@@ -117,7 +117,7 @@ Lexer::Lexer() {
     rules.emplace_back(std::pair(TokenType::IntegerLiteral, R"(((0b[_01]*[01][_01]*)|(0o[_0-7]*[0-7][_0-7]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u8|i8|u16|i16|u32|i32|u64|i64|u128|i128|usize|isize)?)"));
     // Match Integer Literal
 
-    rules.emplace_back(std::pair(TokenType::ReservedIntegerLiteral, R"(((0b[_0-9]*[0-9][_0-9]*)|(0o[_0-9]*[0-9][_0-9]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u8|i8|u16|i16|u32|i32|u64|i64|u128|i128|usize|isize)?)"))
+    rules.emplace_back(std::pair(TokenType::ReservedIntegerLiteral, R"(((0b[_0-9]*[0-9][_0-9]*)|(0o[_0-9]*[0-9][_0-9]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u8|i8|u16|i16|u32|i32|u64|i64|u128|i128|usize|isize)?)"));
     // Match Reserved Integer Literal
 
     rules.emplace_back(std::pair(TokenType::CharLiteral, R"('([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-7][0-9a-fA-F])')"));
