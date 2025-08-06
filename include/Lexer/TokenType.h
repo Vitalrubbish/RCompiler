@@ -14,12 +14,19 @@ enum class TokenType {
 
     Identifier,
 
+    CharLiteral,
+    ByteLiteral,
+
     StringLiteral,
     RawStringLiteral,
     ByteStringLiteral,
+    RawByteStringLiteral,
     CStringLiteral,
+    RawCStringLiteral,
 
     IntegerLiteral,
+    ReservedIntegerLiteral,
+    FloatLiteral,
 
     DotDotDot, DotDotEq, SLEq, SREq, LEq, EqEq, NEq, GEq, AndAnd,
     OrOr, SL, SR, PlusEq, MinusEq, MulEq, DivEq, ModEq, XorEq,

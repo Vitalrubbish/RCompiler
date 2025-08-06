@@ -2,15 +2,6 @@
 #include <vector>
 #include "../../include/Lexer/Lexer.h"
 
-std::string Keyword[] = {
-    "as", "break", "const", "continue", "crate", "else", "enum", "extern",
-    "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod",
-    "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct",
-    "super", "trait", "true", "type", "unsafe", "use", "where", "while","async",
-    "await", "dyn","abstract", "become", "box", "do", "final", "macro", "override",
-    "priv","typeof", "unsized", "virtual", "yield", "try"
-};
-
 Lexer::Lexer() {
     rules.emplace_back(std::pair(TokenType::As, "as"));
     rules.emplace_back(std::pair(TokenType::Break, "break"));
@@ -68,9 +59,6 @@ Lexer::Lexer() {
     rules.emplace_back(std::pair(TokenType::Identifier, "[a-zA-Z][a-zA-Z0-9]*"));
     // Match Identifier
 
-    rules.emplace_back(std::pair(TokenType::IntegerLiteral, R"(((0b[_01]*[01][_01]*)|(0o[_0-7]*[0-7][_0-7]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u8|i8|u16|i16|u32|i32|u64|i64|u128|i128|usize|isize)?)"));
-    // Match Integer Identifier
-
     rules.emplace_back(std::pair(TokenType::DotDotDot, R"(\.\.\.)"));
     rules.emplace_back(std::pair(TokenType::DotDotEq, R"(\.\.=)"));
     rules.emplace_back(std::pair(TokenType::SLEq, R"(<<=)"));
@@ -126,8 +114,38 @@ Lexer::Lexer() {
     rules.emplace_back(std::pair(TokenType::RParen, R"(\))"));
     // Match Punctuation
 
-    rules.emplace(std::pair(TokenType::StringLiteral, R"(\"([^\"\\]|\\.)*\")");
-    // Match StringLiteral
+    rules.emplace_back(std::pair(TokenType::IntegerLiteral, R"(((0b[_01]*[01][_01]*)|(0o[_0-7]*[0-7][_0-7]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u8|i8|u16|i16|u32|i32|u64|i64|u128|i128|usize|isize)?)"));
+    // Match Integer Literal
+
+    rules.emplace_back(std::pair(TokenType::ReservedIntegerLiteral, R"(((0b[_0-9]*[0-9][_0-9]*)|(0o[_0-9]*[0-9][_0-9]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u8|i8|u16|i16|u32|i32|u64|i64|u128|i128|usize|isize)?)"))
+    // Match Reserved Integer Literal
+
+    rules.emplace_back(std::pair(TokenType::CharLiteral, R"('([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-7][0-9a-fA-F])')"));
+    // Match Char Literal
+
+    rules.emplace_back(std::pair(TokenType::ByteLiteral, R"(b'([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2})')"));
+    // Match Byte Literal
+
+    rules.emplace_back(std::pair(TokenType::StringLiteral, R"("([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*")"));
+    // Match String Literal
+
+    rules.emplace_back(std::pair(TokenType::RawStringLiteral, R"(r(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*\"\1)"));
+    // Match Raw-String Literal
+
+    rules.emplace_back(std::pair(TokenType::ByteStringLiteral, R"(b"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*")"));
+    // Match Byte-String Literal
+
+    rules.emplace_back(std::pair(TokenType::RawByteStringLiteral, R"(br(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*\"\1)"));
+    // Match Raw-Byte-String Literal
+
+    rules.emplace_back(std::pair(TokenType::CStringLiteral, R"(c"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*")"));
+    // Match C-String Literal
+
+    rules.emplace_back(std::pair(TokenType::CStringLiteral, R"(cr(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*\"\1)"));
+    // Match C-String Literal
+
+    // rules.emplace_back(std::pair(TokenType::FloatLiteral, R"(([0-9]([_0-9]*)(\.[0-9]([_0-9]*))?(f32|f64)?)|([0-9]([_0-9]*)\.))"));
+    // Match Float Literal
 
     rules.emplace_back(std::pair(TokenType::WhiteSpace, "[ \r\t\n]+"));
     // Match WhiteSpace
