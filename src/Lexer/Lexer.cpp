@@ -1,153 +1,147 @@
-#include <regex>
 #include <vector>
 #include "../../include/Lexer/Lexer.h"
 
 Lexer::Lexer() {
-    rules.emplace_back(std::pair(TokenType::As, "as"));
-    rules.emplace_back(std::pair(TokenType::Break, "break"));
-    rules.emplace_back(std::pair(TokenType::Const, "const"));
-    rules.emplace_back(std::pair(TokenType::Continue, "continue"));
-    rules.emplace_back(std::pair(TokenType::Crate, "crate"));
-    rules.emplace_back(std::pair(TokenType::Else, "else"));
-    rules.emplace_back(std::pair(TokenType::Enum, "enum"));
-    rules.emplace_back(std::pair(TokenType::Extern, "extern"));
-    rules.emplace_back(std::pair(TokenType::False, "false"));
-    rules.emplace_back(std::pair(TokenType::Fn, "fn"));
-    rules.emplace_back(std::pair(TokenType::For, "for"));
-    rules.emplace_back(std::pair(TokenType::If, "if"));
-    rules.emplace_back(std::pair(TokenType::Impl, "impl"));
-    rules.emplace_back(std::pair(TokenType::In, "in"));
-    rules.emplace_back(std::pair(TokenType::Let, "let"));
-    rules.emplace_back(std::pair(TokenType::Loop, "loop"));
-    rules.emplace_back(std::pair(TokenType::Match, "match"));
-    rules.emplace_back(std::pair(TokenType::Mod, "mod"));
-    rules.emplace_back(std::pair(TokenType::Move, "move"));
-    rules.emplace_back(std::pair(TokenType::Mut, "mut"));
-    rules.emplace_back(std::pair(TokenType::Pub, "pub"));
-    rules.emplace_back(std::pair(TokenType::Ref, "ref"));
-    rules.emplace_back(std::pair(TokenType::Return, "return"));
-    rules.emplace_back(std::pair(TokenType::Self, "self"));
-    rules.emplace_back(std::pair(TokenType::SELF, "Self"));
-    rules.emplace_back(std::pair(TokenType::Static, "static"));
-    rules.emplace_back(std::pair(TokenType::Struct, "struct"));
-    rules.emplace_back(std::pair(TokenType::Super, "super"));
-    rules.emplace_back(std::pair(TokenType::Trait, "trait"));
-    rules.emplace_back(std::pair(TokenType::True, "true"));
-    rules.emplace_back(std::pair(TokenType::Type, "type"));
-    rules.emplace_back(std::pair(TokenType::Unsafe, "unsafe"));
-    rules.emplace_back(std::pair(TokenType::Use, "use"));
-    rules.emplace_back(std::pair(TokenType::Where, "where"));
-    rules.emplace_back(std::pair(TokenType::While, "while"));
-    rules.emplace_back(std::pair(TokenType::Async, "async"));
-    rules.emplace_back(std::pair(TokenType::Await, "await"));
-    rules.emplace_back(std::pair(TokenType::Dyn, "dyn"));
-    rules.emplace_back(std::pair(TokenType::Abstract, "abstract"));
-    rules.emplace_back(std::pair(TokenType::Become, "become"));
-    rules.emplace_back(std::pair(TokenType::Box, "box"));
-    rules.emplace_back(std::pair(TokenType::Do, "do"));
-    rules.emplace_back(std::pair(TokenType::Final, "final"));
-    rules.emplace_back(std::pair(TokenType::Macro, "macro"));
-    rules.emplace_back(std::pair(TokenType::Override, "override"));
-    rules.emplace_back(std::pair(TokenType::Priv, "priv"));
-    rules.emplace_back(std::pair(TokenType::Typeof, "typeof"));
-    rules.emplace_back(std::pair(TokenType::Unsized, "unsized"));
-    rules.emplace_back(std::pair(TokenType::Virtual, "virtual"));
-    rules.emplace_back(std::pair(TokenType::Yield, "yield"));
-    rules.emplace_back(std::pair(TokenType::Try, "try"));
+    letter_rules.emplace_back(TokenType::As, std::regex("as"));
+    letter_rules.emplace_back(TokenType::Break, std::regex("break"));
+    letter_rules.emplace_back(TokenType::Const, std::regex("const"));
+    letter_rules.emplace_back(TokenType::Continue, std::regex("continue"));
+    letter_rules.emplace_back(TokenType::Crate, std::regex("crate"));
+    letter_rules.emplace_back(TokenType::Else, std::regex("else"));
+    letter_rules.emplace_back(TokenType::Enum, std::regex("enum"));
+    letter_rules.emplace_back(TokenType::Extern, std::regex("extern"));
+    letter_rules.emplace_back(TokenType::False, std::regex("false"));
+    letter_rules.emplace_back(TokenType::Fn, std::regex("fn"));
+    letter_rules.emplace_back(TokenType::For, std::regex("for"));
+    letter_rules.emplace_back(TokenType::If, std::regex("if"));
+    letter_rules.emplace_back(TokenType::Impl, std::regex("impl"));
+    letter_rules.emplace_back(TokenType::In, std::regex("in"));
+    letter_rules.emplace_back(TokenType::Let, std::regex("let"));
+    letter_rules.emplace_back(TokenType::Loop, std::regex("loop"));
+    letter_rules.emplace_back(TokenType::Match, std::regex("match"));
+    letter_rules.emplace_back(TokenType::Mod, std::regex("mod"));
+    letter_rules.emplace_back(TokenType::Move, std::regex("move"));
+    letter_rules.emplace_back(TokenType::Mut, std::regex("mut"));
+    letter_rules.emplace_back(TokenType::Pub, std::regex("pub"));
+    letter_rules.emplace_back(TokenType::Ref, std::regex("ref"));
+    letter_rules.emplace_back(TokenType::Return, std::regex("return"));
+    letter_rules.emplace_back(TokenType::Self, std::regex("self"));
+    letter_rules.emplace_back(TokenType::SELF, std::regex("Self"));
+    letter_rules.emplace_back(TokenType::Static, std::regex("static"));
+    letter_rules.emplace_back(TokenType::Struct, std::regex("struct"));
+    letter_rules.emplace_back(TokenType::Super, std::regex("super"));
+    letter_rules.emplace_back(TokenType::Trait, std::regex("trait"));
+    letter_rules.emplace_back(TokenType::True, std::regex("true"));
+    letter_rules.emplace_back(TokenType::Type, std::regex("type"));
+    letter_rules.emplace_back(TokenType::Unsafe, std::regex("unsafe"));
+    letter_rules.emplace_back(TokenType::Use, std::regex("use"));
+    letter_rules.emplace_back(TokenType::Where, std::regex("where"));
+    letter_rules.emplace_back(TokenType::While, std::regex("while"));
+    letter_rules.emplace_back(TokenType::Dyn, std::regex("dyn"));
+    letter_rules.emplace_back(TokenType::Abstract, std::regex("abstract"));
+    letter_rules.emplace_back(TokenType::Become, std::regex("become"));
+    letter_rules.emplace_back(TokenType::Box, std::regex("box"));
+    letter_rules.emplace_back(TokenType::Do, std::regex("do"));
+    letter_rules.emplace_back(TokenType::Final, std::regex("final"));
+    letter_rules.emplace_back(TokenType::Macro, std::regex("macro"));
+    letter_rules.emplace_back(TokenType::Override, std::regex("override"));
+    letter_rules.emplace_back(TokenType::Priv, std::regex("priv"));
+    letter_rules.emplace_back(TokenType::Typeof, std::regex("typeof"));
+    letter_rules.emplace_back(TokenType::Unsized, std::regex("unsized"));
+    letter_rules.emplace_back(TokenType::Virtual, std::regex("virtual"));
+    letter_rules.emplace_back(TokenType::Yield, std::regex("yield"));
+    letter_rules.emplace_back(TokenType::Try, std::regex("try"));
     // Match Keywords
 
-    rules.emplace_back(std::pair(TokenType::Identifier, "[a-zA-Z][a-zA-Z0-9]*"));
+    letter_rules.emplace_back(TokenType::Identifier, std::regex("[a-zA-Z][_a-zA-Z0-9]*"));
     // Match Identifier
 
-    rules.emplace_back(std::pair(TokenType::DotDotDot, R"(\.\.\.)"));
-    rules.emplace_back(std::pair(TokenType::DotDotEq, R"(\.\.=)"));
-    rules.emplace_back(std::pair(TokenType::SLEq, R"(<<=)"));
-    rules.emplace_back(std::pair(TokenType::SREq, R"(>>=)"));
-    rules.emplace_back(std::pair(TokenType::LEq, R"(<=)"));
-    rules.emplace_back(std::pair(TokenType::EqEq, R"(==)"));
-    rules.emplace_back(std::pair(TokenType::NEq, R"(!=)"));
-    rules.emplace_back(std::pair(TokenType::GEq, R"(>=)"));
-    rules.emplace_back(std::pair(TokenType::AndAnd, R"(&&)"));
-    rules.emplace_back(std::pair(TokenType::OrOr, R"(\|\|)"));
-    rules.emplace_back(std::pair(TokenType::SL, R"(<<)"));
-    rules.emplace_back(std::pair(TokenType::SR, R"(>>)"));
-    rules.emplace_back(std::pair(TokenType::PlusEq, R"(\+=)"));
-    rules.emplace_back(std::pair(TokenType::MinusEq, R"(-=)"));
-    rules.emplace_back(std::pair(TokenType::MulEq, R"(\*=)"));
-    rules.emplace_back(std::pair(TokenType::DivEq, R"(/=)"));
-    rules.emplace_back(std::pair(TokenType::ModEq, R"(%=)"));
-    rules.emplace_back(std::pair(TokenType::XorEq, R"(\^=)"));
-    rules.emplace_back(std::pair(TokenType::AndEq, R"(&=)"));
-    rules.emplace_back(std::pair(TokenType::OrEq, R"(\|=)"));
-    rules.emplace_back(std::pair(TokenType::DotDot, R"(\.\.)"));
-    rules.emplace_back(std::pair(TokenType::ColonColon, R"(::)"));
-    rules.emplace_back(std::pair(TokenType::RArrow, R"(->)"));
-    rules.emplace_back(std::pair(TokenType::LArrow, R"(<-)"));
-    rules.emplace_back(std::pair(TokenType::FatArrow, R"(=>)"));
-    rules.emplace_back(std::pair(TokenType::Eq, R"(=)"));
-    rules.emplace_back(std::pair(TokenType::Lt, R"(<)"));
-    rules.emplace_back(std::pair(TokenType::Gt, R"(>)"));
-    rules.emplace_back(std::pair(TokenType::Not, R"(!)"));
-    rules.emplace_back(std::pair(TokenType::Tilde, R"(~)"));
-    rules.emplace_back(std::pair(TokenType::Plus, R"(\+)"));
-    rules.emplace_back(std::pair(TokenType::Minus, R"(-)"));
-    rules.emplace_back(std::pair(TokenType::Mul, R"(\*)"));
-    rules.emplace_back(std::pair(TokenType::Div, R"(/)"));
-    rules.emplace_back(std::pair(TokenType::MOD, R"(%)"));
-    rules.emplace_back(std::pair(TokenType::Xor, R"(\^)"));
-    rules.emplace_back(std::pair(TokenType::And, R"(&)"));
-    rules.emplace_back(std::pair(TokenType::Or, R"(\|)"));
-    rules.emplace_back(std::pair(TokenType::At, R"(@)"));
-    rules.emplace_back(std::pair(TokenType::Dot, R"(\.)"));
-    rules.emplace_back(std::pair(TokenType::Comma, R"(,)"));
-    rules.emplace_back(std::pair(TokenType::Semicolon, R"(;)"));
-    rules.emplace_back(std::pair(TokenType::Colon, R"(:)"));
-    rules.emplace_back(std::pair(TokenType::Pound, R"(#)"));
-    rules.emplace_back(std::pair(TokenType::Dollar, R"($)"));
-    rules.emplace_back(std::pair(TokenType::Question, R"(\?)"));
-    rules.emplace_back(std::pair(TokenType::Underscore, R"(_)"));
-    rules.emplace_back(std::pair(TokenType::LBrace, R"(\{)"));
-    rules.emplace_back(std::pair(TokenType::RBrace, R"(\})"));
-    rules.emplace_back(std::pair(TokenType::LBracket, R"(\[)"));
-    rules.emplace_back(std::pair(TokenType::RBracket, R"(\])"));
-    rules.emplace_back(std::pair(TokenType::LParen, R"(\()"));
-    rules.emplace_back(std::pair(TokenType::RParen, R"(\))"));
+    non_letter_rules.emplace_back(TokenType::DotDotDot, std::regex(R"(\.\.\.)"));
+    non_letter_rules.emplace_back(TokenType::DotDotEq, std::regex(R"(\.\.=)"));
+    non_letter_rules.emplace_back(TokenType::SLEq, std::regex(R"(<<=)"));
+    non_letter_rules.emplace_back(TokenType::SREq, std::regex(R"(>>=)"));
+    non_letter_rules.emplace_back(TokenType::LEq, std::regex(R"(<=)"));
+    non_letter_rules.emplace_back(TokenType::EqEq, std::regex(R"(==)"));
+    non_letter_rules.emplace_back(TokenType::NEq, std::regex(R"(!=)"));
+    non_letter_rules.emplace_back(TokenType::GEq, std::regex(R"(>=)"));
+    non_letter_rules.emplace_back(TokenType::AndAnd, std::regex(R"(&&)"));
+    non_letter_rules.emplace_back(TokenType::OrOr, std::regex(R"(\|\|)"));
+    non_letter_rules.emplace_back(TokenType::SL, std::regex(R"(<<)"));
+    non_letter_rules.emplace_back(TokenType::SR, std::regex(R"(>>)"));
+    non_letter_rules.emplace_back(TokenType::PlusEq, std::regex(R"(\+=)"));
+    non_letter_rules.emplace_back(TokenType::MinusEq, std::regex(R"(-=)"));
+    non_letter_rules.emplace_back(TokenType::MulEq, std::regex(R"(\*=)"));
+    non_letter_rules.emplace_back(TokenType::DivEq, std::regex(R"(/=)"));
+    non_letter_rules.emplace_back(TokenType::ModEq, std::regex(R"(%=)"));
+    non_letter_rules.emplace_back(TokenType::XorEq, std::regex(R"(\^=)"));
+    non_letter_rules.emplace_back(TokenType::AndEq, std::regex(R"(&=)"));
+    non_letter_rules.emplace_back(TokenType::OrEq, std::regex(R"(\|=)"));
+    non_letter_rules.emplace_back(TokenType::DotDot, std::regex(R"(\.\.)"));
+    non_letter_rules.emplace_back(TokenType::ColonColon, std::regex(R"(::)"));
+    non_letter_rules.emplace_back(TokenType::RArrow, std::regex(R"(->)"));
+    non_letter_rules.emplace_back(TokenType::LArrow, std::regex(R"(<-)"));
+    non_letter_rules.emplace_back(TokenType::FatArrow, std::regex(R"(=>)"));
+    non_letter_rules.emplace_back(TokenType::Eq, std::regex(R"(=)"));
+    non_letter_rules.emplace_back(TokenType::Lt, std::regex(R"(<)"));
+    non_letter_rules.emplace_back(TokenType::Gt, std::regex(R"(>)"));
+    non_letter_rules.emplace_back(TokenType::Not, std::regex(R"(!)"));
+    non_letter_rules.emplace_back(TokenType::Tilde, std::regex(R"(~)"));
+    non_letter_rules.emplace_back(TokenType::Plus, std::regex(R"(\+)"));
+    non_letter_rules.emplace_back(TokenType::Minus, std::regex(R"(-)"));
+    non_letter_rules.emplace_back(TokenType::Mul, std::regex(R"(\*)"));
+    non_letter_rules.emplace_back(TokenType::Div, std::regex(R"(/)"));
+    non_letter_rules.emplace_back(TokenType::MOD, std::regex(R"(%)"));
+    non_letter_rules.emplace_back(TokenType::Xor, std::regex(R"(\^)"));
+    non_letter_rules.emplace_back(TokenType::And, std::regex(R"(&)"));
+    non_letter_rules.emplace_back(TokenType::Or, std::regex(R"(\|)"));
+    non_letter_rules.emplace_back(TokenType::At, std::regex(R"(@)"));
+    non_letter_rules.emplace_back(TokenType::Dot, std::regex(R"(\.)"));
+    non_letter_rules.emplace_back(TokenType::Comma, std::regex(R"(,)"));
+    non_letter_rules.emplace_back(TokenType::Semicolon, std::regex(R"(;)"));
+    non_letter_rules.emplace_back(TokenType::Colon, std::regex(R"(:)"));
+    non_letter_rules.emplace_back(TokenType::Pound, std::regex(R"(#)"));
+    non_letter_rules.emplace_back(TokenType::Dollar, std::regex(R"(\$)"));
+    non_letter_rules.emplace_back(TokenType::Question, std::regex(R"(\?)"));
+    non_letter_rules.emplace_back(TokenType::Underscore, std::regex(R"(_)"));
+    non_letter_rules.emplace_back(TokenType::LBrace, std::regex(R"(\{)"));
+    non_letter_rules.emplace_back(TokenType::RBrace, std::regex(R"(\})"));
+    non_letter_rules.emplace_back(TokenType::LBracket, std::regex(R"(\[)"));
+    non_letter_rules.emplace_back(TokenType::RBracket, std::regex(R"(\])"));
+    non_letter_rules.emplace_back(TokenType::LParen, std::regex(R"(\()"));
+    non_letter_rules.emplace_back(TokenType::RParen, std::regex(R"(\))"));
     // Match Punctuation
 
-    rules.emplace_back(std::pair(TokenType::IntegerLiteral, R"(((0b[_01]*[01][_01]*)|(0o[_0-7]*[0-7][_0-7]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u8|i8|u16|i16|u32|i32|u64|i64|u128|i128|usize|isize)?)"));
+    non_letter_rules.emplace_back(TokenType::IntegerLiteral, std::regex(R"(((0b[_01]*[01][_01]*)|(0o[_0-7]*[0-7][_0-7]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u32|i32)?)"));
     // Match Integer Literal
 
-    rules.emplace_back(std::pair(TokenType::ReservedIntegerLiteral, R"(((0b[_0-9]*[0-9][_0-9]*)|(0o[_0-9]*[0-9][_0-9]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u8|i8|u16|i16|u32|i32|u64|i64|u128|i128|usize|isize)?)"));
+    non_letter_rules.emplace_back(TokenType::ReservedIntegerLiteral, std::regex(R"(((0b[_0-9]*[0-9][_0-9]*)|(0o[_0-9]*[0-9][_0-9]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u32|i32)?)"));
     // Match Reserved Integer Literal
 
-    rules.emplace_back(std::pair(TokenType::CharLiteral, R"('([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-7][0-9a-fA-F])')"));
+    non_letter_rules.emplace_back(TokenType::CharLiteral, std::regex(R"('([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-7][0-9a-fA-F])')"));
     // Match Char Literal
 
-    rules.emplace_back(std::pair(TokenType::ByteLiteral, R"(b'([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2})')"));
+    letter_rules.emplace_back(TokenType::ByteLiteral, std::regex(R"(b'([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2})')"));
     // Match Byte Literal
 
-    rules.emplace_back(std::pair(TokenType::StringLiteral, R"("([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*")"));
+    non_letter_rules.emplace_back(TokenType::StringLiteral, std::regex(R"("([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
     // Match String Literal
 
-    rules.emplace_back(std::pair(TokenType::RawStringLiteral, R"(r(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*\"\1)"));
+    letter_rules.emplace_back(TokenType::RawStringLiteral, std::regex(R"(r(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
     // Match Raw-String Literal
 
-    rules.emplace_back(std::pair(TokenType::ByteStringLiteral, R"(b"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*")"));
+    letter_rules.emplace_back(TokenType::ByteStringLiteral, std::regex(R"(b"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
     // Match Byte-String Literal
 
-    rules.emplace_back(std::pair(TokenType::RawByteStringLiteral, R"(br(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*\"\1)"));
+    letter_rules.emplace_back(TokenType::RawByteStringLiteral, std::regex(R"(br(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
     // Match Raw-Byte-String Literal
 
-    rules.emplace_back(std::pair(TokenType::CStringLiteral, R"(c"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*")"));
+    letter_rules.emplace_back(TokenType::CStringLiteral, std::regex(R"(c"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
     // Match C-String Literal
 
-    rules.emplace_back(std::pair(TokenType::CStringLiteral, R"(cr(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\n)*\"\1)"));
+    letter_rules.emplace_back(TokenType::CStringLiteral, std::regex(R"(cr(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
     // Match C-String Literal
 
-    // rules.emplace_back(std::pair(TokenType::FloatLiteral, R"(([0-9]([_0-9]*)(\.[0-9]([_0-9]*))?(f32|f64)?)|([0-9]([_0-9]*)\.))"));
-    // Match Float Literal
-
-    rules.emplace_back(std::pair(TokenType::WhiteSpace, "[ \r\t\n]+"));
+    non_letter_rules.emplace_back(TokenType::WhiteSpace, std::regex("[ \r\t\n]+"));
     // Match WhiteSpace
 }
 
@@ -155,14 +149,26 @@ Token Lexer::GetNextToken(std::string& str) const {
     uint32_t bestMatchLength = 0;
     TokenType bestMatchType = TokenType::None;
     uint32_t len = 0;
-    for (const auto& it: rules) {
-        std::regex pattern(it.second);
-        std::smatch match;
-        if (std::regex_search(str, match, pattern) && match.position(0) == 0) {
-            len = match.length(0);
-            if (len > bestMatchLength) {
-                bestMatchLength = len;
-                bestMatchType = it.first;
+    if (str[0] >= 'a' && str[0] <= 'z' || str[0] >= 'A' && str[0] <= 'Z') {
+        for (const auto& it: letter_rules) {
+            std::smatch match;
+            if (std::regex_search(str, match, it.second) && match.position(0) == 0) {
+                len = match.length(0);
+                if (len > bestMatchLength) {
+                    bestMatchLength = len;
+                    bestMatchType = it.first;
+                }
+            }
+        }
+    } else {
+        for (const auto& it: non_letter_rules) {
+            std::smatch match;
+            if (std::regex_search(str, match, it.second) && match.position(0) == 0) {
+                len = match.length(0);
+                if (len > bestMatchLength) {
+                    bestMatchLength = len;
+                    bestMatchType = it.first;
+                }
             }
         }
     }

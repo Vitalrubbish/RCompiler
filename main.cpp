@@ -6,7 +6,6 @@
 Lexer lexer;
 
 int main() {
-    freopen("../testcases/Lexer/in07.txt", "r", stdin);
     std::string text, line;
     while(std::getline(std::cin, line)) {
         text += line;
@@ -18,8 +17,9 @@ int main() {
         std::string current_text = text;
         while (!current_text.empty()) {
             Token current_token = lexer.GetNextToken(current_text);
-            std::cout << current_token.token << '\n';
         } // Lexer
+
+
 
     } catch (std::exception& error) {
         std::cout << error.what() << '\n';

@@ -9,25 +9,20 @@ enum class TokenType {
     False, Fn, For, If, Impl, In, Let, Loop, Match, Mod,
     Move, Mut, Pub, Ref, Return, Self, SELF, Static, Struct,
     Super, Trait, True, Type, Unsafe, Use, Where, While,
-    Async, Await, Dyn, Abstract, Become, Box, Do, Final,
+    Dyn, Abstract, Become, Box, Do, Final,
     Macro, Override, Priv, Typeof, Unsized, Virtual, Yield, Try,
-
     Identifier,
-
     CharLiteral,
     ByteLiteral,
-
     StringLiteral,
     RawStringLiteral,
     ByteStringLiteral,
     RawByteStringLiteral,
     CStringLiteral,
     RawCStringLiteral,
-
     IntegerLiteral,
     ReservedIntegerLiteral,
     FloatLiteral,
-
     DotDotDot, DotDotEq, SLEq, SREq, LEq, EqEq, NEq, GEq, AndAnd,
     OrOr, SL, SR, PlusEq, MinusEq, MulEq, DivEq, ModEq, XorEq,
     AndEq, OrEq, DotDot, ColonColon, RArrow, LArrow, FatArrow, Eq,

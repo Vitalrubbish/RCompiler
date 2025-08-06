@@ -2,11 +2,13 @@
 #define LEXER_H
 #include <string>
 #include <vector>
+#include <regex>
 #include <utility>
 #include "Token.h"
 
 class Lexer {
-    std::vector<std::pair<TokenType, std::string>> rules;
+    std::vector<std::pair<TokenType, std::regex>> letter_rules;
+    std::vector<std::pair<TokenType, std::regex>> non_letter_rules;
 public:
 
     Lexer();
