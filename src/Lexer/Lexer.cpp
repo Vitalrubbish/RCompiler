@@ -9,7 +9,6 @@ Lexer::Lexer() {
     letter_rules.emplace_back(TokenType::Crate, std::regex("crate"));
     letter_rules.emplace_back(TokenType::Else, std::regex("else"));
     letter_rules.emplace_back(TokenType::Enum, std::regex("enum"));
-    letter_rules.emplace_back(TokenType::Extern, std::regex("extern"));
     letter_rules.emplace_back(TokenType::False, std::regex("false"));
     letter_rules.emplace_back(TokenType::Fn, std::regex("fn"));
     letter_rules.emplace_back(TokenType::For, std::regex("for"));
@@ -22,7 +21,6 @@ Lexer::Lexer() {
     letter_rules.emplace_back(TokenType::Mod, std::regex("mod"));
     letter_rules.emplace_back(TokenType::Move, std::regex("move"));
     letter_rules.emplace_back(TokenType::Mut, std::regex("mut"));
-    letter_rules.emplace_back(TokenType::Pub, std::regex("pub"));
     letter_rules.emplace_back(TokenType::Ref, std::regex("ref"));
     letter_rules.emplace_back(TokenType::Return, std::regex("return"));
     letter_rules.emplace_back(TokenType::Self, std::regex("self"));
@@ -111,10 +109,10 @@ Lexer::Lexer() {
     non_letter_rules.emplace_back(TokenType::RParen, std::regex(R"(\))"));
     // Match Punctuation
 
-    non_letter_rules.emplace_back(TokenType::IntegerLiteral, std::regex(R"(((0b[_01]*[01][_01]*)|(0o[_0-7]*[0-7][_0-7]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u32|i32)?)"));
+    non_letter_rules.emplace_back(TokenType::IntegerLiteral, std::regex(R"(((0b[_01]*[01][_01]*)|(0o[_0-7]*[0-7][_0-7]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u32|i32|usize|isize)?)"));
     // Match Integer Literal
 
-    non_letter_rules.emplace_back(TokenType::ReservedIntegerLiteral, std::regex(R"(((0b[_0-9]*[0-9][_0-9]*)|(0o[_0-9]*[0-9][_0-9]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u32|i32)?)"));
+    non_letter_rules.emplace_back(TokenType::ReservedIntegerLiteral, std::regex(R"(((0b[_0-9]*[0-9][_0-9]*)|(0o[_0-9]*[0-9][_0-9]*)|(0x[_0-9a-fA-F]*[0-9a-fA-F][_0-9a-fA-F]*)|([0-9][_0-9]*))(u32|i32|usize|isize)?)"));
     // Match Reserved Integer Literal
 
     non_letter_rules.emplace_back(TokenType::CharLiteral, std::regex(R"('([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-7][0-9a-fA-F])')"));

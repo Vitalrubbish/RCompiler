@@ -15,4 +15,8 @@ add_executable(RCompiler
         include/Preprocessor/Preprocessor.h
         src/Preprocessor/Preprocessor.cpp
         error/Error.h
+        include/Parser/Parser.h
+        src/Parser/Parser.cpp
+        include/ASTNode/ASTNode.h
+        util/Position.h
 )
