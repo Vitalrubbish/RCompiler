@@ -1,4 +1,5 @@
 #include <vector>
+#include "../../error/Error.h"
 #include "../../include/Lexer/Lexer.h"
 
 Lexer::Lexer() {
@@ -23,8 +24,6 @@ Lexer::Lexer() {
     letter_rules.emplace_back(TokenType::Mut, std::regex("mut"));
     letter_rules.emplace_back(TokenType::Ref, std::regex("ref"));
     letter_rules.emplace_back(TokenType::Return, std::regex("return"));
-    letter_rules.emplace_back(TokenType::Self, std::regex("self"));
-    letter_rules.emplace_back(TokenType::SELF, std::regex("Self"));
     letter_rules.emplace_back(TokenType::Static, std::regex("static"));
     letter_rules.emplace_back(TokenType::Struct, std::regex("struct"));
     letter_rules.emplace_back(TokenType::Super, std::regex("super"));
@@ -121,36 +120,86 @@ Lexer::Lexer() {
     letter_rules.emplace_back(TokenType::ByteLiteral, std::regex(R"(b'([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2})')"));
     // Match Byte Literal
 
-    non_letter_rules.emplace_back(TokenType::StringLiteral, std::regex(R"("([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
+    string_rules.emplace_back(TokenType::StringLiteral, std::regex(R"("([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
     // Match String Literal
 
-    letter_rules.emplace_back(TokenType::RawStringLiteral, std::regex(R"(r(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
+    string_rules.emplace_back(TokenType::RawStringLiteral, std::regex(R"(r(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
     // Match Raw-String Literal
 
-    letter_rules.emplace_back(TokenType::ByteStringLiteral, std::regex(R"(b"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
+    string_rules.emplace_back(TokenType::ByteStringLiteral, std::regex(R"(b"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
     // Match Byte-String Literal
 
-    letter_rules.emplace_back(TokenType::RawByteStringLiteral, std::regex(R"(br(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
+    string_rules.emplace_back(TokenType::RawByteStringLiteral, std::regex(R"(br(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
     // Match Raw-Byte-String Literal
 
-    letter_rules.emplace_back(TokenType::CStringLiteral, std::regex(R"(c"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
+    string_rules.emplace_back(TokenType::CStringLiteral, std::regex(R"(c"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
     // Match C-String Literal
 
-    letter_rules.emplace_back(TokenType::CStringLiteral, std::regex(R"(cr(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
+    string_rules.emplace_back(TokenType::CStringLiteral, std::regex(R"(cr(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
     // Match C-String Literal
 
     non_letter_rules.emplace_back(TokenType::WhiteSpace, std::regex("[ \r\t\n]+"));
     // Match WhiteSpace
 }
 
+
+
 Token Lexer::GetNextToken(std::string& str) const {
     uint32_t bestMatchLength = 0;
     TokenType bestMatchType = TokenType::None;
     uint32_t len = 0;
+    if (str.substr(0, 2) == "//") {
+        uint32_t cur = 0;
+        while (str[cur] != '\n' && str[cur] != '\r') {
+            cur++;
+        }
+        bestMatchLength = cur;
+        bestMatchType = TokenType::LineComment;
+        std::string token = str.substr(0, bestMatchLength);
+        str = str.substr(bestMatchLength, str.size() - bestMatchLength);
+        return Token{token, bestMatchType};
+    }
+    if (str.substr(0, 2) == "/*") {
+        uint32_t cur = 2, cnt = 1;
+        while (cnt > 0) {
+            if (str.substr(cur, 2) == "/*") {
+                cnt++;
+            } else if (str.substr(cur, 2) == "*/") {
+                cnt--;
+            }
+            cur++;
+        }
+        bestMatchLength = cur + 2;
+        bestMatchType = TokenType::BlockComment;
+        std::string token = str.substr(0, bestMatchLength);
+        str = str.substr(bestMatchLength, str.size() - bestMatchLength);
+        return Token{token, bestMatchType};
+    }
+    if (str.substr(0, 2) == "*/") {
+        throw SyntaxError("Comments do not match");
+    } // Judge whether it is a comment.
+
+    for (const auto& it: string_rules) {
+        std::smatch match;
+        if (std::regex_search(str, match, it.second) && match.position(0) == 0) {
+            len = match.length(0);
+            if (len > bestMatchLength) {
+                bestMatchLength = len;
+                bestMatchType = it.first;
+            }
+        }
+    }
+    if (bestMatchLength > 0) {
+        std::string token = str.substr(0, bestMatchLength);
+        str = str.substr(bestMatchLength, str.size() - bestMatchLength);
+        return Token{token, bestMatchType};
+    } // Judge String
+
+    std::string match_str = str.substr(0, 64);
     if (str[0] >= 'a' && str[0] <= 'z' || str[0] >= 'A' && str[0] <= 'Z') {
         for (const auto& it: letter_rules) {
             std::smatch match;
-            if (std::regex_search(str, match, it.second) && match.position(0) == 0) {
+            if (std::regex_search(match_str, match, it.second) && match.position(0) == 0) {
                 len = match.length(0);
                 if (len > bestMatchLength) {
                     bestMatchLength = len;
@@ -161,7 +210,7 @@ Token Lexer::GetNextToken(std::string& str) const {
     } else {
         for (const auto& it: non_letter_rules) {
             std::smatch match;
-            if (std::regex_search(str, match, it.second) && match.position(0) == 0) {
+            if (std::regex_search(match_str, match, it.second) && match.position(0) == 0) {
                 len = match.length(0);
                 if (len > bestMatchLength) {
                     bestMatchLength = len;
@@ -169,7 +218,7 @@ Token Lexer::GetNextToken(std::string& str) const {
                 }
             }
         }
-    }
+    } // Judge Others
     std::string token = str.substr(0, bestMatchLength);
     str = str.substr(bestMatchLength, str.size() - bestMatchLength);
     return Token{token, bestMatchType};

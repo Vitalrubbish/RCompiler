@@ -12,11 +12,10 @@ add_executable(RCompiler
         include/Lexer/Lexer.h
         src/Lexer/Lexer.cpp
         include/Lexer/TokenType.h
-        include/Preprocessor/Preprocessor.h
-        src/Preprocessor/Preprocessor.cpp
         error/Error.h
         include/Parser/Parser.h
         src/Parser/Parser.cpp
         include/ASTNode/ASTNode.h
         util/Position.h
+        src/ASTNode/ASTNode.cpp
 )

@@ -9,6 +9,7 @@
 class Lexer {
     std::vector<std::pair<TokenType, std::regex>> letter_rules;
     std::vector<std::pair<TokenType, std::regex>> non_letter_rules;
+    std::vector<std::pair<TokenType, std::regex>> string_rules;
 public:
 
     Lexer();
