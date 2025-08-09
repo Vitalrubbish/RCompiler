@@ -24,6 +24,8 @@ Lexer::Lexer() {
     letter_rules.emplace_back(TokenType::Mut, std::regex("mut"));
     letter_rules.emplace_back(TokenType::Ref, std::regex("ref"));
     letter_rules.emplace_back(TokenType::Return, std::regex("return"));
+    letter_rules.emplace_back(TokenType::Self, std::regex("self"));
+    letter_rules.emplace_back(TokenType::SELF, std::regex("Self"));
     letter_rules.emplace_back(TokenType::Static, std::regex("static"));
     letter_rules.emplace_back(TokenType::Struct, std::regex("struct"));
     letter_rules.emplace_back(TokenType::Super, std::regex("super"));
@@ -176,7 +178,7 @@ Token Lexer::GetNextToken(std::string& str) const {
         return Token{token, bestMatchType};
     }
     if (str.substr(0, 2) == "*/") {
-        throw SyntaxError("Comments do not match");
+        throw LexError("Comments do not match");
     } // Judge whether it is a comment.
 
     for (const auto& it: string_rules) {

@@ -2,6 +2,8 @@
 #define PARSER_H
 #include <vector>
 #include "../Lexer/Lexer.h"
+#include "../AST/ASTNode.h"
+
 
 class Parser {
     std::vector<Token> tokens;
@@ -13,32 +15,40 @@ public:
         this -> tokens = tokens;
     }
 
-    bool ParseCrate();
+    void ConsumeString(const std::string& );
 
-    bool ParseVisItem();
+    CrateNode* ParseCrate();
 
-    bool ParseModule();
+    VisItemNode* ParseVisItem();
 
-    bool ParseFunction();
+    // bool ParseModule();
 
-    bool ParseStruct();
+    FunctionNode* ParseFunction();
 
-    bool ParseEnumeration();
+    // bool ParseStruct();
 
-    bool ParseConstantItem();
+    // bool ParseEnumeration();
 
-    bool ParseTrait();
+    // bool ParseConstantItem();
 
-    bool ParseImplementation();
+    // bool ParseTrait();
 
-    bool ParseFunctionQualifiers();
+    // bool ParseImplementation();
 
-    bool ParseGenericParams();
+    // bool ParseFunctionQualifiers();
 
-    bool ParseFunctionParameter();
+    // bool ParseGenericParams();
 
-    bool ParseFunctionReturnType();
+    // FunctionParametersNode* ParseFunctionParameters();
 
+    // TypeNode* ParseFunctionReturnType();
 
+    BlockExpressionNode* ParseBlockExpression();
+
+    StatementsNode* ParseStatements();
+
+    StatementNode* ParseStatement();
+
+    ExpressionNode* ParseExpressionWithoutBlock();
 };
 #endif //PARSER_H

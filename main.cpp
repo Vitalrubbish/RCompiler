@@ -2,13 +2,14 @@
 #include <string>
 #include <chrono>
 #include "include/Lexer/Lexer.h"
+#include "include/Parser/Parser.h"
 
 Lexer lexer;
 std::vector<Token> tokens;
 
 int main() {
     auto start = std::chrono::steady_clock::now();
-    freopen("../testcases/Lexer/in10.rs", "r", stdin);
+    freopen("../testcases/Parser/in00.rs", "r", stdin);
     // freopen("../output.txt", "w", stdout);
     std::string text, line;
     while(std::getline(std::cin, line)) {
@@ -19,6 +20,7 @@ int main() {
         std::string current_text = text;
         uint32_t rowIndex = 1;
         while (!current_text.empty()) {
+
             Token current_token = lexer.GetNextToken(current_text);
             if (current_token.type != TokenType::WhiteSpace &&
                 current_token.type != TokenType::BlockComment &&
@@ -34,7 +36,8 @@ int main() {
             }
         } // Lexer
 
-
+        Parser parser(tokens);
+        ASTNode* root = parser.ParseCrate(); // Parser
 
     } catch (std::exception& error) {
         std::cout << error.what() << '\n';
