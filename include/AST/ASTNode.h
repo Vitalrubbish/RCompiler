@@ -177,6 +177,19 @@ public:
     ~FunctionParamNode() override;
 };
 
+class FunctionParamPatternNode: public ASTNode {
+    PatternNoTopAltNode* pattern_no_top_alt_;
+    TypeNode* type_;
+public:
+    FunctionParamPatternNode(Position pos, PatternNoTopAltNode* pattern_no_top_alt,
+        TypeNode* type): ASTNode(pos) {
+        pattern_no_top_alt_ = pattern_no_top_alt;
+        type_ = type;
+    }
+
+    ~FunctionParamPatternNode() override;
+};
+
 /****************  Expression With Block  ****************/
 
 class ExpressionNode: public ASTNode {
@@ -648,10 +661,101 @@ public:
     ~PatternNode() override;
 };
 
+class PatternNoTopAltNode: public ASTNode {
+public:
+    explicit PatternNoTopAltNode(Position pos): ASTNode(pos) {}
 
-// TODO: Define FunctionParamPattern
+    ~PatternNoTopAltNode() override = default;
+};
 
-// TODO: Define PatternNoTopAlt
+class PatternWithoutRangeNode: public PatternNoTopAltNode {
+public:
+    explicit PatternWithoutRangeNode(Position pos): PatternNoTopAltNode(pos) {}
+
+    ~PatternWithoutRangeNode() override = default;
+};
+
+class LiteralPatternNode: public PatternWithoutRangeNode {
+    bool have_minus_ = false;
+    ExpressionNode* expression_;
+public:
+    LiteralPatternNode(Position pos, bool have_minus, ExpressionNode* expression):
+        PatternWithoutRangeNode(pos) {
+        have_minus_ = have_minus;
+        expression_ = expression;
+    }
+
+    ~LiteralPatternNode() override;
+};
+
+class IdentifierPatternNode: public PatternWithoutRangeNode {
+    bool is_ref_ = false;
+    bool is_mut_ = false;
+    std::string identifier_;
+    PatternNoTopAltNode* node_ = nullptr;
+public:
+    IdentifierPatternNode(Position pos, bool is_ref, bool is_mut, const std::string& identifier,
+        PatternNoTopAltNode* node): PatternWithoutRangeNode(pos) {
+        is_ref_ = is_ref;
+        is_mut_ = is_mut;
+        identifier_ = identifier;
+        node_ = node;
+    }
+
+    ~IdentifierPatternNode() override;
+};
+
+class WildcardPatternNode: public PatternWithoutRangeNode {
+public:
+    explicit WildcardPatternNode(Position pos): PatternWithoutRangeNode(pos) {}
+
+    ~WildcardPatternNode() override = default;
+};
+
+class RestPatternNode: public PatternWithoutRangeNode {
+public:
+    explicit RestPatternNode(Position pos): PatternWithoutRangeNode(pos) {}
+
+    ~RestPatternNode() override = default;
+};
+
+// TODO Define StructPattern
+
+// TODO TupleStructPattern
+
+// TODO TuplePattern
+
+class GroupedPatternNode: public PatternWithoutRangeNode {
+    PatternNode* pattern_ = nullptr;
+public:
+    GroupedPatternNode(Position pos, PatternNode* pattern):
+        PatternWithoutRangeNode(pos) {
+        pattern_ = pattern;
+    }
+
+    ~GroupedPatternNode() override;
+};
+
+class SlicePatternNode: public PatternWithoutRangeNode {
+    std::vector<PatternNode*> patterns_;
+public:
+    SlicePatternNode(Position pos, const std::vector<PatternNode*> &patterns):
+        PatternWithoutRangeNode(pos) {
+        patterns_ = patterns;
+    }
+
+    ~SlicePatternNode() override;
+};
+
+class PathPatternNode: public PatternWithoutRangeNode {
+    ExpressionNode* expression_;
+public:
+    PathPatternNode(Position pos, ExpressionNode* expression): PatternWithoutRangeNode(pos) {
+        expression_ = expression;
+    }
+
+    ~PathPatternNode() override;
+};
 
 /****************  Types  ****************/
 class TypeNode: public ASTNode {

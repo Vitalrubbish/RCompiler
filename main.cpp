@@ -6,11 +6,10 @@
 
 Lexer lexer;
 std::vector<Token> tokens;
+ASTNode* root;
 
 int main() {
-    auto start = std::chrono::steady_clock::now();
     freopen("../testcases/Parser/in00.rs", "r", stdin);
-    // freopen("../output.txt", "w", stdout);
     std::string text, line;
     while(std::getline(std::cin, line)) {
         text += line;
@@ -37,12 +36,10 @@ int main() {
         } // Lexer
 
         Parser parser(tokens);
-        ASTNode* root = parser.ParseCrate(); // Parser
-
+        root = parser.ParseCrate(); // Parser
+        delete root;
     } catch (std::exception& error) {
+        delete root;
         std::cout << error.what() << '\n';
     }
-    auto end = std::chrono::steady_clock::now();
-    auto dur = end - start;
-    std::cout << "Run time : " << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << " ms \n";
 }

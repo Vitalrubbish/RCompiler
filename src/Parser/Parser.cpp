@@ -59,11 +59,17 @@ FunctionNode* Parser::ParseFunction() {
         }
         std::string identifier = tokens[parseIndex].token;
         parseIndex++;
+
         // TODO ParseGenericParams
+
         ConsumeString("(");
+
         // TODO ParseFunctionParameters
+
         ConsumeString(")");
+
         // TODO ParseFunctionReturnType
+
         // TODO ParseWhereClause
         if (tokens[parseIndex].type != TokenType::Semicolon) {
             block_expression_node = ParseBlockExpression();
@@ -117,7 +123,18 @@ StatementsNode *Parser::ParseStatements() {
 }
 
 StatementNode* Parser::ParseStatement() {
+    Position pos = tokens[parseIndex].pos;
+    try {
+        if (tokens[parseIndex].type == TokenType::Semicolon) {
+            ConsumeString(";");
+            return new EmptyStatementNode(pos);
+        }
+        if (tokens[parseIndex].type == TokenType::Let) {
 
+        }
+    } catch (std::exception&) {
+
+    }
 }
 
 ExpressionNode* Parser::ParseExpressionWithoutBlock() {

@@ -34,9 +34,14 @@ FunctionParamNode::~FunctionParamNode() {
     delete type_;
 }
 
+FunctionParamPatternNode::~FunctionParamPatternNode() {
+    delete pattern_no_top_alt_;
+    delete type_;
+}
+
 /****************  Statement  ****************/
 LetStatementNode::~LetStatementNode() {
-    // delete pattern_no_top_alt_;
+    delete pattern_no_top_alt_;
     delete type_;
     delete expression_;
     delete block_expression_;
@@ -161,9 +166,32 @@ PathExpressionNode::~PathExpressionNode() {
 /****************  Patterns  ****************/
 PatternNode::~PatternNode() {
     for (auto& it: pattern_no_top_alts_) {
-        // delete it;
+        delete it;
     }
 }
+
+LiteralPatternNode::~LiteralPatternNode() {
+    delete expression_;
+}
+
+IdentifierPatternNode::~IdentifierPatternNode() {
+    delete node_;
+}
+
+GroupedPatternNode::~GroupedPatternNode() {
+    delete pattern_;
+}
+
+SlicePatternNode::~SlicePatternNode() {
+    for (auto& it: patterns_) {
+        delete it;
+    }
+}
+
+PathPatternNode::~PathPatternNode() {
+    delete expression_;
+}
+
 /****************  Support Node for Expression  ****************/
 
 ConditionsNode::~ConditionsNode() {
