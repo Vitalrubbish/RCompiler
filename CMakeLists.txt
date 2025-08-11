@@ -19,4 +19,5 @@ add_executable(RCompiler
         util/Position.h
         src/AST/ASTNode.cpp
         include/AST/ASTVisitor.h
+        util/Util.h
 )

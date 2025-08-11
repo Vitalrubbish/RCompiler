@@ -1,10 +1,10 @@
 #ifndef ASTNODE_H
 #define ASTNODE_H
-#include <utility>
 #include <vector>
 #include <string>
 #include "../../util/Position.h"
 #include "../Lexer/TokenType.h"
+#include "../Lexer/Token.h"
 
 class ASTNode;
 class CrateNode;
@@ -48,28 +48,19 @@ class ExpressionNode; // Also StructBaseNode
 class ExpressionWithoutBlockNode;
 class ExpressionWithBlockNode;
 class LiteralExpressionNode;
-
 class CharLiteralNode;
-class ByteLiteralNode;
 class StringLiteralNode;
+class CStringLiteralNode;
 class IntLiteralNode;
 class BoolLiteralNode;
-
-
 class PathExpressionNode;
 class OperatorExpressionNode;
 class GroupedExpressionNode;
-class ArrayExpressionNode;
-class IndexExpressionNode;
 class TupleExpressionNode;
 class TupleIndexingExpressionNode;
 class StructExpressionNode;
-class CallExpressionNode;
-class MethodCallExpressionNode;
 class FieldExpressionNode;
 class ContinueExpressionNode;
-class BreakExpressionNode;
-class ReturnExpressionNode;
 class UnderscoreExpressionNode;
 class BlockExpressionNode; // use is_const_ to show whether this block expression is constant
 class LoopExpressionNode;
@@ -86,7 +77,6 @@ class ComparisonExpressionNode;
 class LazyBooleanExpressionNode;
 class TypeCastExpressionNode;
 class AssignmentExpressionNode;
-class CompoundAssignmentExpressionNode;
 class StructExprFieldNode;
 class ConditionsNode;
 class LetChainNode;
@@ -191,7 +181,6 @@ public:
 };
 
 /****************  Expression With Block  ****************/
-
 class ExpressionNode: public ASTNode {
 protected:
     bool is_assignable_ = false;
@@ -298,6 +287,37 @@ public:
     ~ContinueExpressionNode() override = default;
 };
 
+class TupleExpressionNode: public ExpressionWithoutBlockNode {
+    std::vector<ExpressionNode*> expressions_;
+public:
+    TupleExpressionNode(Position pos, const std::vector<ExpressionNode*>& expressions):
+        ExpressionWithoutBlockNode(pos, false) {
+        expressions_ = expressions;
+    }
+
+    ~TupleExpressionNode() override;
+};
+
+class TupleIndexingExpressionNode: public ExpressionWithoutBlockNode {
+    ExpressionNode* expression_;
+    IntLiteralNode* int_literal_;
+public:
+    TupleIndexingExpressionNode(Position pos, ExpressionNode* expression, IntLiteralNode* int_literal):
+        ExpressionWithoutBlockNode(pos, false) {
+        expression_ = expression;
+        int_literal_ = int_literal;
+    }
+
+    ~TupleIndexingExpressionNode() override;
+}; // TODO Whether it is necessary to have this NodeType
+
+class UnderscoreExpressionNode: public ExpressionWithoutBlockNode {
+public:
+    explicit UnderscoreExpressionNode(Position pos): ExpressionWithoutBlockNode(pos, true) {}
+
+    ~UnderscoreExpressionNode() override = default;
+};
+
 class JumpExpressionNode: public ExpressionWithoutBlockNode {
     TokenType type_;
     ExpressionNode* expression_;
@@ -331,24 +351,26 @@ public:
 
 class LogicAndExpressionNode;
 class LogicOrExpressionNode: public ExpressionWithoutBlockNode {
-    std::vector<ExpressionNode*> expressions_;
+    ExpressionNode* lhs_ = nullptr;
+    ExpressionNode* rhs_ = nullptr;
 public:
-    LogicOrExpressionNode(Position pos,
-        const std::vector<ExpressionNode*>& expressions):
+    LogicOrExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
-        expressions_ = expressions;
+        lhs_ = lhs;
+        rhs_ = rhs;
     }
 
     ~LogicOrExpressionNode() override;
 };
 
 class LogicAndExpressionNode: public ExpressionWithoutBlockNode {
-    std::vector<ExpressionNode*> expressions_;
+    ExpressionNode* lhs_ = nullptr;
+    ExpressionNode* rhs_ = nullptr;
 public:
-    LogicAndExpressionNode(Position pos,
-        const std::vector<ExpressionNode*>& expressions):
+    LogicAndExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
-        expressions_ = expressions;
+        lhs_ = lhs;
+        rhs_ = rhs;
     }
 
     ~LogicAndExpressionNode() override;
@@ -356,11 +378,13 @@ public:
 
 class BitwiseOrExpressionNode;
 class ComparisonExpressionNode: public ExpressionWithoutBlockNode {
+    TokenType type_;
     ExpressionNode* lhs_;
     ExpressionNode* rhs_;
 public:
-    ComparisonExpressionNode(Position pos, ExpressionNode* lhs,
+    ComparisonExpressionNode(Position pos, TokenType type, ExpressionNode* lhs,
         ExpressionNode* rhs): ExpressionWithoutBlockNode(pos, false) {
+        type_ = type;
         lhs_ = lhs;
         rhs_ = rhs;
     }
@@ -370,12 +394,13 @@ public:
 
 class BitwiseXorExpressionNode;
 class BitwiseOrExpressionNode: public ExpressionWithoutBlockNode {
-    std::vector<ExpressionNode*> expressions_;
+    ExpressionNode* lhs_;
+    ExpressionNode* rhs_;
 public:
-    BitwiseOrExpressionNode(Position pos,
-        const std::vector<ExpressionNode*>& expression):
+    BitwiseOrExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
-        expressions_ = expression;
+        lhs_ = lhs;
+        rhs_ = rhs;
     }
 
     ~BitwiseOrExpressionNode() override;
@@ -383,12 +408,13 @@ public:
 
 class BitwiseAndExpressionNode;
 class BitwiseXorExpressionNode: public ExpressionWithoutBlockNode {
-    std::vector<ExpressionNode*> expressions_;
+    ExpressionNode* lhs_;
+    ExpressionNode* rhs_;
 public:
-    BitwiseXorExpressionNode(Position pos,
-        const std::vector<ExpressionNode*>& expressions):
+    BitwiseXorExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
-        expressions_ = expressions;
+        lhs_ = lhs;
+        rhs_ = rhs;
     }
 
     ~BitwiseXorExpressionNode() override;
@@ -396,12 +422,13 @@ public:
 
 class ShiftExpressionNode;
 class BitwiseAndExpressionNode: public ExpressionWithoutBlockNode {
-    std::vector<ExpressionNode*> expressions_;
+    ExpressionNode* lhs_;
+    ExpressionNode* rhs_;
 public:
-    BitwiseAndExpressionNode(Position pos,
-        const std::vector<ExpressionNode*>& expressions):
+    BitwiseAndExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
-        expressions_ = expressions;
+        lhs_ = lhs;
+        rhs_ = rhs;
     }
 
     ~BitwiseAndExpressionNode() override;
@@ -409,14 +436,16 @@ public:
 
 class AddMinusExpressionNode;
 class ShiftExpressionNode: public ExpressionWithoutBlockNode {
-    std::vector<TokenType> types_;
-    std::vector<ExpressionNode*> expressions_;
+    TokenType type_;
+    ExpressionNode* lhs_;
+    ExpressionNode* rhs_;
 public:
-    ShiftExpressionNode(Position pos, const std::vector<TokenType>& types,
-        const std::vector<ExpressionNode*>& expressions):
+    ShiftExpressionNode(Position pos, TokenType type,
+        ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
-        types_ = types;
-        expressions_ = expressions;
+        type_ = type;
+        lhs_ = lhs;
+        rhs_ = rhs;
     }
 
     ~ShiftExpressionNode() override;
@@ -424,28 +453,32 @@ public:
 
 class MulDivModExpressionNode;
 class AddMinusExpressionNode: public ExpressionWithoutBlockNode {
-    std::vector<TokenType> types_;
-    std::vector<ExpressionNode*> expressions_;
+    TokenType type_;
+    ExpressionNode* lhs_;
+    ExpressionNode* rhs_;
 public:
-    AddMinusExpressionNode(Position pos, const std::vector<TokenType>& types,
-        const std::vector<ExpressionNode*>& expressions):
+    AddMinusExpressionNode(Position pos, TokenType type,
+        ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
-        types_ = types;
-        expressions_ = expressions;
+        type_ = type;
+        lhs_ = lhs;
+        rhs_ = rhs;
     }
 
     ~AddMinusExpressionNode() override;
 };
 
 class MulDivModExpressionNode: public ExpressionWithoutBlockNode {
-    std::vector<TokenType> types_;
-    std::vector<ExpressionNode*> expressions_;
+    TokenType type_;
+    ExpressionNode* lhs_;
+    ExpressionNode* rhs_;
 public:
-    MulDivModExpressionNode(Position pos, const std::vector<TokenType>& types,
-        const std::vector<ExpressionNode*>& expressions):
+    MulDivModExpressionNode(Position pos, TokenType type,
+        ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
-        types_ = types;
-        expressions_ = expressions;
+        type_ = type;
+        lhs_ = lhs;
+        rhs_ = rhs;
     }
 
     ~MulDivModExpressionNode() override;
@@ -478,17 +511,43 @@ public:
     ~UnaryExpressionNode() override;
 };
 
-class MemberCallExpressionNode: public ExpressionWithoutBlockNode {
-    ExpressionNode* expression_;
-    std::vector<ASTNode*> suffixes_;
+class FunctionCallExpressionNode : public ExpressionWithoutBlockNode {
+    ExpressionNode* callee_;
+    std::vector<ExpressionNode*> params_;
 public:
-    MemberCallExpressionNode(Position pos, ExpressionNode* expression,
-        const std::vector<ASTNode*>& suffixes, bool is_assignable): ExpressionWithoutBlockNode(pos, is_assignable) {
-        expression_ = expression;
-        suffixes_ = suffixes;
-    } // Notice that assignable is needed to be a param.
+    FunctionCallExpressionNode(Position pos, ExpressionNode* callee,
+        const std::vector<ExpressionNode*>& params): ExpressionWithoutBlockNode(pos, false) {
+        callee_ = callee;
+        params_ = params;
+    }
 
-    ~MemberCallExpressionNode() override;
+    ~FunctionCallExpressionNode() override;
+};
+
+class ArrayIndexExpressionNode : public ExpressionWithoutBlockNode {
+    ExpressionNode* base_;
+    ExpressionNode* index_;
+public:
+    ArrayIndexExpressionNode(Position pos, ExpressionNode* base,
+        ExpressionNode* index): ExpressionWithoutBlockNode(pos, true) {
+        base_ = base;
+        index_ = index;
+    }
+
+    ~ArrayIndexExpressionNode() override;
+};
+
+class MemberAccessExpressionNode : public ExpressionWithoutBlockNode {
+    ExpressionNode* base_;
+    Token member_;
+public:
+    MemberAccessExpressionNode(Position pos, ExpressionNode* base, const Token& member):
+        ExpressionWithoutBlockNode(pos, false) {
+        base_ = base;
+        member_ = member;
+    }
+
+    ~MemberAccessExpressionNode() override;
 };
 
 class GroupedExpressionNode: public ExpressionWithoutBlockNode {
@@ -512,7 +571,7 @@ public:
         simple_path_segments_ = simple_path_segments;
     }
 
-    ~PathExpressionNode() override; // TODO
+    ~PathExpressionNode() override;
 };
 /* Without templates, PathExpression just means SimplePath.
  * Implementation will be modified when implementing templates.
@@ -571,11 +630,16 @@ public:
     ~BoolLiteralNode() override = default;
 };
 
-// TODO Define ByteLiteralNode
+class CStringLiteralNode: public LiteralExpressionNode {
+    std::string c_string_literal_;
+public:
+    CStringLiteralNode(Position pos, const std::string& c_string_literal):
+        LiteralExpressionNode(pos) {
+        c_string_literal_ = c_string_literal;
+    }
 
-// TODO Define ByteStringLiteralNode
-
-// TODO Define CStringLiteralNode
+    ~CStringLiteralNode() override = default;
+};
 
 /****************  Support Node for Expression  ****************/
 
@@ -719,7 +783,7 @@ public:
     ~RestPatternNode() override = default;
 };
 
-// TODO Define StructPattern
+// TODO StructPattern
 
 // TODO TupleStructPattern
 

@@ -8,6 +8,9 @@
 class Parser {
     std::vector<Token> tokens;
     uint32_t parseIndex = 0;
+
+    void ConsumeString(const std::string& );
+
 public:
     Parser() = default;
 
@@ -15,8 +18,7 @@ public:
         this -> tokens = tokens;
     }
 
-    void ConsumeString(const std::string& );
-
+    /****************  Items  ****************/
     CrateNode* ParseCrate();
 
     VisItemNode* ParseVisItem();
@@ -43,12 +45,74 @@ public:
 
     // TypeNode* ParseFunctionReturnType();
 
+    /****************  Expression  ****************/
+    ExpressionNode* ParseExpression();
+
+    ExpressionNode* ParseExpressionWithBlock();
+
     BlockExpressionNode* ParseBlockExpression();
+
+    ExpressionNode* ParseExpressionWithoutBlock();
+
+    ExpressionNode* ParseTupleExpression();
+
+    ExpressionNode* ParseJumpExpression();
+
+    ExpressionNode* ParseAssignmentExpression();
+
+    ExpressionNode* ParseLogicalOrExpression();
+
+    ExpressionNode* ParseLogicalAndExpression();
+
+    ExpressionNode* ParseComparisonExpression();
+
+    ExpressionNode* ParseBitwiseOrExpression();
+
+    ExpressionNode* ParseBitwiseXorExpression();
+
+    ExpressionNode* ParseBitwiseAndExpression();
+
+    ExpressionNode* ParseShiftExpression();
+
+    ExpressionNode* ParseAddMinusExpression();
+
+    ExpressionNode* ParseMulDivModExpression();
+
+    ExpressionNode* ParseTypeCastExpression();
+
+    ExpressionNode* ParseUnaryExpression();
+
+    ExpressionNode* ParseCallExpression();
+
+    ExpressionNode* ParsePrimaryExpression();
+
+    PathExpressionNode* ParsePathExpression();
 
     StatementsNode* ParseStatements();
 
+    /****************  Statement  ****************/
     StatementNode* ParseStatement();
 
-    ExpressionNode* ParseExpressionWithoutBlock();
+    LetStatementNode* ParseLetStatement();
+
+    ExpressionStatementNode* ParseExpressionStatement();
+
+    /****************  Patterns  ****************/
+    PatternNoTopAltNode* ParsePatternNoTopAlt();
+
+    PatternWithoutRangeNode* ParsePatternWithoutRange();
+
+    LiteralPatternNode* ParseLiteralPattern();
+
+    IdentifierPatternNode* ParseIdentifierPattern();
+
+    SlicePatternNode* ParseSlicePattern();
+
+    PathPatternNode* ParsePathPattern();
+    /****************  Types  ****************/
+    TypeNode* ParseType();
+
+    /****************  Paths  ****************/
+    SimplePathSegment* ParseSimplePathSegment();
 };
 #endif //PARSER_H

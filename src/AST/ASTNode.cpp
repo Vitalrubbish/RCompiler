@@ -77,6 +77,18 @@ MatchExpressionNode::~MatchExpressionNode() {
     // delete match_arms_;
 }
 
+TupleExpressionNode::~TupleExpressionNode() {
+    for (auto& it: expressions_) {
+        delete it;
+    }
+}
+
+TupleIndexingExpressionNode::~TupleIndexingExpressionNode() {
+    delete expression_;
+    delete int_literal_;
+}
+
+
 JumpExpressionNode::~JumpExpressionNode() {
     delete expression_;
 }
@@ -87,15 +99,13 @@ AssignmentExpressionNode::~AssignmentExpressionNode() {
 }
 
 LogicOrExpressionNode::~LogicOrExpressionNode() {
-    for (auto& it: expressions_) {
-        delete it;
-    }
+    delete lhs_;
+    delete rhs_;
 }
 
 LogicAndExpressionNode::~LogicAndExpressionNode() {
-    for (auto& it: expressions_) {
-        delete it;
-    }
+    delete lhs_;
+    delete rhs_;
 }
 
 ComparisonExpressionNode::~ComparisonExpressionNode() {
@@ -104,39 +114,33 @@ ComparisonExpressionNode::~ComparisonExpressionNode() {
 }
 
 BitwiseOrExpressionNode::~BitwiseOrExpressionNode() {
-    for (auto& it: expressions_) {
-        delete it;
-    }
+    delete lhs_;
+    delete rhs_;
 }
 
 BitwiseXorExpressionNode::~BitwiseXorExpressionNode() {
-    for (auto& it: expressions_) {
-        delete it;
-    }
+    delete lhs_;
+    delete rhs_;
 }
 
 BitwiseAndExpressionNode::~BitwiseAndExpressionNode() {
-    for (auto& it: expressions_) {
-        delete it;
-    }
+    delete lhs_;
+    delete rhs_;
 }
 
 ShiftExpressionNode::~ShiftExpressionNode() {
-    for (auto& it: expressions_) {
-        delete it;
-    }
+    delete lhs_;
+    delete rhs_;
 }
 
 AddMinusExpressionNode::~AddMinusExpressionNode() {
-    for (auto& it: expressions_) {
-        delete it;
-    }
+    delete lhs_;
+    delete rhs_;
 }
 
 MulDivModExpressionNode::~MulDivModExpressionNode() {
-    for (auto& it: expressions_) {
-        delete it;
-    }
+    delete lhs_;
+    delete rhs_;
 }
 
 TypeCastExpressionNode::~TypeCastExpressionNode() {
@@ -147,10 +151,20 @@ UnaryExpressionNode::~UnaryExpressionNode() {
     delete expression_;
 }
 
-MemberCallExpressionNode::~MemberCallExpressionNode() {
-    for (auto& it: suffixes_) {
+FunctionCallExpressionNode::~FunctionCallExpressionNode() {
+    delete callee_;
+    for (auto& it: params_) {
         delete it;
     }
+}
+
+ArrayIndexExpressionNode::~ArrayIndexExpressionNode() {
+    delete base_;
+    delete index_;
+}
+
+MemberAccessExpressionNode::~MemberAccessExpressionNode() {
+    delete base_;
 }
 
 GroupedExpressionNode::~GroupedExpressionNode() {
