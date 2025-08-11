@@ -16,8 +16,8 @@ add_executable(RCompiler
         include/Parser/Parser.h
         src/Parser/Parser.cpp
         include/AST/ASTNode.h
-        util/Position.h
         src/AST/ASTNode.cpp
+        util/Position.h
         include/AST/ASTVisitor.h
         util/Util.h
 )

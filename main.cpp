@@ -11,7 +11,7 @@ std::vector<Token> tokens;
 ASTNode* root;
 
 int main() {
-    freopen("../testcases/Parser/in01.rs", "r", stdin);
+    freopen("../testcases/Parser/in02.rs", "r", stdin);
     std::string text, line;
     while(std::getline(std::cin, line)) {
         text += line;
@@ -21,7 +21,6 @@ int main() {
         std::string current_text = text;
         uint32_t rowIndex = 1;
         while (!current_text.empty()) {
-
             Token current_token = lexer.GetNextToken(current_text);
             if (current_token.type != TokenType::WhiteSpace &&
                 current_token.type != TokenType::BlockComment &&

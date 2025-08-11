@@ -51,11 +51,11 @@ ExpressionStatementNode::~ExpressionStatementNode() {
     delete expression_;
 }
 
-InfiniteLoopExpression::~InfiniteLoopExpression() {
+InfiniteLoopExpressionNode::~InfiniteLoopExpressionNode() {
     delete block_expression_;
 }
 
-PredicateLoopExpression::~PredicateLoopExpression() {
+PredicateLoopExpressionNode::~PredicateLoopExpressionNode() {
     delete conditions_;
     delete block_expression_;
 }
@@ -82,12 +82,6 @@ TupleExpressionNode::~TupleExpressionNode() {
         delete it;
     }
 }
-
-TupleIndexingExpressionNode::~TupleIndexingExpressionNode() {
-    delete expression_;
-    delete int_literal_;
-}
-
 
 JumpExpressionNode::~JumpExpressionNode() {
     delete expression_;
@@ -167,6 +161,14 @@ MemberAccessExpressionNode::~MemberAccessExpressionNode() {
     delete base_;
 }
 
+ArrayLiteralNode::~ArrayLiteralNode() {
+    for (auto& it: expressions_) {
+        delete it;
+    }
+    delete lhs_;
+    delete rhs_;
+}
+
 GroupedExpressionNode::~GroupedExpressionNode() {
     delete expression_;
 }
@@ -222,5 +224,22 @@ StatementsNode::~StatementsNode() {
 /****************  Types  ***************/
 ParenthesizedTypeNode::~ParenthesizedTypeNode() {
     delete type_;
+}
+
+TypePathNode::~TypePathNode() {
+    for (auto& it: type_path_segment_nodes_) {
+        delete it;
+    }
+}
+
+TypePathSegmentNode::~TypePathSegmentNode() {
+    delete path_indent_segment_node_;
+}
+
+
+
+ArrayType::~ArrayType() {
+    delete type_;
+    delete expression_node_;
 }
 

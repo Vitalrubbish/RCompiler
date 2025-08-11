@@ -4,8 +4,8 @@
 #include <unordered_map>
 #include <cctype>
 
-inline long long StringToInt(const std::string& literal) {
-    int32_t base = 10;
+inline int64_t StringToInt(const std::string& literal) {
+    uint32_t base = 10;
     uint32_t start_index = 0;
     if (literal.length() >= 2 && literal[0] == '0') {
         char second_char = literal[1];
@@ -21,11 +21,11 @@ inline long long StringToInt(const std::string& literal) {
         }
     }
     uint32_t end_index = literal.length();
-    uint32_t suffix_pos = literal.find_first_of("ui", start_index);
+    uint64_t suffix_pos = literal.find_first_of("ui", start_index);
     if (suffix_pos != std::string::npos) {
         end_index = suffix_pos;
     }
-    long long result = 0;
+    int64_t result = 0;
     for (uint32_t i = start_index; i < end_index; i++) {
         char c = literal[i];
         if (c == '_') {

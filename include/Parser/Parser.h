@@ -52,6 +52,16 @@ public:
 
     BlockExpressionNode* ParseBlockExpression();
 
+    BlockExpressionNode* ParseConstBlockExpression();
+
+    InfiniteLoopExpressionNode* ParseInfiniteLoopExpression();
+
+    PredicateLoopExpressionNode* ParsePredicateLoopExpression();
+
+    IfExpressionNode* ParseIfExpression();
+
+    MatchExpressionNode* ParseMatchExpression();
+
     ExpressionNode* ParseExpressionWithoutBlock();
 
     ExpressionNode* ParseTupleExpression();
@@ -86,9 +96,13 @@ public:
 
     ExpressionNode* ParsePrimaryExpression();
 
+    ExpressionNode* ParseLiteral();
+
     PathExpressionNode* ParsePathExpression();
 
     StatementsNode* ParseStatements();
+
+    ConditionsNode* ParseConditions();
 
     /****************  Statement  ****************/
     StatementNode* ParseStatement();
@@ -111,6 +125,24 @@ public:
     PathPatternNode* ParsePathPattern();
     /****************  Types  ****************/
     TypeNode* ParseType();
+
+    TypeNoBoundsNode* ParseTypeNoBounds();
+
+    ParenthesizedTypeNode* ParseParenthesizedType();
+
+    TypePathNode* ParseTypePath();
+
+    TypePathSegmentNode* ParseTypePathSegment();
+
+    PathIndentSegmentNode* ParsePathIndentSegment();
+
+    TupleType* ParseTupleType();
+
+    ArrayType* ParseArrayType();
+
+    SliceTypeNode* ParseSliceType();
+
+    InferredType* ParseInferredType();
 
     /****************  Paths  ****************/
     SimplePathSegment* ParseSimplePathSegment();

@@ -108,7 +108,120 @@ ExpressionNode *Parser::ParseExpression() {
     }
 }
 
+/****************  Expression With Block  ****************/
+ExpressionNode* Parser::ParseExpressionWithBlock() {
+    ExpressionWithBlockNode* node = nullptr;
+    try {
+        if (tokens[parseIndex].type == TokenType::Const) {
+            node = ParseConstBlockExpression();
+        } else if (tokens[parseIndex].type == TokenType::Loop) {
+            node = ParseInfiniteLoopExpression();
+        } else if (tokens[parseIndex].type == TokenType::While) {
+            node = ParsePredicateLoopExpression();
+        } else if (tokens[parseIndex].type == TokenType::If) {
+            node = ParseIfExpression();
+        }
+        // TODO ParseMatchExpression
+        node = ParseBlockExpression();
+        return node;
+    } catch (std::exception&) {
+        delete node;
+        throw;
+    }
+}
 
+BlockExpressionNode* Parser::ParseBlockExpression() {
+    Position pos = tokens[parseIndex].pos;
+    try {
+        StatementsNode* node = nullptr;
+        ConsumeString("{");
+        if (tokens[parseIndex].type != TokenType::RBrace) {
+            node = ParseStatements();
+        }
+        ConsumeString("}");
+        return new BlockExpressionNode(pos, false, node);
+    } catch (std::exception&) {
+        throw;
+    }
+}
+
+BlockExpressionNode* Parser::ParseConstBlockExpression() {
+    Position pos = tokens[parseIndex].pos;
+    ConsumeString("const");
+    try {
+        StatementsNode* node = nullptr;
+        ConsumeString("{");
+        if (tokens[parseIndex].type != TokenType::RBrace) {
+            node = ParseStatements();
+        }
+        ConsumeString("}");
+        return new BlockExpressionNode(pos, true, node);
+    } catch (std::exception&) {
+        throw;
+    }
+}
+
+
+InfiniteLoopExpressionNode* Parser::ParseInfiniteLoopExpression() {
+    Position pos = tokens[parseIndex].pos;
+    ConsumeString("loop");
+    try {
+        auto* node = ParseBlockExpression();
+        return new InfiniteLoopExpressionNode(pos, node);
+    } catch (std::exception&) {
+        throw;
+    }
+}
+
+PredicateLoopExpressionNode* Parser::ParsePredicateLoopExpression() {
+    Position pos = tokens[parseIndex].pos;
+    ConditionsNode* conditions = nullptr;
+    try {
+        ConsumeString("while");
+        conditions = ParseConditions();
+        auto* node = ParseBlockExpression();
+        return new PredicateLoopExpressionNode(pos, conditions, node);
+    } catch (std::exception&) {
+        delete conditions;
+        throw;
+    }
+}
+
+IfExpressionNode* Parser::ParseIfExpression() {
+    Position pos = tokens[parseIndex].pos;
+    ConditionsNode* conditions_node = nullptr;
+    BlockExpressionNode* true_block_expression_node = nullptr;
+    BlockExpressionNode* false_block_expression_node = nullptr;
+    IfExpressionNode* if_expression_node = nullptr;
+    try {
+        ConsumeString("if");
+        conditions_node = ParseConditions();
+        true_block_expression_node = ParseBlockExpression();
+        if (tokens[parseIndex].type == TokenType::Else) {
+            ConsumeString("else");
+            if (tokens[parseIndex].type == TokenType::If) {
+                if_expression_node = ParseIfExpression();
+            } else {
+                false_block_expression_node = ParseBlockExpression();
+            }
+        }
+        return new IfExpressionNode(pos, conditions_node, true_block_expression_node,
+            false_block_expression_node, if_expression_node);
+    } catch (std::exception&) {
+        delete conditions_node;
+        delete true_block_expression_node;
+        delete false_block_expression_node;
+        delete if_expression_node;
+        throw;
+    }
+}
+
+MatchExpressionNode* Parser::ParseMatchExpression() {
+    // TODO
+    return nullptr;
+}
+
+/****************  Expression Without Block  ****************/
 ExpressionNode* Parser::ParseExpressionWithoutBlock() {
     Position pos = tokens[parseIndex].pos;
     ExpressionNode* expression_node = nullptr;
@@ -117,7 +230,7 @@ ExpressionNode* Parser::ParseExpressionWithoutBlock() {
         return new ContinueExpressionNode(pos);
     }
     try {
-        expression_node = ParseExpression();
+        expression_node = ParseJumpExpression();
         return expression_node;
     } catch(std::exception&) {
         delete expression_node;
@@ -152,7 +265,8 @@ ExpressionNode* Parser::ParseJumpExpression() {
             type = TokenType::Return;
             parseIndex++;
         } else {
-            type = TokenType::None;
+            auto* tmp = ParseAssignmentExpression();
+            return tmp;
         }
         auto* tmp = ParseAssignmentExpression();
         return new JumpExpressionNode(pos, type, tmp);
@@ -234,9 +348,10 @@ ExpressionNode* Parser::ParseComparisonExpression() {
         while (tokens[parseIndex].type == TokenType::Lt || tokens[parseIndex].type == TokenType::Gt
             || tokens[parseIndex].type == TokenType::LEq || tokens[parseIndex].type == TokenType::GEq
             || tokens[parseIndex].type == TokenType::EqEq || tokens[parseIndex].type == TokenType::NEq) {
+            TokenType type = tokens[parseIndex].type;
             parseIndex++;
             rhs_ = ParseBitwiseOrExpression();
-            lhs_ = new ComparisonExpressionNode(pos, tokens[parseIndex].type, lhs_, rhs_);
+            lhs_ = new ComparisonExpressionNode(pos, type, lhs_, rhs_);
         }
         return lhs_;
     } catch (std::exception&) {
@@ -310,9 +425,10 @@ ExpressionNode* Parser::ParseShiftExpression() {
     try {
         lhs_ = ParseAddMinusExpression();
         while (tokens[parseIndex].type == TokenType::SL || tokens[parseIndex].type == TokenType::SR) {
+            TokenType type = tokens[parseIndex].type;
             parseIndex++;
             rhs_ = ParseAddMinusExpression();
-            lhs_ = new ShiftExpressionNode(pos, tokens[parseIndex].type, lhs_, rhs_);
+            lhs_ = new ShiftExpressionNode(pos, type, lhs_, rhs_);
         }
         return lhs_;
     } catch (std::exception&) {
@@ -329,9 +445,10 @@ ExpressionNode* Parser::ParseAddMinusExpression() {
     try {
         lhs_ = ParseMulDivModExpression();
         while (tokens[parseIndex].type == TokenType::Plus || tokens[parseIndex].type == TokenType::Minus) {
+            TokenType type = tokens[parseIndex].type;
             parseIndex++;
             rhs_ = ParseMulDivModExpression();
-            lhs_ = new AddMinusExpressionNode(pos, tokens[parseIndex].type, lhs_, rhs_);
+            lhs_ = new AddMinusExpressionNode(pos, type, lhs_, rhs_);
         }
         return lhs_;
     } catch (std::exception&) {
@@ -349,9 +466,10 @@ ExpressionNode* Parser::ParseMulDivModExpression() {
         lhs_ = ParseTypeCastExpression();
         while (tokens[parseIndex].type == TokenType::Mul || tokens[parseIndex].type == TokenType::Div
             || tokens[parseIndex].type == TokenType::MOD) {
+            TokenType type = tokens[parseIndex].type;
             parseIndex++;
             rhs_ = ParseTypeCastExpression();
-            lhs_ = new MulDivModExpressionNode(pos, tokens[parseIndex].type, lhs_, rhs_);
+            lhs_ = new MulDivModExpressionNode(pos, type, lhs_, rhs_);
         }
         return lhs_;
     } catch (std::exception&) {
@@ -385,8 +503,10 @@ ExpressionNode* Parser::ParseUnaryExpression() {
     ExpressionNode* rhs_ = nullptr;
     try {
         while (tokens[parseIndex].type == TokenType::Minus || tokens[parseIndex].type == TokenType::Not) {
+            TokenType type = tokens[parseIndex].type;
+            parseIndex++;
             rhs_ = ParseUnaryExpression();
-            return new UnaryExpressionNode(pos, tokens[parseIndex].type, rhs_);
+            return new UnaryExpressionNode(pos, type, rhs_);
         }
         return ParseCallExpression();
     } catch (std::exception&) {
@@ -449,30 +569,11 @@ ExpressionNode* Parser::ParsePrimaryExpression() {
     Position pos = tokens[parseIndex].pos;
     std::vector<ExpressionNode*> expression_nodes;
     try {
-        if (tokens[parseIndex].type == TokenType::IntegerLiteral) {
-            parseIndex++;
-            return new IntLiteralNode(pos, StringToInt(tokens[parseIndex].token));
-        }
-        if (tokens[parseIndex].type == TokenType::StringLiteral ||
-            tokens[parseIndex].type == TokenType::RawStringLiteral) {
-            parseIndex++;
-            return new StringLiteralNode(pos, rust_str_to_cpp(tokens[parseIndex].token));
-        }
-        if (tokens[parseIndex].type == TokenType::CStringLiteral ||
-            tokens[parseIndex].type == TokenType::RawCStringLiteral) {
-            parseIndex++;
-            return new CStringLiteralNode(pos, rust_str_to_cpp(tokens[parseIndex].token));
-        }
-        if (tokens[parseIndex].type == TokenType::CharLiteral) {
-            parseIndex++;
-            return new CharLiteralNode(pos, rust_char_to_cpp(tokens[parseIndex].token));
-        }
-        if (tokens[parseIndex].type == TokenType::True) {
-            return new BoolLiteralNode(pos, true);
-        }
-        if (tokens[parseIndex].type == TokenType::False) {
-            return new BoolLiteralNode(pos, false);
-        }
+        auto* tmp = ParseLiteral();
+        return tmp;
+    } catch (std::exception&) {}
+
+    try {
         if (tokens[parseIndex].type == TokenType::Identifier) {
             return ParsePathExpression();
         }
@@ -504,6 +605,69 @@ ExpressionNode* Parser::ParsePrimaryExpression() {
     }
 }
 
+ExpressionNode *Parser::ParseLiteral() {
+    Position pos = tokens[parseIndex].pos;
+    std::vector<ExpressionNode*> expression_nodes;
+    ExpressionNode* lhs = nullptr;
+    ExpressionNode* rhs = nullptr;
+    try {
+        if (tokens[parseIndex].type == TokenType::IntegerLiteral) {
+            return new IntLiteralNode(pos, StringToInt(tokens[parseIndex++].token));
+        }
+        if (tokens[parseIndex].type == TokenType::StringLiteral ||
+            tokens[parseIndex].type == TokenType::RawStringLiteral) {
+            return new StringLiteralNode(pos, rust_str_to_cpp(tokens[parseIndex++].token));
+        }
+        if (tokens[parseIndex].type == TokenType::CStringLiteral ||
+            tokens[parseIndex].type == TokenType::RawCStringLiteral) {
+            return new CStringLiteralNode(pos, rust_str_to_cpp(tokens[parseIndex++].token));
+        }
+        if (tokens[parseIndex].type == TokenType::CharLiteral) {
+            return new CharLiteralNode(pos, rust_char_to_cpp(tokens[parseIndex++].token));
+        }
+        if (tokens[parseIndex].type == TokenType::True) {
+            parseIndex++;
+            return new BoolLiteralNode(pos, true);
+        }
+        if (tokens[parseIndex].type == TokenType::False) {
+            parseIndex++;
+            return new BoolLiteralNode(pos, false);
+        }
+        if (tokens[parseIndex].type == TokenType::LBracket) {
+            ConsumeString("[");
+            if (tokens[parseIndex].type == TokenType::RBracket) {
+                ConsumeString("]");
+                return new ArrayLiteralNode(pos, expression_nodes, lhs, rhs);
+            }
+            auto* tmp = ParseExpression();
+            if (tokens[parseIndex].type == TokenType::Semicolon) {
+                lhs = tmp;
+                ConsumeString(";");
+                rhs = ParseExpression();
+                ConsumeString("]");
+                return new ArrayLiteralNode(pos, expression_nodes, lhs, rhs);
+            }
+            expression_nodes.emplace_back(tmp);
+            while (tokens[parseIndex].type == TokenType::Comma) {
+                ConsumeString(",");
+                tmp = ParseExpression();
+                expression_nodes.push_back(tmp);
+            }
+            ConsumeString("]");
+            return new ArrayLiteralNode(pos, expression_nodes, lhs, rhs);
+        }
+        throw ParseError("Parse Error: Not A Literal", pos);
+    } catch (std::exception&) {
+        for (auto& it: expression_nodes) {
+            delete it;
+        }
+        delete lhs;
+        delete rhs;
+        throw;
+    }
+}
+
+
 PathExpressionNode* Parser::ParsePathExpression() {
     Position pos = tokens[parseIndex].pos;
     SimplePathSegment* tmp = nullptr;
@@ -525,28 +689,6 @@ PathExpressionNode* Parser::ParsePathExpression() {
         for (auto& it: simple_path_segments) {
             delete it;
         }
-        throw;
-    }
-}
-
-
-
-ExpressionNode *Parser::ParseExpressionWithBlock() {
-    // TODO
-}
-
-
-BlockExpressionNode* Parser::ParseBlockExpression() {
-    Position pos = tokens[parseIndex].pos;
-    try {
-        StatementsNode* node = nullptr;
-        ConsumeString("{");
-        if (tokens[parseIndex].type != TokenType::RBrace) {
-             node = ParseStatements();
-        }
-        ConsumeString("}");
-        return new BlockExpressionNode(pos, node);
-    } catch (std::exception&) {
         throw;
     }
 }
@@ -578,6 +720,20 @@ StatementsNode *Parser::ParseStatements() {
     }
     return new StatementsNode(pos, statement_nodes, expression_node);
 }
+
+ConditionsNode *Parser::ParseConditions() {
+    Position pos = tokens[parseIndex].pos;
+    ExpressionNode* tmp = nullptr;
+    try {
+        tmp = ParseExpression();
+        // TODO Parse LetChain
+        return new ConditionsNode(pos, tmp);
+    } catch (std::exception&) {
+        delete tmp;
+        throw;
+    }
+}
+
 
 /****************  Statement  ****************/
 StatementNode* Parser::ParseStatement() {
@@ -659,13 +815,25 @@ ExpressionStatementNode *Parser::ParseExpressionStatement() {
 PatternNoTopAltNode* Parser::ParsePatternNoTopAlt() {
     try {
         PatternNoTopAltNode* ret = ParsePatternWithoutRange();
+        return ret;
     } catch (std::exception&) {
         throw;
     }
 }
 
 PatternWithoutRangeNode *Parser::ParsePatternWithoutRange() {
+    PatternWithoutRangeNode* tmp = nullptr;
+    try {
+        tmp = ParseLiteralPattern();
+        return tmp;
+    } catch (std::exception&) {}
 
+    try {
+        tmp = ParseIdentifierPattern();
+        return tmp;
+    } catch (std::exception&) {
+        throw;
+    }
 }
 
 LiteralPatternNode* Parser::ParseLiteralPattern() {
@@ -677,12 +845,8 @@ LiteralPatternNode* Parser::ParseLiteralPattern() {
             have_minus_ = true;
             ConsumeString("-");
         }
-        expression_node = ParsePrimaryExpression();
-        auto* tmp = dynamic_cast<LiteralExpressionNode*>(expression_node);
-        if (tmp) {
-            return new LiteralPatternNode(pos, have_minus_, expression_node);
-        }
-        throw ParseError("Parse Error: Failed to match Literal Pattern", pos);
+        expression_node = ParseLiteral();
+        return new LiteralPatternNode(pos, have_minus_, expression_node);
     } catch (std::exception&) {
         delete expression_node;
         throw;
@@ -705,6 +869,7 @@ IdentifierPatternNode* Parser::ParseIdentifierPattern() {
             throw ParseError("Parse Error: Identifier is missing", pos);
         }
         std::string identifier = tokens[parseIndex].token;
+        parseIndex++;
         if (tokens[parseIndex].type == TokenType::At) {
             ConsumeString("@");
             pattern_no_top_alt_node = ParsePatternNoTopAlt();
@@ -717,17 +882,151 @@ IdentifierPatternNode* Parser::ParseIdentifierPattern() {
 }
 
 SlicePatternNode* Parser::ParseSlicePattern() {
-
+    return nullptr;
 }
 
 PathPatternNode* Parser::ParsePathPattern() {
-
+    return nullptr;
 }
 
 /****************  Types  ****************/
 TypeNode* Parser::ParseType() {
-    return nullptr;
+    Position pos = tokens[parseIndex].pos;
+    TypeNode* type_node = nullptr;
+    try {
+        type_node = ParseTypeNoBounds();
+        return type_node;
+    } catch (std::exception&) {
+        delete type_node;
+        throw;
+    }
 }
+
+TypeNoBoundsNode* Parser::ParseTypeNoBounds() {
+    Position pos = tokens[parseIndex].pos;
+    TypeNoBoundsNode* ret = nullptr;
+    uint32_t start = parseIndex;
+    try {
+        ret = ParseParenthesizedType();
+        return ret;
+    } catch (std::exception&) {
+        parseIndex = start;
+    }
+
+    try {
+        ret = ParseTypePath();
+        return ret;
+    } catch (std::exception&) {
+        parseIndex = start;
+    }
+
+    try {
+        ret = ParseTupleType();
+        return ret;
+    } catch (std::exception&) {
+        parseIndex = start;
+    }
+
+    try {
+        ret = ParseArrayType();
+        return ret;
+    } catch (std::exception&) {
+        parseIndex = start;
+    }
+
+    try {
+        ret = ParseSliceType();
+        return ret;
+    } catch (std::exception&) {
+        parseIndex = start;
+    }
+
+    try {
+        ret = ParseInferredType();
+        return ret;
+    } catch (std::exception&) {
+        throw ParseError("Parse Error: Failed to Parse Type", pos);
+    }
+}
+
+ParenthesizedTypeNode* Parser::ParseParenthesizedType() {
+    Position pos = tokens[parseIndex].pos;
+    try {
+        ConsumeString("(");
+        auto* tmp = ParseType();
+        ConsumeString(")");
+        return new ParenthesizedTypeNode(pos, tmp);
+    } catch (std::exception&) {
+        throw;
+    }
+}
+
+TypePathNode* Parser::ParseTypePath() {
+    Position pos = tokens[parseIndex].pos;
+    std::vector<TypePathSegmentNode*> type_path_segment_nodes;
+    TypePathSegmentNode* tmp = nullptr;
+    try {
+        if (tokens[parseIndex].type == TokenType::ColonColon) {
+            ConsumeString("::");
+        }
+        tmp = ParseTypePathSegment();
+        type_path_segment_nodes.emplace_back(tmp);
+        while (tokens[parseIndex].type == TokenType::ColonColon) {
+            tmp = ParseTypePathSegment();
+            type_path_segment_nodes.emplace_back(tmp);
+        }
+        return new TypePathNode(pos, type_path_segment_nodes);
+    } catch (std::exception&) {
+        delete tmp;
+        for (auto& it: type_path_segment_nodes) {
+            delete it;
+        }
+        throw;
+    }
+}
+
+TypePathSegmentNode* Parser::ParseTypePathSegment() {
+    Position pos = tokens[parseIndex].pos;
+    PathIndentSegmentNode* tmp = nullptr;
+    try {
+        tmp = ParsePathIndentSegment();
+        return new TypePathSegmentNode(pos, tmp);
+    } catch (std::exception&) {
+        delete tmp;
+        throw;
+    }
+}
+
+PathIndentSegmentNode* Parser::ParsePathIndentSegment() {
+    Position pos = tokens[parseIndex].pos;
+    try {
+        if (tokens[parseIndex].type == TokenType::Super || tokens[parseIndex].type == TokenType::Self ||
+            tokens[parseIndex].type == TokenType::SELF || tokens[parseIndex].type == TokenType::Crate ||
+            tokens[parseIndex].type == TokenType::Identifier) {
+            return new PathIndentSegmentNode(pos, tokens[parseIndex].type, tokens[parseIndex++].token);
+            }
+        throw ParseError("Parse Error: Invalid PathIndentSegment", pos);
+    } catch (std::exception&) {
+        throw;
+    }
+}
+
+TupleType* Parser::ParseTupleType() {
+
+}
+
+ArrayType* Parser::ParseArrayType() {
+
+}
+
+SliceTypeNode* Parser::ParseSliceType() {
+
+}
+
+InferredType* Parser::ParseInferredType() {
+
+}
+
 
 /****************  Paths  ****************/
 SimplePathSegment *Parser::ParseSimplePathSegment() {
@@ -736,8 +1035,7 @@ SimplePathSegment *Parser::ParseSimplePathSegment() {
         if (tokens[parseIndex].type == TokenType::Super || tokens[parseIndex].type == TokenType::Self ||
             tokens[parseIndex].type == TokenType::SELF || tokens[parseIndex].type == TokenType::Crate ||
             tokens[parseIndex].type == TokenType::Identifier) {
-            parseIndex++;
-            return new SimplePathSegment(pos, tokens[parseIndex].type, tokens[parseIndex].token);
+            return new SimplePathSegment(pos, tokens[parseIndex].type, tokens[parseIndex++].token);
         }
         throw ParseError("Parse Error: Invalid SimplePathSegment", pos);
     } catch (std::exception&) {

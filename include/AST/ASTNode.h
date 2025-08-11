@@ -26,7 +26,6 @@ class FunctionParamNode;
 class TypeNode; // Also FunctionReturnTypeNode
 class FunctionParamPatternNode;
 class StructStructNode;
-class TupleStructNode;
 class StructFieldNode; // Use std::vector to perform StructFields
 class TupleFieldNode;  // Use std::vector to perform TupleFields
 class EnumVariantNode; // Use std::vector to perform EnumVariants
@@ -200,15 +199,18 @@ public:
 };
 
 class BlockExpressionNode: public ExpressionWithBlockNode {
+    bool is_const_;
     StatementsNode* statements_;
 public:
-    BlockExpressionNode(Position pos, StatementsNode* statements):
+    BlockExpressionNode(Position pos, bool is_const, StatementsNode* statements):
         ExpressionWithBlockNode(pos) {
+        is_const_ = is_const;
         statements_ = statements;
     }
 
     ~BlockExpressionNode() override;
 };
+
 
 class LoopExpressionNode: public ExpressionWithBlockNode {
 public:
@@ -217,28 +219,28 @@ public:
     ~LoopExpressionNode() override = default;
 };
 
-class InfiniteLoopExpression: public LoopExpressionNode {
+class InfiniteLoopExpressionNode: public LoopExpressionNode {
     BlockExpressionNode* block_expression_ = nullptr;
 public:
-    InfiniteLoopExpression(Position pos, BlockExpressionNode* block_expression):
+    InfiniteLoopExpressionNode(Position pos, BlockExpressionNode* block_expression):
         LoopExpressionNode(pos) {
         block_expression_ = block_expression;
     }
 
-    ~InfiniteLoopExpression() override;
+    ~InfiniteLoopExpressionNode() override;
 };
 
-class PredicateLoopExpression: public LoopExpressionNode {
+class PredicateLoopExpressionNode: public LoopExpressionNode {
     ConditionsNode* conditions_ = nullptr;
     BlockExpressionNode* block_expression_ = nullptr;
 public:
-    PredicateLoopExpression(Position pos, ConditionsNode* conditions,
+    PredicateLoopExpressionNode(Position pos, ConditionsNode* conditions,
         BlockExpressionNode* block_expression): LoopExpressionNode(pos) {
         conditions_ = conditions;
         block_expression_ = block_expression;
     }
 
-    ~PredicateLoopExpression() override;
+    ~PredicateLoopExpressionNode() override;
 };
 
 class IfExpressionNode: public ExpressionWithBlockNode {
@@ -298,18 +300,7 @@ public:
     ~TupleExpressionNode() override;
 };
 
-class TupleIndexingExpressionNode: public ExpressionWithoutBlockNode {
-    ExpressionNode* expression_;
-    IntLiteralNode* int_literal_;
-public:
-    TupleIndexingExpressionNode(Position pos, ExpressionNode* expression, IntLiteralNode* int_literal):
-        ExpressionWithoutBlockNode(pos, false) {
-        expression_ = expression;
-        int_literal_ = int_literal;
-    }
 
-    ~TupleIndexingExpressionNode() override;
-}; // TODO Whether it is necessary to have this NodeType
 
 class UnderscoreExpressionNode: public ExpressionWithoutBlockNode {
 public:
@@ -609,9 +600,9 @@ public:
 };
 
 class IntLiteralNode: public LiteralExpressionNode {
-    uint32_t int_literal_;
+    int64_t int_literal_;
 public:
-    IntLiteralNode(Position pos, const uint32_t& int_literal):
+    IntLiteralNode(Position pos, const int64_t& int_literal):
         LiteralExpressionNode(pos) {
         int_literal_ = int_literal;
     }
@@ -639,6 +630,22 @@ public:
     }
 
     ~CStringLiteralNode() override = default;
+};
+
+class ArrayLiteralNode: public LiteralExpressionNode {
+    std::vector<ExpressionNode*> expressions_;
+    ExpressionNode* lhs_;
+    ExpressionNode* rhs_;
+public:
+    ArrayLiteralNode(Position pos, const std::vector<ExpressionNode*>& expression_nodes,
+        ExpressionNode* lhs, ExpressionNode* rhs):
+        LiteralExpressionNode(pos) {
+        expressions_ = expression_nodes;
+        lhs_ = lhs;
+        rhs_ = rhs;
+    }
+
+    ~ArrayLiteralNode() override;
 };
 
 /****************  Support Node for Expression  ****************/
@@ -837,7 +844,7 @@ public:
 };
 
 class ParenthesizedTypeNode: public TypeNoBoundsNode {
-    TypeNode* type_;
+    TypeNode* type_ = nullptr;
 public:
     ParenthesizedTypeNode(Position pos, TypeNode* type): TypeNoBoundsNode(pos) {
         type_ = type;
@@ -846,12 +853,84 @@ public:
     ~ParenthesizedTypeNode() override;
 };
 
+class TypePathSegmentNode;
+class TypePathNode: public TypeNoBoundsNode {
+    std::vector<TypePathSegmentNode*> type_path_segment_nodes_;
+public:
+    TypePathNode(Position pos, const std::vector<TypePathSegmentNode*>& type_path_segment_nodes):
+        TypeNoBoundsNode(pos) {
+        type_path_segment_nodes_ = type_path_segment_nodes;
+    }
+
+    ~TypePathNode() override;
+};
+
+class PathIndentSegmentNode;
+class TypePathSegmentNode: public ASTNode {
+    PathIndentSegmentNode* path_indent_segment_node_ = nullptr;
+public:
+    TypePathSegmentNode(Position pos, PathIndentSegmentNode* path_indent_segment_node): ASTNode(pos) {
+        path_indent_segment_node_ = path_indent_segment_node;
+    }
+
+    ~TypePathSegmentNode() override;
+};
+
+class PathIndentSegmentNode: public ASTNode {
+    TokenType type_;
+    std::string identifier_;
+public:
+    PathIndentSegmentNode(Position pos, TokenType type, const std::string& identifier): ASTNode(pos) {
+        type_ = type;
+        identifier_ = identifier;
+    }
+
+    ~PathIndentSegmentNode() override = default;
+};
+
+class TupleType: public TypeNoBoundsNode {
+    std::vector<TypeNode*> type_nodes_;
+public:
+    TupleType(Position pos, const std::vector<TypeNode*>& type_nodes): TypeNoBoundsNode(pos) {
+        type_nodes_ = type_nodes;
+    }
+};
+
+class ArrayType: public TypeNoBoundsNode {
+    TypeNode* type_;
+    ExpressionNode* expression_node_ = nullptr;
+public:
+    ArrayType(Position pos, TypeNode* type, ExpressionNode* expression_node): TypeNoBoundsNode(pos) {
+        type_ = type;
+        expression_node_ = expression_node;
+    }
+
+    ~ArrayType() override; // TODO
+};
+
+class SliceTypeNode: public TypeNoBoundsNode {
+    TypeNode* type_ = nullptr;
+public:
+    SliceTypeNode(Position pos, TypeNode* type): TypeNoBoundsNode(pos) {
+        type_ = type;
+    }
+
+    ~SliceTypeNode() override;
+};
+
+class InferredType: public TypeNoBoundsNode {
+public:
+    explicit InferredType(Position pos): TypeNoBoundsNode(pos) {}
+
+    ~InferredType() override = default;
+};
+
 /****************  Path (Naive Version) ****************/
 class SimplePathSegment: public ASTNode {
     TokenType type_;
     std::string identifier_;
 public:
-    SimplePathSegment(Position pos, TokenType type, const std::string& identifier):
+    SimplePathSegment(Position pos, const TokenType type, const std::string& identifier):
         ASTNode(pos) {
         type_ = type;
         identifier_ = identifier;
