@@ -11,8 +11,8 @@ std::vector<Token> tokens;
 ASTNode* root;
 
 int main() {
-    // freopen("../testcases_official/Semantic/if1.rx", "r", stdin);
-    freopen("../testcases/Parser/in02.rs", "r", stdin);
+    // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
+    freopen("../testcases/Parser/in03.rs", "r", stdin);
     std::string text, line;
     while(std::getline(std::cin, line)) {
         text += line;

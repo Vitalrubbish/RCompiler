@@ -66,6 +66,27 @@ StructBaseNode::~StructBaseNode() {
     delete expression_node_;
 }
 
+EnumerationNode::~EnumerationNode() {
+    for (auto& it: enum_variant_nodes_) {
+        delete it;
+    }
+}
+
+EnumVariantNode::~EnumVariantNode() {
+    delete enum_variant_discriminant_node_;
+    delete enum_variant_struct_node_;
+}
+
+EnumVariantStructNode::~EnumVariantStructNode() {
+    for (auto& it: struct_field_nodes_) {
+        delete it;
+    }
+}
+
+EnumVariantDiscriminantNode::~EnumVariantDiscriminantNode() {
+    delete expression_node_;
+}
+
 /****************  Statement  ****************/
 LetStatementNode::~LetStatementNode() {
     delete pattern_no_top_alt_;
@@ -214,8 +235,8 @@ GroupedExpressionNode::~GroupedExpressionNode() {
     delete expression_;
 }
 
-PathExpressionNode::~PathExpressionNode() {
-    for (auto& it: simple_path_segments_) {
+PathInExpressionNode::~PathInExpressionNode() {
+    for (auto& it: path_indent_segments_) {
         delete it;
     }
 }

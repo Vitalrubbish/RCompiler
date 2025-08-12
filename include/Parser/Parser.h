@@ -31,7 +31,13 @@ public:
 
     StructFieldNode* ParseStructFieldNode();
 
-    // bool ParseEnumeration();
+    EnumerationNode* ParseEnumeration();
+
+    EnumVariantNode* ParseEnumVariant();
+
+    EnumVariantStructNode* ParseEnumVariantStruct();
+
+    EnumVariantDiscriminantNode* ParseEnumVariantDiscirminant();
 
     // bool ParseConstantItem();
 
@@ -154,8 +160,6 @@ public:
 
     TypePathSegmentNode* ParseTypePathSegment();
 
-    PathIndentSegmentNode* ParsePathIndentSegment();
-
     TupleTypeNode* ParseTupleType();
 
     ArrayTypeNode* ParseArrayType();
@@ -165,6 +169,6 @@ public:
     InferredTypeNode* ParseInferredType();
 
     /****************  Paths  ****************/
-    SimplePathSegment* ParseSimplePathSegment();
+    PathIndentSegmentNode* ParsePathIndentSegment();
 };
 #endif //PARSER_H

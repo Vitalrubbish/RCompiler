@@ -27,9 +27,7 @@ class TypeNode; // Also FunctionReturnTypeNode
 class FunctionParamPatternNode;
 class StructNode;
 class StructFieldNode; // Use std::vector to perform StructFields
-class TupleFieldNode;  // Use std::vector to perform TupleFields
 class EnumVariantNode; // Use std::vector to perform EnumVariants
-class EnumVariantTupleNode;
 class EnumVariantStructNode;
 class EnumVariantDiscriminantNode;
 class TypeParamBoundsNode;
@@ -69,11 +67,7 @@ class MatchArmsNode;
 class PathInExpressionNode;
 class QualifiedPathInExpressionNode;
 class StatementsNode;
-class OperatorExpressionNode;
-class NegationExpressionNode;
-class ArithmeticOrLogicalExpressionNode;
 class ComparisonExpressionNode;
-class LazyBooleanExpressionNode;
 class TypeCastExpressionNode;
 class AssignmentExpressionNode;
 class StructExprFieldNode;
@@ -205,6 +199,56 @@ public:
     }
 
     ~StructFieldNode() override;
+};
+
+class EnumerationNode: public ASTNode {
+    std::string identifier_;
+    std::vector<EnumVariantNode*> enum_variant_nodes_;
+public:
+    EnumerationNode(Position pos, const std::string& identifier,
+        const std::vector<EnumVariantNode*>& enum_variant_nodes): ASTNode(pos) {
+        identifier_ = identifier;
+        enum_variant_nodes_ = enum_variant_nodes;
+    }
+
+    ~EnumerationNode() override;
+};
+
+class EnumVariantNode: public ASTNode {
+    std::string identifier_;
+    EnumVariantStructNode* enum_variant_struct_node_ = nullptr;
+    EnumVariantDiscriminantNode* enum_variant_discriminant_node_ = nullptr;
+public:
+    EnumVariantNode(Position pos, const std::string& identifier,
+        EnumVariantStructNode* enum_variant_struct_node,
+        EnumVariantDiscriminantNode* enum_variant_discriminant_node): ASTNode(pos) {
+        identifier_ = identifier;
+        enum_variant_struct_node_ = enum_variant_struct_node;
+        enum_variant_discriminant_node_ = enum_variant_discriminant_node;
+    }
+
+    ~EnumVariantNode() override;
+};
+
+class EnumVariantStructNode: public ASTNode {
+    std::vector<StructFieldNode*> struct_field_nodes_;
+public:
+    EnumVariantStructNode(Position pos, const std::vector<StructFieldNode*>& struct_field_nodes):
+        ASTNode(pos) {
+        struct_field_nodes_ = struct_field_nodes;
+    }
+
+    ~EnumVariantStructNode() override;
+};
+
+class EnumVariantDiscriminantNode: public ASTNode {
+    ExpressionNode* expression_node_;
+public:
+    EnumVariantDiscriminantNode(Position pos, ExpressionNode* expression_node): ASTNode(pos) {
+        expression_node_ = expression_node;
+    }
+
+    ~EnumVariantDiscriminantNode() override;
 };
 
 /****************  Expression With Block  ****************/
