@@ -36,6 +36,36 @@ FunctionParamPatternNode::~FunctionParamPatternNode() {
     delete type_;
 }
 
+StructNode::~StructNode() {
+    for (auto& it: struct_field_nodes_) {
+        delete it;
+    }
+}
+
+StructFieldNode::~StructFieldNode() {
+    delete type_node_;
+}
+
+StructExpressionNode::~StructExpressionNode() {
+    delete path_in_expression_node_;
+    delete struct_expr_fields_node_;
+    delete struct_base_node_;
+}
+
+StructExprFieldsNode::~StructExprFieldsNode() {
+    for (auto& it: struct_expr_field_nodes_) {
+        delete it;
+    }
+}
+
+StructExprFieldNode::~StructExprFieldNode() {
+    delete expression_node_;
+}
+
+StructBaseNode::~StructBaseNode() {
+    delete expression_node_;
+}
+
 /****************  Statement  ****************/
 LetStatementNode::~LetStatementNode() {
     delete pattern_no_top_alt_;
@@ -72,6 +102,20 @@ IfExpressionNode::~IfExpressionNode() {
 MatchExpressionNode::~MatchExpressionNode() {
     delete expression_;
     // delete match_arms_;
+}
+
+MatchArmsNode::~MatchArmsNode() {
+    for (auto& it: match_arm_nodes_) {
+        delete it;
+    }
+    for (auto& it: expression_nodes_) {
+        delete it;
+    }
+}
+
+MatchArmNode::~MatchArmNode() {
+    delete pattern_node_;
+    delete match_arm_guard_;
 }
 
 TupleExpressionNode::~TupleExpressionNode() {

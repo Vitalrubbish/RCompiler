@@ -27,7 +27,9 @@ public:
 
     FunctionNode* ParseFunction();
 
-    // bool ParseStruct();
+    StructNode* ParseStruct();
+
+    StructFieldNode* ParseStructFieldNode();
 
     // bool ParseEnumeration();
 
@@ -98,13 +100,27 @@ public:
 
     ExpressionNode* ParsePrimaryExpression();
 
+    StructExpressionNode* ParseStructExpression();
+
+    StructExprFieldsNode* ParseStructExprFields();
+
+    StructExprFieldNode* ParseStructExprField();
+
+    StructBaseNode* ParseStructBase();
+
     ExpressionNode* ParseLiteral();
 
     PathExpressionNode* ParsePathExpression();
 
+    PathInExpressionNode* ParsePathInExpression();
+
     StatementsNode* ParseStatements();
 
     ConditionsNode* ParseConditions();
+
+    MatchArmsNode* ParseMatchArms();
+
+    MatchArmNode* ParseMatchArm();
 
     /****************  Statement  ****************/
     StatementNode* ParseStatement();

@@ -1,3 +1,5 @@
+// Test String
 fn main() {
-    let numbers: [i32; 3] = [10, 20, 30];
+    let str = "I am a string.\n";
+    let another_str = r#"I am a string\n"#;
 }

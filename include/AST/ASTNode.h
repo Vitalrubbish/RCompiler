@@ -25,7 +25,7 @@ class WhereClauseItemNode;
 class FunctionParamNode;
 class TypeNode; // Also FunctionReturnTypeNode
 class FunctionParamPatternNode;
-class StructStructNode;
+class StructNode;
 class StructFieldNode; // Use std::vector to perform StructFields
 class TupleFieldNode;  // Use std::vector to perform TupleFields
 class EnumVariantNode; // Use std::vector to perform EnumVariants
@@ -181,6 +181,32 @@ public:
     ~FunctionParamPatternNode() override;
 };
 
+class StructNode: public ASTNode {
+    std::string identifier_;
+    std::vector<StructFieldNode*> struct_field_nodes_;
+public:
+    StructNode(Position pos, const std::string& identifier,
+        const std::vector<StructFieldNode*>& struct_field_nodes): ASTNode(pos) {
+        identifier_ = identifier;
+        struct_field_nodes_ = struct_field_nodes;
+    }
+
+    ~StructNode() override;
+};
+
+class StructFieldNode: public ASTNode {
+    std::string identifier_;
+    TypeNode* type_node_;
+public:
+    StructFieldNode(Position pos, const std::string& identifier, TypeNode* type_node):
+        ASTNode(pos) {
+        identifier_ = identifier;
+        type_node_ = type_node;
+    }
+
+    ~StructFieldNode() override;
+};
+
 /****************  Expression With Block  ****************/
 class ExpressionNode: public ASTNode {
 protected:
@@ -267,8 +293,10 @@ class MatchExpressionNode: public ExpressionWithBlockNode {
     ExpressionNode* expression_ = nullptr; // Except StructExpression
     MatchArmsNode* match_arms_ = nullptr;
 public:
-    MatchExpressionNode(Position pos, ExpressionNode* expression): ExpressionWithBlockNode(pos) {
+    MatchExpressionNode(Position pos, ExpressionNode* expression, MatchArmsNode* match_arms_node):
+        ExpressionWithBlockNode(pos) {
         expression_ = expression;
+        match_arms_ = match_arms_node;
     }
 
     ~MatchExpressionNode() override;
@@ -554,21 +582,80 @@ public:
     ~GroupedExpressionNode() override;
 };
 
-class SimplePathSegment;
-class PathExpressionNode: public ExpressionWithoutBlockNode {
-    std::vector<SimplePathSegment*> simple_path_segments_;
+class StructExprFieldsNode;
+class StructBaseNode;
+
+class StructExpressionNode: public ExpressionWithoutBlockNode {
+    PathInExpressionNode* path_in_expression_node_ = nullptr;
+    StructExprFieldsNode* struct_expr_fields_node_ = nullptr;
+    StructBaseNode* struct_base_node_ = nullptr;
 public:
-    explicit PathExpressionNode(Position pos,
-        const std::vector<SimplePathSegment*>& simple_path_segments):
-        ExpressionWithoutBlockNode(pos, true) {
-        simple_path_segments_ = simple_path_segments;
+    StructExpressionNode(Position pos, PathInExpressionNode* path_in_expression_node,
+        StructExprFieldsNode* struct_expr_fields_node, StructBaseNode* struct_base_node):
+        ExpressionWithoutBlockNode(pos, false) {
+        path_in_expression_node_ = path_in_expression_node;
+        struct_expr_fields_node_ = struct_expr_fields_node;
+        struct_base_node_ = struct_base_node;
     }
 
-    ~PathExpressionNode() override;
+    ~StructExpressionNode() override;
 };
-/* Without templates, PathExpression just means SimplePath.
- * Implementation will be modified when implementing templates.
- */
+
+class StructExprFieldsNode: public ASTNode {
+    std::vector<StructExprFieldNode*> struct_expr_field_nodes_;
+    StructBaseNode* struct_base_node_;
+public:
+    StructExprFieldsNode(Position pos, const std::vector<StructExprFieldNode*>& struct_expr_field_nodes,
+        StructBaseNode* struct_base): ASTNode(pos) {
+        struct_expr_field_nodes_ = struct_expr_field_nodes;
+        struct_base_node_ = struct_base;
+    }
+
+    ~StructExprFieldsNode() override;
+};
+
+class StructExprFieldNode: public ASTNode {
+    std::string identifier_;
+    ExpressionNode* expression_node_;
+public:
+    StructExprFieldNode(Position pos, const std::string& identifier,
+        ExpressionNode* expression_node): ASTNode(pos) {
+        identifier_ = identifier;
+        expression_node_ = expression_node;
+    }
+
+    ~StructExprFieldNode() override;
+};
+
+class StructBaseNode: public ASTNode {
+    ExpressionNode* expression_node_;
+public:
+    StructBaseNode(Position pos, ExpressionNode* expression_node): ASTNode(pos) {
+        expression_node_ = expression_node;
+    }
+
+    ~StructBaseNode() override;
+};
+
+class PathExpressionNode: public ExpressionWithoutBlockNode {
+public:
+    explicit PathExpressionNode(Position pos): ExpressionWithoutBlockNode(pos, true) {}
+
+    ~PathExpressionNode() override = default;
+};
+
+class PathIndentSegmentNode;
+class PathInExpressionNode: public PathExpressionNode {
+    std::vector<PathIndentSegmentNode*> path_indent_segments_;
+public:
+    explicit PathInExpressionNode(Position pos,
+        const std::vector<PathIndentSegmentNode*>& simple_path_segments):
+        PathExpressionNode(pos) {
+        path_indent_segments_ = simple_path_segments;
+    }
+
+    ~PathInExpressionNode() override;
+};
 
 /****************  Literal Node  ****************/
 class LiteralExpressionNode: public ExpressionWithoutBlockNode {
@@ -675,7 +762,33 @@ public:
     ~StatementsNode() override;
 };
 
-// TODO Define MatchArmNode
+class MatchArmNode;
+class MatchArmsNode: public ASTNode {
+    std::vector<MatchArmNode*> match_arm_nodes_;
+    std::vector<ExpressionNode*> expression_nodes_;
+public:
+    MatchArmsNode(Position pos, const std::vector<MatchArmNode*>& match_arm_nodes,
+        const std::vector<ExpressionNode*>& expression_nodes): ASTNode(pos) {
+        match_arm_nodes_ = match_arm_nodes;
+        expression_nodes_ = expression_nodes;
+    }
+
+    ~MatchArmsNode() override;
+};
+
+class MatchArmGuardNode;
+class MatchArmNode: public ASTNode {
+    PatternNode* pattern_node_;
+    ExpressionNode* match_arm_guard_;
+public:
+    MatchArmNode(Position pos, PatternNode* pattern_node,
+        ExpressionNode* match_arm_guard): ASTNode(pos) {
+        pattern_node_ = pattern_node;
+        match_arm_guard_ = match_arm_guard;
+    }
+
+    ~MatchArmNode() override;
+};
 
 // TODO Add LetChain
 
@@ -794,8 +907,6 @@ public:
 
 // TODO StructPattern
 
-// TODO TupleStructPattern
-
 // TODO TuplePattern
 
 class GroupedPatternNode: public PatternWithoutRangeNode {
@@ -878,18 +989,6 @@ public:
     ~TypePathSegmentNode() override;
 };
 
-class PathIndentSegmentNode: public ASTNode {
-    TokenType type_;
-    std::string identifier_;
-public:
-    PathIndentSegmentNode(Position pos, TokenType type, const std::string& identifier): ASTNode(pos) {
-        type_ = type;
-        identifier_ = identifier;
-    }
-
-    ~PathIndentSegmentNode() override = default;
-};
-
 class TupleTypeNode: public TypeNoBoundsNode {
     std::vector<TypeNode*> type_nodes_;
 public:
@@ -930,17 +1029,16 @@ public:
 };
 
 /****************  Path (Naive Version) ****************/
-class SimplePathSegment: public ASTNode {
+class PathIndentSegmentNode: public ASTNode {
     TokenType type_;
     std::string identifier_;
 public:
-    SimplePathSegment(Position pos, const TokenType type, const std::string& identifier):
-        ASTNode(pos) {
+    PathIndentSegmentNode(Position pos, TokenType type, const std::string& identifier): ASTNode(pos) {
         type_ = type;
         identifier_ = identifier;
     }
 
-    ~SimplePathSegment() override = default;
+    ~PathIndentSegmentNode() override = default;
 };
 
 #endif //ASTNODE_H
