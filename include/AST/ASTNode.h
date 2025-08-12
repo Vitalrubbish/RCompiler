@@ -120,19 +120,17 @@ public:
 class FunctionNode: public ASTNode {
     bool is_const_;
     std::string identifier_;
-    std::vector<GenericParamNode*> generic_param_;
     FunctionParametersNode* function_parameters_ = nullptr;
     TypeNode* type_ = nullptr;
     std::vector<WhereClauseItemNode*> where_clause_items_;
     BlockExpressionNode* block_expression_ = nullptr;
 public:
     FunctionNode(Position pos, bool is_const, const std::string& identifier,
-        const std::vector<GenericParamNode*>& generic_param, FunctionParametersNode* function_parameters,
-        TypeNode* type, const std::vector<WhereClauseItemNode*>& where_clause_items,
+        FunctionParametersNode* function_parameters, TypeNode* type,
+        const std::vector<WhereClauseItemNode*>& where_clause_items,
         BlockExpressionNode* block_expression): ASTNode(pos) {
         is_const_ = is_const;
         identifier_ = identifier;
-        generic_param_ = generic_param;
         function_parameters_ = function_parameters;
         type_ = type;
         where_clause_items_ = where_clause_items;
@@ -156,11 +154,13 @@ public:
 class FunctionParamNode: public ASTNode {
     FunctionParamPatternNode* function_param_pattern_ = nullptr;
     TypeNode* type_ = nullptr;
+    bool is_DotDotDot_ = false;
 public:
     FunctionParamNode(Position pos, FunctionParamPatternNode* function_param_pattern,
-        TypeNode* type): ASTNode(pos) {
+        TypeNode* type, bool is_DotDotDot): ASTNode(pos) {
         function_param_pattern_ = function_param_pattern;
         type_ = type;
+        is_DotDotDot_ =  is_DotDotDot;
     }
 
     ~FunctionParamNode() override;
@@ -169,11 +169,13 @@ public:
 class FunctionParamPatternNode: public ASTNode {
     PatternNoTopAltNode* pattern_no_top_alt_;
     TypeNode* type_;
+    bool is_DotDotDot_ = false;
 public:
     FunctionParamPatternNode(Position pos, PatternNoTopAltNode* pattern_no_top_alt,
-        TypeNode* type): ASTNode(pos) {
+        TypeNode* type, bool is_DotDotDot): ASTNode(pos) {
         pattern_no_top_alt_ = pattern_no_top_alt;
         type_ = type;
+        is_DotDotDot_ = is_DotDotDot;
     }
 
     ~FunctionParamPatternNode() override;
@@ -888,24 +890,26 @@ public:
     ~PathIndentSegmentNode() override = default;
 };
 
-class TupleType: public TypeNoBoundsNode {
+class TupleTypeNode: public TypeNoBoundsNode {
     std::vector<TypeNode*> type_nodes_;
 public:
-    TupleType(Position pos, const std::vector<TypeNode*>& type_nodes): TypeNoBoundsNode(pos) {
+    TupleTypeNode(Position pos, const std::vector<TypeNode*>& type_nodes): TypeNoBoundsNode(pos) {
         type_nodes_ = type_nodes;
     }
+
+    ~TupleTypeNode() override;
 };
 
-class ArrayType: public TypeNoBoundsNode {
+class ArrayTypeNode: public TypeNoBoundsNode {
     TypeNode* type_;
     ExpressionNode* expression_node_ = nullptr;
 public:
-    ArrayType(Position pos, TypeNode* type, ExpressionNode* expression_node): TypeNoBoundsNode(pos) {
+    ArrayTypeNode(Position pos, TypeNode* type, ExpressionNode* expression_node): TypeNoBoundsNode(pos) {
         type_ = type;
         expression_node_ = expression_node;
     }
 
-    ~ArrayType() override; // TODO
+    ~ArrayTypeNode() override;
 };
 
 class SliceTypeNode: public TypeNoBoundsNode {
@@ -918,11 +922,11 @@ public:
     ~SliceTypeNode() override;
 };
 
-class InferredType: public TypeNoBoundsNode {
+class InferredTypeNode: public TypeNoBoundsNode {
 public:
-    explicit InferredType(Position pos): TypeNoBoundsNode(pos) {}
+    explicit InferredTypeNode(Position pos): TypeNoBoundsNode(pos) {}
 
-    ~InferredType() override = default;
+    ~InferredTypeNode() override = default;
 };
 
 /****************  Path (Naive Version) ****************/

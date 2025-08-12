@@ -65,15 +65,15 @@ FunctionNode* Parser::ParseFunction() {
         std::string identifier = tokens[parseIndex].token;
         parseIndex++;
 
-        // TODO ParseGenericParams
-
         ConsumeString("(");
 
-        // TODO ParseFunctionParameters
+        if (tokens[parseIndex].type != TokenType::RParen) {
+            function_parameters_node = ParseFunctionParameters();
+        }
 
         ConsumeString(")");
 
-        // TODO ParseFunctionReturnType
+        type_node = ParseFunctionReturnType();
 
         // TODO ParseWhereClause
 
@@ -82,12 +82,97 @@ FunctionNode* Parser::ParseFunction() {
         } else {
             ConsumeString(";");
         }
-        return new FunctionNode(pos, is_const, identifier, generic_param_nodes,
-            function_parameters_node, type_node, where_clause_item_nodes, block_expression_node);
+        return new FunctionNode(pos, is_const, identifier, function_parameters_node,
+            type_node, where_clause_item_nodes, block_expression_node);
     } catch (std::exception&) {
+        delete type_node;
+        delete block_expression_node;
         throw;
     }
 }
+
+TypeNode *Parser::ParseFunctionReturnType() {
+    TypeNode* type = nullptr;
+    try {
+        ConsumeString("->");
+        type = ParseType();
+        return type;
+    } catch (std::exception&) {
+        delete type;
+        throw;
+    }
+}
+
+
+FunctionParametersNode* Parser::ParseFunctionParameters() {
+    Position pos = tokens[parseIndex].pos;
+    std::vector<FunctionParamNode*> function_param_nodes;
+    FunctionParamNode* tmp = nullptr;
+    try {
+        tmp = ParseFunctionParam();
+        function_param_nodes.emplace_back(tmp);
+        while (tokens[parseIndex].type == TokenType::Comma) {
+            ConsumeString(",");
+            tmp = ParseFunctionParam();
+            function_param_nodes.emplace_back(tmp);
+            if (tokens[parseIndex].type == TokenType::RParen) {
+                break;
+            }
+        }
+        return new FunctionParametersNode(pos, function_param_nodes);
+    } catch (std::exception&) {
+        delete tmp;
+        for (auto& it: function_param_nodes) {
+            delete it;
+        }
+        throw;
+    }
+}
+
+FunctionParamNode *Parser::ParseFunctionParam() {
+    Position pos = tokens[parseIndex].pos;
+    uint32_t start = parseIndex;
+    FunctionParamPatternNode* function_param_pattern_node = nullptr;
+    TypeNode* type_node = nullptr;
+    if (tokens[parseIndex].type == TokenType::DotDotDot) {
+        ConsumeString("...");
+        return new FunctionParamNode(pos, function_param_pattern_node, type_node, true);
+    }
+    try {
+        type_node = ParseType();
+        return new FunctionParamNode(pos, function_param_pattern_node, type_node, false);
+    } catch (std::exception&) {
+        parseIndex = start;
+    }
+    try {
+        function_param_pattern_node = ParseFunctionParamPattern();
+        return new FunctionParamNode(pos, function_param_pattern_node, type_node, false);
+    } catch (std::exception&) {
+        throw ParseError("Parse Error: Failed to Match FunctionParam", pos);
+    }
+}
+
+FunctionParamPatternNode *Parser::ParseFunctionParamPattern() {
+    Position pos = tokens[parseIndex].pos;
+    PatternNoTopAltNode* pattern_no_top_alt_node = nullptr;
+    TypeNode* type_node = nullptr;
+    try {
+        pattern_no_top_alt_node = ParsePatternNoTopAlt();
+        ConsumeString(":");
+        if (tokens[parseIndex].type == TokenType::DotDotDot) {
+            ConsumeString("...");
+            return new FunctionParamPatternNode(pos, pattern_no_top_alt_node, type_node, true);
+        }
+        type_node = ParseType();
+        return new FunctionParamPatternNode(pos, pattern_no_top_alt_node, type_node, true);
+    } catch (std::exception&) {
+        delete pattern_no_top_alt_node;
+        delete type_node;
+        throw;
+    }
+}
+
+
 
 
 /****************  Expression  ****************/
@@ -812,6 +897,31 @@ ExpressionStatementNode *Parser::ParseExpressionStatement() {
 
 
 /****************  Pattern  ****************/
+PatternNode* Parser::ParsePattern() {
+    Position pos = tokens[parseIndex].pos;
+    std::vector<PatternNoTopAltNode*> pattern_no_top_alt_nodes;
+    PatternNoTopAltNode* tmp = nullptr;
+    try {
+        if (tokens[parseIndex].type == TokenType::Or) {
+            ConsumeString("|");
+        }
+        tmp = ParsePatternNoTopAlt();
+        pattern_no_top_alt_nodes.emplace_back(tmp);
+        while (tokens[parseIndex].type == TokenType::Or) {
+            ConsumeString("|");
+            tmp = ParsePatternNoTopAlt();
+            pattern_no_top_alt_nodes.emplace_back(tmp);
+        }
+        return new PatternNode(pos, pattern_no_top_alt_nodes);
+    } catch (std::exception&) {
+        delete tmp;
+        for (auto& it: pattern_no_top_alt_nodes) {
+            delete it;
+        }
+        throw;
+    }
+}
+
 PatternNoTopAltNode* Parser::ParsePatternNoTopAlt() {
     try {
         PatternNoTopAltNode* ret = ParsePatternWithoutRange();
@@ -882,16 +992,45 @@ IdentifierPatternNode* Parser::ParseIdentifierPattern() {
 }
 
 SlicePatternNode* Parser::ParseSlicePattern() {
-    return nullptr;
+    Position pos = tokens[parseIndex].pos;
+    std::vector<PatternNode*> pattern_nodes;
+    PatternNode* tmp = nullptr;
+    try {
+        ConsumeString("[");
+        tmp = ParsePattern();
+        pattern_nodes.emplace_back(tmp);
+        while (tokens[parseIndex].type == TokenType::Comma) {
+            ConsumeString(",");
+            if (tokens[parseIndex].type == TokenType::RBracket) {
+                break;
+            }
+            tmp = ParsePattern();
+            pattern_nodes.emplace_back(tmp);
+        }
+        return new SlicePatternNode(pos, pattern_nodes);
+    } catch (std::exception&) {
+        delete tmp;
+        for (auto& it: pattern_nodes) {
+            delete it;
+        }
+        throw;
+    }
 }
 
 PathPatternNode* Parser::ParsePathPattern() {
-    return nullptr;
+    Position pos = tokens[parseIndex].pos;
+    ExpressionNode* expression_node = nullptr;
+    try {
+        expression_node = ParsePathExpression();
+        return new PathPatternNode(pos, expression_node);
+    } catch (std::exception&) {
+        delete expression_node;
+        throw;
+    }
 }
 
 /****************  Types  ****************/
 TypeNode* Parser::ParseType() {
-    Position pos = tokens[parseIndex].pos;
     TypeNode* type_node = nullptr;
     try {
         type_node = ParseTypeNoBounds();
@@ -1011,20 +1150,67 @@ PathIndentSegmentNode* Parser::ParsePathIndentSegment() {
     }
 }
 
-TupleType* Parser::ParseTupleType() {
-
+TupleTypeNode* Parser::ParseTupleType() {
+    Position pos = tokens[parseIndex].pos;
+    std::vector<TypeNode*> type_nodes;
+    try {
+        ConsumeString("(");
+        while (tokens[parseIndex].type != TokenType::RParen) {
+            auto* tmp = ParseType();
+            type_nodes.emplace_back(tmp);
+            if (tokens[parseIndex].type == TokenType::Comma) {
+                ConsumeString(",");
+            } else {
+                break;
+            }
+        }
+        ConsumeString(")");
+        return new TupleTypeNode(pos, type_nodes);
+    } catch (std::exception&) {
+        throw;
+    }
 }
 
-ArrayType* Parser::ParseArrayType() {
-
+ArrayTypeNode* Parser::ParseArrayType() {
+    Position pos = tokens[parseIndex].pos;
+    TypeNode* type_node = nullptr;
+    ExpressionNode* expression_node = nullptr;
+    try {
+        ConsumeString("[");
+        type_node = ParseType();
+        ConsumeString(";");
+        expression_node = ParseExpression();
+        ConsumeString("]");
+        return new ArrayTypeNode(pos, type_node, expression_node);
+    } catch (std::exception&) {
+        delete type_node;
+        delete expression_node;
+        throw;
+    }
 }
 
 SliceTypeNode* Parser::ParseSliceType() {
-
+    Position pos = tokens[parseIndex].pos;
+    TypeNode* type_node = nullptr;
+    try {
+        ConsumeString("[");
+        type_node = ParseType();
+        ConsumeString("]");
+        return new SliceTypeNode(pos, type_node);
+    } catch (std::exception&) {
+        delete type_node;
+        throw;
+    }
 }
 
-InferredType* Parser::ParseInferredType() {
-
+InferredTypeNode* Parser::ParseInferredType() {
+    Position pos = tokens[parseIndex].pos;
+    try {
+        ConsumeString("_");
+        return new InferredTypeNode(pos);
+    } catch (std::exception&) {
+        throw;
+    }
 }
 
 

@@ -12,9 +12,6 @@ VisItemNode::~VisItemNode() {
 }
 
 FunctionNode::~FunctionNode() {
-    /*for (auto& it: generic_param_) {
-        delete it;
-    }*/
     delete function_parameters_;
     delete type_;
     /*for (auto& it: where_clause_items_) {
@@ -236,9 +233,17 @@ TypePathSegmentNode::~TypePathSegmentNode() {
     delete path_indent_segment_node_;
 }
 
+TupleTypeNode::~TupleTypeNode() {
+    for (auto& it: type_nodes_) {
+        delete it;
+    }
+}
 
+SliceTypeNode::~SliceTypeNode() {
+    delete type_;
+}
 
-ArrayType::~ArrayType() {
+ArrayTypeNode::~ArrayTypeNode() {
     delete type_;
     delete expression_node_;
 }

@@ -39,11 +39,13 @@ public:
 
     // bool ParseFunctionQualifiers();
 
-    // bool ParseGenericParams();
+    TypeNode* ParseFunctionReturnType();
 
-    // FunctionParametersNode* ParseFunctionParameters();
+    FunctionParametersNode* ParseFunctionParameters();
 
-    // TypeNode* ParseFunctionReturnType();
+    FunctionParamNode* ParseFunctionParam();
+
+    FunctionParamPatternNode* ParseFunctionParamPattern();
 
     /****************  Expression  ****************/
     ExpressionNode* ParseExpression();
@@ -112,6 +114,8 @@ public:
     ExpressionStatementNode* ParseExpressionStatement();
 
     /****************  Patterns  ****************/
+    PatternNode* ParsePattern();
+
     PatternNoTopAltNode* ParsePatternNoTopAlt();
 
     PatternWithoutRangeNode* ParsePatternWithoutRange();
@@ -136,13 +140,13 @@ public:
 
     PathIndentSegmentNode* ParsePathIndentSegment();
 
-    TupleType* ParseTupleType();
+    TupleTypeNode* ParseTupleType();
 
-    ArrayType* ParseArrayType();
+    ArrayTypeNode* ParseArrayType();
 
     SliceTypeNode* ParseSliceType();
 
-    InferredType* ParseInferredType();
+    InferredTypeNode* ParseInferredType();
 
     /****************  Paths  ****************/
     SimplePathSegment* ParseSimplePathSegment();
