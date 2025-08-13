@@ -2,7 +2,7 @@
 #define PARSER_H
 #include <vector>
 #include "../Lexer/Lexer.h"
-#include "../AST/ASTNode.h"
+#include "../Semantic"
 
 
 class Parser {

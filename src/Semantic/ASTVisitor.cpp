@@ -1,10 +1,11 @@
-#include "../../include/AST/ASTVisitor.h"
+#include "../../include/Semantic/ASTVisitor.h"
 
 void ASTVisitor::visit(ASTNode* node) {
+
 }
 
 void ASTVisitor::visit(CrateNode* node) {
-    
+
 }
 
 void ASTVisitor::visit(VisItemNode* node) {
