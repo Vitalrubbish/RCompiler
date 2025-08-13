@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 enum class TypeKind {
-    Primitive, Function, Struct, Enumeration, ConstantItem
+    Primitive, Function, Struct, Enumeration, ConstantItem, Tuple,
+    Slice, Inferred
 };
 class Type {
 public:
@@ -146,5 +147,93 @@ public:
         }
         return true;
     }
+};
+
+class TupleType: public Type {
+    std::vector<Type*> types_;
+public:
+    explicit TupleType(const std::vector<Type*>& types) {
+        types_ = types;
+    }
+
+    ~TupleType() override {
+        for (auto& it: types_) {
+            delete it;
+        }
+    }
+
+    [[nodiscard]] TypeKind getKind() const override {
+        return TypeKind::Tuple;
+    }
+
+    [[nodiscard]] std::string toString() const override {
+        std::string str;
+        str += "( ";
+        for (auto& it: types_) {
+            str += it -> toString();
+            str += ", ";
+        }
+        str += ")";
+        return str;
+    }
+
+    bool equal(Type *other) const override {
+        if (!other || other -> getKind() != TypeKind::Tuple) {
+            return false;
+        }
+        auto* tmp = dynamic_cast<TupleType*> (other);
+        if (types_.size() != tmp -> types_.size()) {
+            return false;
+        }
+        for (uint32_t i = 0; i < types_.size(); i++) {
+            if (!types_[i] -> equal(tmp -> types_[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
+class SliceType: public Type {
+    Type* type_ = nullptr;
+public:
+    explicit SliceType(Type* type) {
+        type_ = type;
+    }
+
+    ~SliceType() override {
+        delete type_;
+    }
+
+    [[nodiscard]] TypeKind getKind() const override {
+        return TypeKind::Slice;
+    }
+
+    [[nodiscard]] std::string toString() const override {
+        std::string str;
+        str += "[ ";
+        str += type_ -> toString();
+        str += " ]";
+        return str;
+    }
+
+    bool equal(Type *other) const override {
+        if (!other || other -> getKind() != TypeKind::Slice) {
+            return false;
+        }
+        auto* tmp = dynamic_cast<SliceType*> (other);
+        if (!type_ -> equal(tmp -> type_)) {
+            return false;
+        }
+        return true;
+    }
+};
+
+class EnumerationType: public Type {
+    // TODO Hard......
+};
+
+class InferredType: public Type {
+    // TODO Hard......
 };
 #endif //TYPE_H
