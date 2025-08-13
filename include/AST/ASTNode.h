@@ -5,6 +5,7 @@
 #include "../../util/Position.h"
 #include "../Lexer/TokenType.h"
 #include "../Lexer/Token.h"
+#include "ASTVisitor.h"
 
 class ASTNode;
 class CrateNode;
@@ -102,32 +103,26 @@ public:
 };
 
 class VisItemNode: public ASTNode {
-    ASTNode* node_;
 public:
-    VisItemNode(Position pos, ASTNode* node): ASTNode(pos) {
-        node_ = node;
-    }
+    explicit VisItemNode(Position pos): ASTNode(pos) {}
 
-    ~VisItemNode() override;
+    ~VisItemNode() override = default;
 };
 
-class FunctionNode: public ASTNode {
+class FunctionNode: public VisItemNode {
     bool is_const_;
     std::string identifier_;
     FunctionParametersNode* function_parameters_ = nullptr;
     TypeNode* type_ = nullptr;
-    std::vector<WhereClauseItemNode*> where_clause_items_;
     BlockExpressionNode* block_expression_ = nullptr;
 public:
     FunctionNode(Position pos, bool is_const, const std::string& identifier,
         FunctionParametersNode* function_parameters, TypeNode* type,
-        const std::vector<WhereClauseItemNode*>& where_clause_items,
-        BlockExpressionNode* block_expression): ASTNode(pos) {
+        BlockExpressionNode* block_expression): VisItemNode(pos) {
         is_const_ = is_const;
         identifier_ = identifier;
         function_parameters_ = function_parameters;
         type_ = type;
-        where_clause_items_ = where_clause_items;
         block_expression_ = block_expression;
     }
 
@@ -175,12 +170,12 @@ public:
     ~FunctionParamPatternNode() override;
 };
 
-class StructNode: public ASTNode {
+class StructNode: public VisItemNode {
     std::string identifier_;
     std::vector<StructFieldNode*> struct_field_nodes_;
 public:
     StructNode(Position pos, const std::string& identifier,
-        const std::vector<StructFieldNode*>& struct_field_nodes): ASTNode(pos) {
+        const std::vector<StructFieldNode*>& struct_field_nodes):VisItemNode(pos) {
         identifier_ = identifier;
         struct_field_nodes_ = struct_field_nodes;
     }
@@ -201,12 +196,12 @@ public:
     ~StructFieldNode() override;
 };
 
-class EnumerationNode: public ASTNode {
+class EnumerationNode: public VisItemNode {
     std::string identifier_;
     std::vector<EnumVariantNode*> enum_variant_nodes_;
 public:
     EnumerationNode(Position pos, const std::string& identifier,
-        const std::vector<EnumVariantNode*>& enum_variant_nodes): ASTNode(pos) {
+        const std::vector<EnumVariantNode*>& enum_variant_nodes): VisItemNode(pos) {
         identifier_ = identifier;
         enum_variant_nodes_ = enum_variant_nodes;
     }
@@ -251,14 +246,14 @@ public:
     ~EnumVariantDiscriminantNode() override;
 };
 
-class ConstantItemNode: public ASTNode {
+class ConstantItemNode: public VisItemNode {
     std::string identifier_;
     bool is_underscore_ = false;
     TypeNode* type_node_;
     ExpressionNode* expression_node_;
 public:
     ConstantItemNode(Position pos, const std::string& identifier, bool is_underscore,
-        TypeNode* type_node, ExpressionNode* expression_node): ASTNode(pos) {
+        TypeNode* type_node, ExpressionNode* expression_node): VisItemNode(pos) {
         identifier_ = identifier;
         is_underscore_ = is_underscore;
         type_node_ = type_node;
@@ -268,12 +263,12 @@ public:
     ~ConstantItemNode() override;
 };
 
-class AssociatedItemNode: public ASTNode {
+class AssociatedItemNode: public VisItemNode {
     ConstantItemNode* constant_item_node_;
     FunctionNode* function_node_;
 public:
     AssociatedItemNode(Position pos, ConstantItemNode* constant_item_node,
-        FunctionNode* function_node): ASTNode(pos) {
+        FunctionNode* function_node): VisItemNode(pos) {
         constant_item_node_ = constant_item_node;
         function_node_ = function_node;
     }
@@ -281,9 +276,9 @@ public:
     ~AssociatedItemNode() override;
 };
 
-class ImplementationNode: public ASTNode {
+class ImplementationNode: public VisItemNode {
 public:
-    explicit ImplementationNode(Position pos): ASTNode(pos) {}
+    explicit ImplementationNode(Position pos): VisItemNode(pos) {}
 
     ~ImplementationNode() override = default;
 };

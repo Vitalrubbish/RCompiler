@@ -32,49 +32,46 @@ CrateNode* Parser::ParseCrate() {
 }
 
 VisItemNode* Parser::ParseVisItem() {
-    Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
-    ASTNode* node = nullptr;
+    VisItemNode* node = nullptr;
     try {
         node = ParseFunction();
-        return new VisItemNode(pos, node);
+        return node;
     } catch (std::exception&) {
+        delete node;
+        node = nullptr;
         parseIndex = start;
     }
 
     try {
         if (tokens[parseIndex].type == TokenType::Const) {
             node = ParseConstantItem();
-            return new VisItemNode(pos, node);
+            return node;
         }
         if (tokens[parseIndex].type == TokenType::Struct) {
             node = ParseStruct();
-            return new VisItemNode(pos, node);
+            return node;
         }
         if (tokens[parseIndex].type == TokenType::Enum) {
             node = ParseEnumeration();
-            return new VisItemNode(pos, node);
+            return node;
         }
         if (tokens[parseIndex].type == TokenType::Impl) {
             node = ParseImplementation();
-            return new VisItemNode(pos, node);
+            return node;
         }
         return nullptr;
     } catch (std::exception&) {
         delete node;
         throw;
     }
-
-
     // TODO Parse Other Items
 }
 
 FunctionNode* Parser::ParseFunction() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<GenericParamNode*> generic_param_nodes;
     FunctionParametersNode* function_parameters_node = nullptr;
     TypeNode* type_node = nullptr;
-    std::vector<WhereClauseItemNode*> where_clause_item_nodes;
     BlockExpressionNode* block_expression_node = nullptr;
     try {
         bool is_const = false;
@@ -109,7 +106,7 @@ FunctionNode* Parser::ParseFunction() {
             ConsumeString(";");
         }
         return new FunctionNode(pos, is_const, identifier, function_parameters_node,
-            type_node, where_clause_item_nodes, block_expression_node);
+            type_node, block_expression_node);
     } catch (std::exception&) {
         delete type_node;
         delete function_parameters_node;

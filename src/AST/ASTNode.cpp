@@ -7,10 +7,6 @@ CrateNode::~CrateNode() {
     }
 }
 
-VisItemNode::~VisItemNode() {
-    delete node_;
-}
-
 FunctionNode::~FunctionNode() {
     delete function_parameters_;
     delete type_;
