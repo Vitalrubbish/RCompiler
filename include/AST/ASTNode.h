@@ -7,9 +7,11 @@
 #include "../Lexer/Token.h"
 #include "ASTVisitor.h"
 
+// Forward declarations
+class ASTVisitor;
 class ASTNode;
 class CrateNode;
-class VisItemNode; // In our R Compiler, Item just means VisItem
+class VisItemNode;
 class ModuleNode;
 class FunctionNode;
 class StructNode;
@@ -17,18 +19,12 @@ class EnumerationNode;
 class ConstantItemNode;
 class TraitNode;
 class ImplementationNode;
-class IdentifierNode;
-class GenericParamNode; // Use std::vector to perform GenericParamNode
 class FunctionParametersNode;
-class WhereClauseItemNode;
-/* Use std::vector to perform WhereClauseNode, and since we do not have LifeTimeClauseItem,
- * it just represents TypeBoundClauseItem. */
 class FunctionParamNode;
-class TypeNode; // Also FunctionReturnTypeNode
+class TypeNode;
 class FunctionParamPatternNode;
-class StructNode;
-class StructFieldNode; // Use std::vector to perform StructFields
-class EnumVariantNode; // Use std::vector to perform EnumVariants
+class StructFieldNode;
+class EnumVariantNode;
 class EnumVariantStructNode;
 class EnumVariantDiscriminantNode;
 class TypeParamBoundsNode;
@@ -42,7 +38,7 @@ class StatementNode;
 class EmptyStatementNode;
 class LetStatementNode;
 class ExpressionStatementNode;
-class ExpressionNode; // Also StructBaseNode
+class ExpressionNode;
 class ExpressionWithoutBlockNode;
 class ExpressionWithBlockNode;
 class LiteralExpressionNode;
@@ -52,15 +48,12 @@ class CStringLiteralNode;
 class IntLiteralNode;
 class BoolLiteralNode;
 class PathExpressionNode;
-class OperatorExpressionNode;
 class GroupedExpressionNode;
 class TupleExpressionNode;
-class TupleIndexingExpressionNode;
 class StructExpressionNode;
-class FieldExpressionNode;
 class ContinueExpressionNode;
 class UnderscoreExpressionNode;
-class BlockExpressionNode; // use is_const_ to show whether this block expression is constant
+class BlockExpressionNode;
 class LoopExpressionNode;
 class IfExpressionNode;
 class MatchExpressionNode;
@@ -74,9 +67,45 @@ class AssignmentExpressionNode;
 class StructExprFieldNode;
 class ConditionsNode;
 class LetChainNode;
-
 class PatternNode;
 class PatternNoTopAltNode;
+class InfiniteLoopExpressionNode;
+class PredicateLoopExpressionNode;
+class JumpExpressionNode;
+class LogicOrExpressionNode;
+class LogicAndExpressionNode;
+class BitwiseOrExpressionNode;
+class BitwiseXorExpressionNode;
+class BitwiseAndExpressionNode;
+class ShiftExpressionNode;
+class AddMinusExpressionNode;
+class MulDivModExpressionNode;
+class UnaryExpressionNode;
+class FunctionCallExpressionNode;
+class ArrayIndexExpressionNode;
+class MemberAccessExpressionNode;
+class StructExprFieldsNode;
+class StructBaseNode;
+class PathIndentSegmentNode;
+class ArrayLiteralNode;
+class MatchArmNode;
+class MatchArmGuardNode;
+class PatternWithoutRangeNode;
+class LiteralPatternNode;
+class IdentifierPatternNode;
+class WildcardPatternNode;
+class RestPatternNode;
+class GroupedPatternNode;
+class SlicePatternNode;
+class PathPatternNode;
+class TypeNoBoundsNode;
+class ParenthesizedTypeNode;
+class TypePathSegmentNode;
+class TupleTypeNode;
+class ArrayTypeNode;
+class SliceTypeNode;
+class InferredTypeNode;
+
 
 class ASTNode {
 protected:
@@ -88,7 +117,7 @@ public:
 
     virtual ~ASTNode() = default;
 
-    // virtual void accept(Visitor visitor)
+    virtual void accept(ASTVisitor* visitor) = 0;
 };
 
 /****************  Items  ****************/
@@ -100,6 +129,10 @@ public:
     }
 
     ~CrateNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class VisItemNode: public ASTNode {
@@ -107,6 +140,10 @@ public:
     explicit VisItemNode(Position pos): ASTNode(pos) {}
 
     ~VisItemNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class FunctionNode: public VisItemNode {
@@ -127,6 +164,10 @@ public:
     }
 
     ~FunctionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class FunctionParametersNode: public ASTNode {
@@ -138,6 +179,10 @@ public:
     }
 
     ~FunctionParametersNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class FunctionParamNode: public ASTNode {
@@ -153,6 +198,10 @@ public:
     }
 
     ~FunctionParamNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class FunctionParamPatternNode: public ASTNode {
@@ -168,6 +217,10 @@ public:
     }
 
     ~FunctionParamPatternNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class StructNode: public VisItemNode {
@@ -181,6 +234,10 @@ public:
     }
 
     ~StructNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class StructFieldNode: public ASTNode {
@@ -194,6 +251,10 @@ public:
     }
 
     ~StructFieldNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class EnumerationNode: public VisItemNode {
@@ -207,6 +268,10 @@ public:
     }
 
     ~EnumerationNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class EnumVariantNode: public ASTNode {
@@ -223,6 +288,10 @@ public:
     }
 
     ~EnumVariantNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class EnumVariantStructNode: public ASTNode {
@@ -234,6 +303,10 @@ public:
     }
 
     ~EnumVariantStructNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class EnumVariantDiscriminantNode: public ASTNode {
@@ -244,6 +317,10 @@ public:
     }
 
     ~EnumVariantDiscriminantNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class ConstantItemNode: public VisItemNode {
@@ -261,6 +338,10 @@ public:
     }
 
     ~ConstantItemNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class AssociatedItemNode: public VisItemNode {
@@ -274,6 +355,10 @@ public:
     }
 
     ~AssociatedItemNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class ImplementationNode: public VisItemNode {
@@ -281,6 +366,10 @@ public:
     explicit ImplementationNode(Position pos): VisItemNode(pos) {}
 
     ~ImplementationNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class InherentImplNode: public ImplementationNode {
@@ -295,6 +384,10 @@ public:
     }
 
     ~InherentImplNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 // TODO Define TraitImplNode
@@ -309,6 +402,10 @@ public:
     }
 
     ~ExpressionNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class ExpressionWithBlockNode: public ExpressionNode {
@@ -316,6 +413,10 @@ public:
     explicit ExpressionWithBlockNode(Position pos): ExpressionNode(pos, false) {}
 
     ~ExpressionWithBlockNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class BlockExpressionNode: public ExpressionWithBlockNode {
@@ -329,6 +430,10 @@ public:
     }
 
     ~BlockExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 
@@ -337,6 +442,10 @@ public:
     explicit LoopExpressionNode(Position pos): ExpressionWithBlockNode(pos) {};
 
     ~LoopExpressionNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class InfiniteLoopExpressionNode: public LoopExpressionNode {
@@ -348,6 +457,10 @@ public:
     }
 
     ~InfiniteLoopExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class PredicateLoopExpressionNode: public LoopExpressionNode {
@@ -361,6 +474,10 @@ public:
     }
 
     ~PredicateLoopExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class IfExpressionNode: public ExpressionWithBlockNode {
@@ -379,6 +496,10 @@ public:
     }
 
     ~IfExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class MatchExpressionNode: public ExpressionWithBlockNode {
@@ -392,6 +513,10 @@ public:
     }
 
     ~MatchExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 /****************  Expression Without Block  ****************/
@@ -401,6 +526,10 @@ public:
         ExpressionNode(pos, is_assignable) {}
 
     ~ExpressionWithoutBlockNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class ContinueExpressionNode: public ExpressionWithoutBlockNode {
@@ -409,6 +538,10 @@ public:
         ExpressionWithoutBlockNode(pos, false) {}
 
     ~ContinueExpressionNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class TupleExpressionNode: public ExpressionWithoutBlockNode {
@@ -420,6 +553,10 @@ public:
     }
 
     ~TupleExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 
@@ -429,6 +566,10 @@ public:
     explicit UnderscoreExpressionNode(Position pos): ExpressionWithoutBlockNode(pos, true) {}
 
     ~UnderscoreExpressionNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class JumpExpressionNode: public ExpressionWithoutBlockNode {
@@ -443,6 +584,10 @@ public:
     }
 
     ~JumpExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class LogicOrExpressionNode;
@@ -460,6 +605,10 @@ public:
     }
 
     ~AssignmentExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class LogicAndExpressionNode;
@@ -474,6 +623,10 @@ public:
     }
 
     ~LogicOrExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class LogicAndExpressionNode: public ExpressionWithoutBlockNode {
@@ -487,6 +640,10 @@ public:
     }
 
     ~LogicAndExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class BitwiseOrExpressionNode;
@@ -503,6 +660,10 @@ public:
     }
 
     ~ComparisonExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class BitwiseXorExpressionNode;
@@ -517,6 +678,10 @@ public:
     }
 
     ~BitwiseOrExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class BitwiseAndExpressionNode;
@@ -531,6 +696,10 @@ public:
     }
 
     ~BitwiseXorExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class ShiftExpressionNode;
@@ -545,6 +714,10 @@ public:
     }
 
     ~BitwiseAndExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class AddMinusExpressionNode;
@@ -562,6 +735,10 @@ public:
     }
 
     ~ShiftExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class MulDivModExpressionNode;
@@ -579,6 +756,10 @@ public:
     }
 
     ~AddMinusExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class MulDivModExpressionNode: public ExpressionWithoutBlockNode {
@@ -595,6 +776,10 @@ public:
     }
 
     ~MulDivModExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class UnaryExpressionNode;
@@ -609,6 +794,10 @@ public:
     }
 
     ~TypeCastExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class UnaryExpressionNode: public ExpressionWithoutBlockNode {
@@ -622,6 +811,10 @@ public:
     }
 
     ~UnaryExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class FunctionCallExpressionNode : public ExpressionWithoutBlockNode {
@@ -635,6 +828,10 @@ public:
     }
 
     ~FunctionCallExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class ArrayIndexExpressionNode : public ExpressionWithoutBlockNode {
@@ -648,6 +845,10 @@ public:
     }
 
     ~ArrayIndexExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class MemberAccessExpressionNode : public ExpressionWithoutBlockNode {
@@ -661,6 +862,10 @@ public:
     }
 
     ~MemberAccessExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class GroupedExpressionNode: public ExpressionWithoutBlockNode {
@@ -672,6 +877,10 @@ public:
     }
 
     ~GroupedExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class StructExprFieldsNode;
@@ -691,6 +900,10 @@ public:
     }
 
     ~StructExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class StructExprFieldsNode: public ASTNode {
@@ -704,6 +917,10 @@ public:
     }
 
     ~StructExprFieldsNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class StructExprFieldNode: public ASTNode {
@@ -717,6 +934,10 @@ public:
     }
 
     ~StructExprFieldNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class StructBaseNode: public ASTNode {
@@ -727,6 +948,10 @@ public:
     }
 
     ~StructBaseNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class PathExpressionNode: public ExpressionWithoutBlockNode {
@@ -734,6 +959,10 @@ public:
     explicit PathExpressionNode(Position pos): ExpressionWithoutBlockNode(pos, true) {}
 
     ~PathExpressionNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class PathIndentSegmentNode;
@@ -747,6 +976,10 @@ public:
     }
 
     ~PathInExpressionNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 /****************  Literal Node  ****************/
@@ -756,6 +989,10 @@ public:
         ExpressionWithoutBlockNode(pos, false) {}
 
     ~LiteralExpressionNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class CharLiteralNode: public LiteralExpressionNode {
@@ -767,6 +1004,10 @@ public:
     }
 
     ~CharLiteralNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class StringLiteralNode: public LiteralExpressionNode {
@@ -778,6 +1019,10 @@ public:
     }
 
     ~StringLiteralNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class IntLiteralNode: public LiteralExpressionNode {
@@ -789,6 +1034,10 @@ public:
     }
 
     ~IntLiteralNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class BoolLiteralNode: public LiteralExpressionNode {
@@ -800,6 +1049,10 @@ public:
     }
 
     ~BoolLiteralNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class CStringLiteralNode: public LiteralExpressionNode {
@@ -811,6 +1064,10 @@ public:
     }
 
     ~CStringLiteralNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class ArrayLiteralNode: public LiteralExpressionNode {
@@ -827,6 +1084,10 @@ public:
     }
 
     ~ArrayLiteralNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 /****************  Support Node for Expression  ****************/
@@ -839,6 +1100,10 @@ public:
     }
 
     ~ConditionsNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class StatementsNode: public ASTNode {
@@ -852,6 +1117,10 @@ public:
     }
 
     ~StatementsNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class MatchArmNode;
@@ -866,6 +1135,10 @@ public:
     }
 
     ~MatchArmsNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class MatchArmGuardNode;
@@ -880,6 +1153,10 @@ public:
     }
 
     ~MatchArmNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 // TODO Add LetChain
@@ -890,6 +1167,10 @@ public:
     explicit StatementNode(Position pos): ASTNode(pos) {}
 
     ~StatementNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class EmptyStatementNode: public StatementNode {
@@ -897,6 +1178,10 @@ public:
     explicit EmptyStatementNode(Position pos): StatementNode(pos) {}
 
     ~EmptyStatementNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class LetStatementNode: public StatementNode {
@@ -914,6 +1199,10 @@ public:
     }
 
     ~LetStatementNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class ExpressionStatementNode: public StatementNode {
@@ -925,6 +1214,10 @@ public:
     }
 
     ~ExpressionStatementNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 /****************  Patterns  ****************/
@@ -937,6 +1230,10 @@ public:
     }
 
     ~PatternNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class PatternNoTopAltNode: public ASTNode {
@@ -944,6 +1241,10 @@ public:
     explicit PatternNoTopAltNode(Position pos): ASTNode(pos) {}
 
     ~PatternNoTopAltNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class PatternWithoutRangeNode: public PatternNoTopAltNode {
@@ -951,6 +1252,10 @@ public:
     explicit PatternWithoutRangeNode(Position pos): PatternNoTopAltNode(pos) {}
 
     ~PatternWithoutRangeNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class LiteralPatternNode: public PatternWithoutRangeNode {
@@ -964,6 +1269,10 @@ public:
     }
 
     ~LiteralPatternNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class IdentifierPatternNode: public PatternWithoutRangeNode {
@@ -981,6 +1290,10 @@ public:
     }
 
     ~IdentifierPatternNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class WildcardPatternNode: public PatternWithoutRangeNode {
@@ -988,6 +1301,10 @@ public:
     explicit WildcardPatternNode(Position pos): PatternWithoutRangeNode(pos) {}
 
     ~WildcardPatternNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class RestPatternNode: public PatternWithoutRangeNode {
@@ -995,6 +1312,10 @@ public:
     explicit RestPatternNode(Position pos): PatternWithoutRangeNode(pos) {}
 
     ~RestPatternNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 // TODO StructPattern
@@ -1010,6 +1331,10 @@ public:
     }
 
     ~GroupedPatternNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class SlicePatternNode: public PatternWithoutRangeNode {
@@ -1021,6 +1346,10 @@ public:
     }
 
     ~SlicePatternNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class PathPatternNode: public PatternWithoutRangeNode {
@@ -1031,6 +1360,10 @@ public:
     }
 
     ~PathPatternNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 /****************  Types  ****************/
@@ -1039,6 +1372,10 @@ public:
     explicit TypeNode(Position pos): ASTNode(pos) {}
 
     ~TypeNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class TypeNoBoundsNode: public TypeNode {
@@ -1046,6 +1383,10 @@ public:
     explicit TypeNoBoundsNode(Position pos): TypeNode(pos) {}
 
     ~TypeNoBoundsNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class ParenthesizedTypeNode: public TypeNoBoundsNode {
@@ -1056,6 +1397,10 @@ public:
     }
 
     ~ParenthesizedTypeNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class TypePathSegmentNode;
@@ -1068,6 +1413,10 @@ public:
     }
 
     ~TypePathNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class PathIndentSegmentNode;
@@ -1079,6 +1428,10 @@ public:
     }
 
     ~TypePathSegmentNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class TupleTypeNode: public TypeNoBoundsNode {
@@ -1089,6 +1442,10 @@ public:
     }
 
     ~TupleTypeNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class ArrayTypeNode: public TypeNoBoundsNode {
@@ -1101,6 +1458,10 @@ public:
     }
 
     ~ArrayTypeNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class SliceTypeNode: public TypeNoBoundsNode {
@@ -1111,6 +1472,10 @@ public:
     }
 
     ~SliceTypeNode() override;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 class InferredTypeNode: public TypeNoBoundsNode {
@@ -1118,6 +1483,10 @@ public:
     explicit InferredTypeNode(Position pos): TypeNoBoundsNode(pos) {}
 
     ~InferredTypeNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 /****************  Path (Naive Version) ****************/
@@ -1131,6 +1500,10 @@ public:
     }
 
     ~PathIndentSegmentNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 #endif //ASTNODE_H

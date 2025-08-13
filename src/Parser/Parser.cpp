@@ -188,7 +188,7 @@ FunctionParamPatternNode *Parser::ParseFunctionParamPattern() {
             return new FunctionParamPatternNode(pos, pattern_no_top_alt_node, type_node, true);
         }
         type_node = ParseType();
-        return new FunctionParamPatternNode(pos, pattern_no_top_alt_node, type_node, true);
+        return new FunctionParamPatternNode(pos, pattern_no_top_alt_node, type_node, false);
     } catch (std::exception&) {
         delete pattern_no_top_alt_node;
         delete type_node;
