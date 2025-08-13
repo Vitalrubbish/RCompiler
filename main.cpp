@@ -1,18 +1,17 @@
 #include <iostream>
 #include <string>
 #include <chrono>
-
 #include "error/Error.h"
 #include "include/Lexer/Lexer.h"
 #include "include/Parser/Parser.h"
 
 Lexer lexer;
 std::vector<Token> tokens;
-ASTNode* root;
+ASTNode* root = nullptr;
 
 int main() {
     // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
-    freopen("../testcases/Parser/in06.rs", "r", stdin);
+    freopen("../testcases/Parser/in01.rs", "r", stdin);
     std::string text, line;
     while(std::getline(std::cin, line)) {
         text += line;
@@ -42,9 +41,8 @@ int main() {
 
         Parser parser(tokens);
         root = parser.ParseCrate(); // Parser
-        delete root;
     } catch (std::exception& error) {
-        delete root;
         std::cout << error.what() << '\n';
     }
+    delete root;
 }

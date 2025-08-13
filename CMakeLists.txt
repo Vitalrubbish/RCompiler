@@ -21,4 +21,5 @@ add_executable(RCompiler
         include/AST/ASTVisitor.h
         util/Util.h
         src/AST/ASTVisitor.cpp
+        include/AST/Type.h
 )

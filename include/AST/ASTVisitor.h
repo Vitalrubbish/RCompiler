@@ -128,9 +128,9 @@ public:
     virtual void visit(EnumVariantStructNode* node) = 0;
     virtual void visit(EnumVariantDiscriminantNode* node) = 0;
 
-    // virtual void visit(TypeParamBoundsNode* node) = 0;
-    // virtual void visit(TypeParamNode* node) = 0;
-    // virtual void visit(ConstParamNode* node) = 0;
+    virtual void visit(TypeParamBoundsNode* node) = 0;
+    virtual void visit(TypeParamNode* node) = 0;
+    virtual void visit(ConstParamNode* node) = 0;
 
     virtual void visit(StatementNode* node) = 0;
     virtual void visit(StatementsNode* node) = 0;
@@ -188,11 +188,11 @@ public:
     virtual void visit(GroupedExpressionNode* node) = 0;
     virtual void visit(TupleExpressionNode* node) = 0;
     virtual void visit(ConditionsNode* node) = 0;
-    // virtual void visit(LetChainNode* node) = 0;
+    virtual void visit(LetChainNode* node) = 0;
 
     virtual void visit(MatchArmsNode* node) = 0;
     virtual void visit(MatchArmNode* node) = 0;
-    // virtual void visit(MatchArmGuardNode* node) = 0;
+    virtual void visit(MatchArmGuardNode* node) = 0;
 
     virtual void visit(PatternNode* node) = 0;
     virtual void visit(PatternNoTopAltNode* node) = 0;
