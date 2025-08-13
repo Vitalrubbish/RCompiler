@@ -1,4 +1,7 @@
 #include "../../include/Parser/Parser.h"
+
+#include <random>
+
 #include "../../Error/error.h"
 #include "../../util/Util.h"
 
@@ -30,11 +33,18 @@ CrateNode* Parser::ParseCrate() {
 
 VisItemNode* Parser::ParseVisItem() {
     Position pos = tokens[parseIndex].pos;
-    // uint32_t start = parseIndex;
+    uint32_t start = parseIndex;
     ASTNode* node = nullptr;
     try {
-        if (tokens[parseIndex].type == TokenType::Fn) {
-            node = ParseFunction();
+        node = ParseFunction();
+        return new VisItemNode(pos, node);
+    } catch (std::exception&) {
+        parseIndex = start;
+    }
+
+    try {
+        if (tokens[parseIndex].type == TokenType::Const) {
+            node = ParseConstantItem();
             return new VisItemNode(pos, node);
         }
         if (tokens[parseIndex].type == TokenType::Struct) {
@@ -202,13 +212,15 @@ StructNode* Parser::ParseStruct() {
         ConsumeString("{");
         struct_field_node = ParseStructFieldNode();
         struct_field_nodes.emplace_back(struct_field_node);
+        struct_field_node = nullptr;
         while (tokens[parseIndex].type == TokenType::Comma) {
             ConsumeString(",");
-            struct_field_node = ParseStructFieldNode();
-            struct_field_nodes.emplace_back(struct_field_node);
             if (tokens[parseIndex].type == TokenType::RBrace) {
                 break;
             }
+            struct_field_node = ParseStructFieldNode();
+            struct_field_nodes.emplace_back(struct_field_node);
+            struct_field_node = nullptr;
         }
         ConsumeString("}");
         return new StructNode(pos, identifier, struct_field_nodes);
@@ -255,21 +267,23 @@ EnumerationNode *Parser::ParseEnumeration() {
         }
         enum_variant_node = ParseEnumVariant();
         enum_variant_nodes.emplace_back(enum_variant_node);
+        enum_variant_node = nullptr;
         while (tokens[parseIndex].type == TokenType::Comma) {
             ConsumeString(",");
-            enum_variant_node = ParseEnumVariant();
-            enum_variant_nodes.emplace_back(enum_variant_node);
             if (tokens[parseIndex].type == TokenType::RBrace) {
                 break;
             }
+            enum_variant_node = ParseEnumVariant();
+            enum_variant_nodes.emplace_back(enum_variant_node);
+            enum_variant_node = nullptr;
         }
         ConsumeString("}");
         return new EnumerationNode(pos, identifier, enum_variant_nodes);
     } catch (std::exception&) {
-        delete enum_variant_node;
         for (auto& it: enum_variant_nodes) {
             delete it;
         }
+        delete enum_variant_node;
         throw;
     }
 }
@@ -287,7 +301,7 @@ EnumVariantNode *Parser::ParseEnumVariant() {
             enum_variant_struct_node = ParseEnumVariantStruct();
         }
         if (tokens[parseIndex].type == TokenType::Eq) {
-            enum_variant_discriminant_node = ParseEnumVariantDiscirminant();
+            enum_variant_discriminant_node = ParseEnumVariantDiscriminant();
         }
         return new EnumVariantNode(pos, identifier, enum_variant_struct_node,
             enum_variant_discriminant_node);
@@ -325,7 +339,7 @@ EnumVariantStructNode *Parser::ParseEnumVariantStruct() {
     }
 }
 
-EnumVariantDiscriminantNode *Parser::ParseEnumVariantDiscirminant() {
+EnumVariantDiscriminantNode *Parser::ParseEnumVariantDiscriminant() {
     Position pos = tokens[parseIndex].pos;
     ExpressionNode* expression_node = nullptr;
     try {
@@ -334,6 +348,54 @@ EnumVariantDiscriminantNode *Parser::ParseEnumVariantDiscirminant() {
         return new EnumVariantDiscriminantNode(pos, expression_node);
     } catch (std::exception&) {
         delete expression_node;
+        throw;
+    }
+}
+
+ConstantItemNode* Parser::ParseConstantItem() {
+    Position pos = tokens[parseIndex].pos;
+    TypeNode* type_node = nullptr;
+    ExpressionNode* expression_node = nullptr;
+    try {
+        bool is_underscore = false;
+        std::string identifier;
+        ConsumeString("const");
+        if (tokens[parseIndex].type == TokenType::Underscore) {
+            is_underscore = true;
+        } else {
+            if (tokens[parseIndex].type != TokenType::Identifier) {
+                throw ParseError("Parse Error: Identifier Not Found", tokens[parseIndex].pos);
+            }
+            identifier = tokens[parseIndex++].token;
+        }
+        ConsumeString(":");
+        type_node = ParseType();
+        if (tokens[parseIndex].type == TokenType::Eq) {
+            ConsumeString("=");
+            expression_node = ParseExpression();
+        }
+        return new ConstantItemNode(pos, identifier, is_underscore, type_node, expression_node);
+    } catch (std::exception&) {
+        delete type_node;
+        delete expression_node;
+        throw;
+    }
+}
+
+AssociatedItemNode* Parser::ParseAssociatedItem() {
+    Position pos = tokens[parseIndex].pos;
+    ConstantItemNode* constant_item_node = nullptr;
+    FunctionNode* function_node = nullptr;
+    try {
+        if (tokens[parseIndex].type == TokenType::Const) {
+            constant_item_node = ParseConstantItem();
+        } else {
+            function_node = ParseFunction();
+        }
+        return new AssociatedItemNode(pos, constant_item_node, function_node);
+    } catch (std::exception&) {
+        delete constant_item_node;
+        delete function_node;
         throw;
     }
 }
@@ -889,11 +951,21 @@ ExpressionNode* Parser::ParseCallExpression() {
 
 ExpressionNode* Parser::ParsePrimaryExpression() {
     Position pos = tokens[parseIndex].pos;
+    uint32_t start = parseIndex;
     std::vector<ExpressionNode*> expression_nodes;
     try {
         auto* tmp = ParseLiteral();
         return tmp;
-    } catch (std::exception&) {}
+    } catch (std::exception&) {
+        parseIndex = start;
+    }
+
+    try {
+        auto* tmp = ParseStructExpression();
+        return tmp;
+    } catch (std::exception&) {
+        parseIndex = start;
+    }
 
     try {
         if (tokens[parseIndex].type == TokenType::Identifier) {
@@ -927,7 +999,6 @@ ExpressionNode* Parser::ParsePrimaryExpression() {
     }
 }
 
-// 解析结构体表达式 (StructExpression → PathInExpression { ( StructExprFields | StructBase )? })
 StructExpressionNode* Parser::ParseStructExpression() {
     Position pos = tokens[parseIndex].pos;
     PathInExpressionNode* path_in_expression_node = nullptr;
@@ -941,6 +1012,7 @@ StructExpressionNode* Parser::ParseStructExpression() {
         } else if (tokens[parseIndex].type != TokenType::RBrace) {
             struct_field_node = ParseStructExprFields();
         }
+        ConsumeString("}");
         return new StructExpressionNode(pos, path_in_expression_node,
                 struct_field_node, struct_base_node);
     } catch (std::exception&) {
@@ -960,7 +1032,7 @@ StructExprFieldNode* Parser::ParseStructExprField() {
         }
         std::string identifier = tokens[parseIndex].token;
         parseIndex++;
-        if (tokens[parseIndex].type != TokenType::Colon) {
+        if (tokens[parseIndex].type == TokenType::Colon) {
             ConsumeString(":");
             expr = ParseExpression();
         }

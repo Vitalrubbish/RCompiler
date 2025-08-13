@@ -87,6 +87,16 @@ EnumVariantDiscriminantNode::~EnumVariantDiscriminantNode() {
     delete expression_node_;
 }
 
+ConstantItemNode::~ConstantItemNode() {
+    delete type_node_;
+    delete expression_node_;
+}
+
+AssociatedItemNode::~AssociatedItemNode() {
+    delete constant_item_node_;
+    delete function_node_;
+}
+
 /****************  Statement  ****************/
 LetStatementNode::~LetStatementNode() {
     delete pattern_no_top_alt_;

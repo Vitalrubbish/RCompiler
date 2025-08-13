@@ -251,6 +251,36 @@ public:
     ~EnumVariantDiscriminantNode() override;
 };
 
+class ConstantItemNode: public ASTNode {
+    std::string identifier_;
+    bool is_underscore_ = false;
+    TypeNode* type_node_;
+    ExpressionNode* expression_node_;
+public:
+    ConstantItemNode(Position pos, const std::string& identifier, bool is_underscore,
+        TypeNode* type_node, ExpressionNode* expression_node): ASTNode(pos) {
+        identifier_ = identifier;
+        is_underscore_ = is_underscore;
+        type_node_ = type_node;
+        expression_node_ = expression_node;
+    }
+
+    ~ConstantItemNode() override; // TODO
+};
+
+class AssociatedItemNode: public ASTNode {
+    ConstantItemNode* constant_item_node_;
+    FunctionNode* function_node_;
+public:
+    AssociatedItemNode(Position pos, ConstantItemNode* constant_item_node,
+        FunctionNode* function_node): ASTNode(pos) {
+        constant_item_node_ = constant_item_node;
+        function_node_ = function_node;
+    }
+
+    ~AssociatedItemNode() override;
+};
+
 /****************  Expression With Block  ****************/
 class ExpressionNode: public ASTNode {
 protected:

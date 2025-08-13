@@ -37,15 +37,16 @@ public:
 
     EnumVariantStructNode* ParseEnumVariantStruct();
 
-    EnumVariantDiscriminantNode* ParseEnumVariantDiscirminant();
+    EnumVariantDiscriminantNode* ParseEnumVariantDiscriminant();
 
-    // bool ParseConstantItem();
+    ConstantItemNode* ParseConstantItem();
+
+    AssociatedItemNode* ParseAssociatedItem();
 
     // bool ParseTrait();
 
     // bool ParseImplementation();
 
-    // bool ParseFunctionQualifiers();
 
     TypeNode* ParseFunctionReturnType();
 
