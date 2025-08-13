@@ -265,7 +265,7 @@ public:
         expression_node_ = expression_node;
     }
 
-    ~ConstantItemNode() override; // TODO
+    ~ConstantItemNode() override;
 };
 
 class AssociatedItemNode: public ASTNode {
@@ -280,6 +280,29 @@ public:
 
     ~AssociatedItemNode() override;
 };
+
+class ImplementationNode: public ASTNode {
+public:
+    explicit ImplementationNode(Position pos): ASTNode(pos) {}
+
+    ~ImplementationNode() override = default;
+};
+
+class InherentImplNode: public ImplementationNode {
+    TypeNode* type_node_;
+    std::vector<AssociatedItemNode*> associated_item_nodes_;
+public:
+    InherentImplNode(Position pos, TypeNode* type_node,
+        const std::vector<AssociatedItemNode*>& associated_item_nodes):
+        ImplementationNode(pos) {
+        type_node_ = type_node;
+        associated_item_nodes_ = associated_item_nodes;
+    }
+
+    ~InherentImplNode() override;
+};
+
+// TODO Define TraitImplNode
 
 /****************  Expression With Block  ****************/
 class ExpressionNode: public ASTNode {

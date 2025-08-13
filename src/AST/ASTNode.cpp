@@ -97,6 +97,13 @@ AssociatedItemNode::~AssociatedItemNode() {
     delete function_node_;
 }
 
+InherentImplNode::~InherentImplNode() {
+    delete type_node_;
+    for (auto& it: associated_item_nodes_) {
+        delete it;
+    }
+}
+
 /****************  Statement  ****************/
 LetStatementNode::~LetStatementNode() {
     delete pattern_no_top_alt_;

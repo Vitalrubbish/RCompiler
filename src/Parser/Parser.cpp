@@ -55,8 +55,13 @@ VisItemNode* Parser::ParseVisItem() {
             node = ParseEnumeration();
             return new VisItemNode(pos, node);
         }
+        if (tokens[parseIndex].type == TokenType::Impl) {
+            node = ParseImplementation();
+            return new VisItemNode(pos, node);
+        }
         return nullptr;
     } catch (std::exception&) {
+        delete node;
         throw;
     }
 
@@ -396,6 +401,44 @@ AssociatedItemNode* Parser::ParseAssociatedItem() {
     } catch (std::exception&) {
         delete constant_item_node;
         delete function_node;
+        throw;
+    }
+}
+
+ImplementationNode* Parser::ParseImplementation() {
+    ImplementationNode* ret = nullptr;
+    try {
+        ret = ParseInherentImpl();
+        return ret;
+    } catch (std::exception&) {
+        delete ret;
+        throw;
+    }
+
+    // TODO Parse TraitImpl
+}
+
+InherentImplNode *Parser::ParseInherentImpl() {
+    Position pos = tokens[parseIndex].pos;
+    TypeNode* type_node = nullptr;
+    std::vector<AssociatedItemNode*> associated_item_nodes;
+    AssociatedItemNode* associated_item_node = nullptr;
+    try {
+        ConsumeString("impl");
+        type_node = ParseType();
+        ConsumeString("{");
+        while (tokens[parseIndex].type != TokenType::RBrace) {
+            associated_item_node = ParseAssociatedItem();
+            associated_item_nodes.emplace_back(associated_item_node);
+        }
+        ConsumeString("}");
+        return new InherentImplNode(pos, type_node, associated_item_nodes);
+    } catch (std::exception&) {
+        delete type_node;
+        delete associated_item_node;
+        for (auto& it: associated_item_nodes) {
+            delete it;
+        }
         throw;
     }
 }

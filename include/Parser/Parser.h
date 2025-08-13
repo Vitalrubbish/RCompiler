@@ -45,8 +45,9 @@ public:
 
     // bool ParseTrait();
 
-    // bool ParseImplementation();
+    ImplementationNode* ParseImplementation();
 
+    InherentImplNode* ParseInherentImpl();
 
     TypeNode* ParseFunctionReturnType();
 

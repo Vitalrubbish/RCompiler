@@ -12,7 +12,7 @@ ASTNode* root;
 
 int main() {
     // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
-    freopen("../testcases/Parser/in04.rs", "r", stdin);
+    freopen("../testcases/Parser/in06.rs", "r", stdin);
     std::string text, line;
     while(std::getline(std::cin, line)) {
         text += line;
