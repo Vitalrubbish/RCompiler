@@ -9,168 +9,169 @@ class Parser {
     std::vector<Token> tokens;
     uint32_t parseIndex = 0;
 
-    void ConsumeString(const std::string& );
+    void ConsumeString(const std::string &);
 
 public:
     Parser() = default;
 
     explicit Parser(const std::vector<Token> &tokens) {
-        this -> tokens = tokens;
+        this->tokens = tokens;
     }
 
     /****************  Items  ****************/
-    CrateNode* ParseCrate();
+    CrateNode *ParseCrate();
 
-    VisItemNode* ParseVisItem();
+    VisItemNode *ParseVisItem();
 
     // bool ParseModule();
 
-    FunctionNode* ParseFunction();
+    FunctionNode *ParseFunction();
 
-    StructNode* ParseStruct();
+    StructNode *ParseStruct();
 
-    StructFieldNode* ParseStructFieldNode();
+    StructFieldNode *ParseStructFieldNode();
 
-    EnumerationNode* ParseEnumeration();
+    EnumerationNode *ParseEnumeration();
 
-    EnumVariantNode* ParseEnumVariant();
+    EnumVariantNode *ParseEnumVariant();
 
-    EnumVariantStructNode* ParseEnumVariantStruct();
+    EnumVariantStructNode *ParseEnumVariantStruct();
 
-    EnumVariantDiscriminantNode* ParseEnumVariantDiscriminant();
+    EnumVariantDiscriminantNode *ParseEnumVariantDiscriminant();
 
-    ConstantItemNode* ParseConstantItem();
+    ConstantItemNode *ParseConstantItem();
 
-    AssociatedItemNode* ParseAssociatedItem();
+    AssociatedItemNode *ParseAssociatedItem();
 
     // bool ParseTrait();
 
-    ImplementationNode* ParseImplementation();
+    ImplementationNode *ParseImplementation();
 
-    InherentImplNode* ParseInherentImpl();
+    InherentImplNode *ParseInherentImpl();
 
-    TypeNode* ParseFunctionReturnType();
+    TypeNode *ParseFunctionReturnType();
 
-    FunctionParametersNode* ParseFunctionParameters();
+    FunctionParametersNode *ParseFunctionParameters();
 
-    FunctionParamNode* ParseFunctionParam();
+    FunctionParamNode *ParseFunctionParam();
 
-    FunctionParamPatternNode* ParseFunctionParamPattern();
+    FunctionParamPatternNode *ParseFunctionParamPattern();
 
     /****************  Expression  ****************/
-    ExpressionNode* ParseExpression();
+    ExpressionNode *ParseExpression();
 
-    ExpressionNode* ParseExpressionWithBlock();
+    ExpressionNode *ParseExpressionWithBlock();
 
-    BlockExpressionNode* ParseBlockExpression();
+    BlockExpressionNode *ParseBlockExpression();
 
-    BlockExpressionNode* ParseConstBlockExpression();
+    BlockExpressionNode *ParseConstBlockExpression();
 
-    InfiniteLoopExpressionNode* ParseInfiniteLoopExpression();
+    InfiniteLoopExpressionNode *ParseInfiniteLoopExpression();
 
-    PredicateLoopExpressionNode* ParsePredicateLoopExpression();
+    PredicateLoopExpressionNode *ParsePredicateLoopExpression();
 
-    IfExpressionNode* ParseIfExpression();
+    IfExpressionNode *ParseIfExpression();
 
-    MatchExpressionNode* ParseMatchExpression();
+    MatchExpressionNode *ParseMatchExpression();
 
-    ExpressionNode* ParseExpressionWithoutBlock();
+    ExpressionNode *ParseExpressionWithoutBlock();
 
-    ExpressionNode* ParseTupleExpression();
+    ExpressionNode *ParseTupleExpression();
 
-    ExpressionNode* ParseJumpExpression();
+    ExpressionNode *ParseJumpExpression();
 
-    ExpressionNode* ParseAssignmentExpression();
+    ExpressionNode *ParseAssignmentExpression();
 
-    ExpressionNode* ParseLogicalOrExpression();
+    ExpressionNode *ParseLogicalOrExpression();
 
-    ExpressionNode* ParseLogicalAndExpression();
+    ExpressionNode *ParseLogicalAndExpression();
 
-    ExpressionNode* ParseComparisonExpression();
+    ExpressionNode *ParseComparisonExpression();
 
-    ExpressionNode* ParseBitwiseOrExpression();
+    ExpressionNode *ParseBitwiseOrExpression();
 
-    ExpressionNode* ParseBitwiseXorExpression();
+    ExpressionNode *ParseBitwiseXorExpression();
 
-    ExpressionNode* ParseBitwiseAndExpression();
+    ExpressionNode *ParseBitwiseAndExpression();
 
-    ExpressionNode* ParseShiftExpression();
+    ExpressionNode *ParseShiftExpression();
 
-    ExpressionNode* ParseAddMinusExpression();
+    ExpressionNode *ParseAddMinusExpression();
 
-    ExpressionNode* ParseMulDivModExpression();
+    ExpressionNode *ParseMulDivModExpression();
 
-    ExpressionNode* ParseTypeCastExpression();
+    ExpressionNode *ParseTypeCastExpression();
 
-    ExpressionNode* ParseUnaryExpression();
+    ExpressionNode *ParseUnaryExpression();
 
-    ExpressionNode* ParseCallExpression();
+    ExpressionNode *ParseCallExpression();
 
-    ExpressionNode* ParsePrimaryExpression();
+    ExpressionNode *ParsePrimaryExpression();
 
-    StructExpressionNode* ParseStructExpression();
+    StructExpressionNode *ParseStructExpression();
 
-    StructExprFieldsNode* ParseStructExprFields();
+    StructExprFieldsNode *ParseStructExprFields();
 
-    StructExprFieldNode* ParseStructExprField();
+    StructExprFieldNode *ParseStructExprField();
 
-    StructBaseNode* ParseStructBase();
+    StructBaseNode *ParseStructBase();
 
-    ExpressionNode* ParseLiteral();
+    ExpressionNode *ParseLiteral();
 
-    PathExpressionNode* ParsePathExpression();
+    PathExpressionNode *ParsePathExpression();
 
-    PathInExpressionNode* ParsePathInExpression();
+    PathInExpressionNode *ParsePathInExpression();
 
-    StatementsNode* ParseStatements();
+    StatementsNode *ParseStatements();
 
-    ConditionsNode* ParseConditions();
+    ConditionsNode *ParseConditions();
 
-    MatchArmsNode* ParseMatchArms();
+    MatchArmsNode *ParseMatchArms();
 
-    MatchArmNode* ParseMatchArm();
+    MatchArmNode *ParseMatchArm();
 
     /****************  Statement  ****************/
-    StatementNode* ParseStatement();
+    StatementNode *ParseStatement();
 
-    LetStatementNode* ParseLetStatement();
+    LetStatementNode *ParseLetStatement();
 
-    ExpressionStatementNode* ParseExpressionStatement();
+    ExpressionStatementNode *ParseExpressionStatement();
 
     /****************  Patterns  ****************/
-    PatternNode* ParsePattern();
+    PatternNode *ParsePattern();
 
-    PatternNoTopAltNode* ParsePatternNoTopAlt();
+    PatternNoTopAltNode *ParsePatternNoTopAlt();
 
-    PatternWithoutRangeNode* ParsePatternWithoutRange();
+    PatternWithoutRangeNode *ParsePatternWithoutRange();
 
-    LiteralPatternNode* ParseLiteralPattern();
+    LiteralPatternNode *ParseLiteralPattern();
 
-    IdentifierPatternNode* ParseIdentifierPattern();
+    IdentifierPatternNode *ParseIdentifierPattern();
 
-    SlicePatternNode* ParseSlicePattern();
+    SlicePatternNode *ParseSlicePattern();
 
-    PathPatternNode* ParsePathPattern();
+    PathPatternNode *ParsePathPattern();
+
     /****************  Types  ****************/
-    TypeNode* ParseType();
+    TypeNode *ParseType();
 
-    TypeNoBoundsNode* ParseTypeNoBounds();
+    TypeNoBoundsNode *ParseTypeNoBounds();
 
-    ParenthesizedTypeNode* ParseParenthesizedType();
+    ParenthesizedTypeNode *ParseParenthesizedType();
 
-    TypePathNode* ParseTypePath();
+    TypePathNode *ParseTypePath();
 
-    TypePathSegmentNode* ParseTypePathSegment();
+    TypePathSegmentNode *ParseTypePathSegment();
 
-    TupleTypeNode* ParseTupleType();
+    TupleTypeNode *ParseTupleType();
 
-    ArrayTypeNode* ParseArrayType();
+    ArrayTypeNode *ParseArrayType();
 
-    SliceTypeNode* ParseSliceType();
+    SliceTypeNode *ParseSliceType();
 
-    InferredTypeNode* ParseInferredType();
+    InferredTypeNode *ParseInferredType();
 
     /****************  Paths  ****************/
-    PathIndentSegmentNode* ParsePathIndentSegment();
+    PathIndentSegmentNode *ParsePathIndentSegment();
 };
 #endif //PARSER_H

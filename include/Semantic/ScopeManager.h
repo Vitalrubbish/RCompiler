@@ -5,6 +5,7 @@
 
 class ScopeManager {
     std::vector<Scope> scopes_;
+
 public:
     ScopeManager() {
         scopes_.emplace_back();
@@ -18,19 +19,19 @@ public:
         scopes_.pop_back();
     }
 
-    void declare(Symbol* symbol) {
+    void declare(Symbol *symbol) {
         try {
             uint32_t len = scopes_.size();
             scopes_[len - 1].declare(symbol);
-        } catch (std::exception&) {
+        } catch (std::exception &) {
             throw;
         }
     }
 
-    Symbol* lookup(const std::string& name) {
+    Symbol *lookup(const std::string &name) {
         auto len = static_cast<int32_t>(scopes_.size());
         for (int32_t i = len - 1; i >= 0; i--) {
-            auto* ret = scopes_[i].lookup(name);
+            auto *ret = scopes_[i].lookup(name);
             if (ret) {
                 return ret;
             }

@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <cctype>
 
-inline int64_t StringToInt(const std::string& literal) {
+inline int64_t StringToInt(const std::string &literal) {
     uint32_t base = 10;
     uint32_t start_index = 0;
     if (literal.length() >= 2 && literal[0] == '0') {
@@ -45,18 +45,18 @@ inline int64_t StringToInt(const std::string& literal) {
 
 
 // Helper functions for starts_with/ends_with
-inline bool starts_with(const std::string& str, const std::string& prefix) {
+inline bool starts_with(const std::string &str, const std::string &prefix) {
     return str.size() >= prefix.size() &&
            str.compare(0, prefix.size(), prefix) == 0;
 }
 
-inline bool ends_with(const std::string& str, const std::string& suffix) {
+inline bool ends_with(const std::string &str, const std::string &suffix) {
     return str.size() >= suffix.size() &&
            str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
 // Unescape Rust string literals
-inline std::string unescape_rust_string(const std::string& input) {
+inline std::string unescape_rust_string(const std::string &input) {
     std::string result;
     result.reserve(input.length());
 
@@ -73,13 +73,13 @@ inline std::string unescape_rust_string(const std::string& input) {
                 {'0', '\0'}
             };
 
-            char next = input[i+1];
+            char next = input[i + 1];
             if (escapes.count(next)) {
                 result += escapes.at(next);
                 i++;
             } else if (next == 'x' && i + 3 < input.length() &&
-                      isxdigit(input[i+2]) && isxdigit(input[i+3])) {
-                char hex[3] = {input[i+2], input[i+3], '\0'};
+                       isxdigit(input[i + 2]) && isxdigit(input[i + 3])) {
+                char hex[3] = {input[i + 2], input[i + 3], '\0'};
                 result += static_cast<char>(strtol(hex, nullptr, 16));
                 i += 3;
             } else {
@@ -93,7 +93,7 @@ inline std::string unescape_rust_string(const std::string& input) {
 }
 
 // For string literals (returns std::string)
-inline std::string rust_str_to_cpp(const std::string& token) {
+inline std::string rust_str_to_cpp(const std::string &token) {
     if (token.empty()) return "";
 
     // Check for string literal types
@@ -106,15 +106,14 @@ inline std::string rust_str_to_cpp(const std::string& token) {
         }
         std::string content = token.substr(start + 1, token.length() - start - 2);
         return unescape_rust_string(content);
-    }
-    else if (starts_with(token, "r") && (token[1] == '#' || token[1] == '\"')) {
+    } else if (starts_with(token, "r") && (token[1] == '#' || token[1] == '\"')) {
         // Raw string literal
         size_t start_hash = token.find('"') + 1;
         size_t end_hash = token.rfind('"') - 1;
 
         if (token.size() > 2 && token[1] == '#') {
             size_t hash_count = 1;
-            while (token[start_hash-2-hash_count] == '#') {
+            while (token[start_hash - 2 - hash_count] == '#') {
                 hash_count++;
             }
             return token.substr(start_hash, end_hash - start_hash + 1);
@@ -126,7 +125,7 @@ inline std::string rust_str_to_cpp(const std::string& token) {
 }
 
 // For char literals (returns char)
-inline char rust_char_to_cpp(const std::string& token, char default_char = '\0') {
+inline char rust_char_to_cpp(const std::string &token, char default_char = '\0') {
     if (token.empty()) return default_char;
 
     // Check for char literal types
@@ -135,8 +134,7 @@ inline char rust_char_to_cpp(const std::string& token, char default_char = '\0')
         std::string content = token.substr(1, token.length() - 2);
         std::string unescaped = unescape_rust_string(content);
         return unescaped.empty() ? default_char : unescaped[0];
-    }
-    else if (starts_with(token, "b\'")) {
+    } else if (starts_with(token, "b\'")) {
         if (token.length() < 4) return default_char;
         std::string content = token.substr(2, token.length() - 3);
         std::string unescaped = unescape_rust_string(content);

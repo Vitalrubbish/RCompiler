@@ -103,117 +103,196 @@ class ASTVisitor {
 public:
     virtual ~ASTVisitor() = default;
 
-    virtual void visit(ASTNode* node) = 0;
+    virtual void visit(ASTNode *node) = 0;
 
-    virtual void visit(CrateNode* node) = 0;
-    virtual void visit(VisItemNode* node) = 0;
-    virtual void visit(ModuleNode* node) = 0;
-    virtual void visit(FunctionNode* node) = 0;
-    virtual void visit(StructNode* node) = 0;
-    virtual void visit(EnumerationNode* node) = 0;
-    virtual void visit(ConstantItemNode* node) = 0;
-    virtual void visit(TraitNode* node) = 0;
-    virtual void visit(ImplementationNode* node) = 0;
-    virtual void visit(AssociatedItemNode* node) = 0;
-    virtual void visit(InherentImplNode* node) = 0;
-    virtual void visit(TraitImplNode* node) = 0;
+    virtual void visit(CrateNode *node) = 0;
 
-    virtual void visit(FunctionParametersNode* node) = 0;
-    virtual void visit(FunctionParamNode* node) = 0;
-    virtual void visit(FunctionParamPatternNode* node) = 0;
+    virtual void visit(VisItemNode *node) = 0;
 
-    virtual void visit(StructFieldNode* node) = 0;
+    virtual void visit(ModuleNode *node) = 0;
 
-    virtual void visit(EnumVariantNode* node) = 0;
-    virtual void visit(EnumVariantStructNode* node) = 0;
-    virtual void visit(EnumVariantDiscriminantNode* node) = 0;
+    virtual void visit(FunctionNode *node) = 0;
 
-    virtual void visit(TypeParamBoundsNode* node) = 0;
-    virtual void visit(TypeParamNode* node) = 0;
-    virtual void visit(ConstParamNode* node) = 0;
+    virtual void visit(StructNode *node) = 0;
 
-    virtual void visit(StatementNode* node) = 0;
-    virtual void visit(StatementsNode* node) = 0;
-    virtual void visit(EmptyStatementNode* node) = 0;
-    virtual void visit(LetStatementNode* node) = 0;
-    virtual void visit(ExpressionStatementNode* node) = 0;
+    virtual void visit(EnumerationNode *node) = 0;
 
-    virtual void visit(ExpressionNode* node) = 0;
-    virtual void visit(ExpressionWithoutBlockNode* node) = 0;
-    virtual void visit(ExpressionWithBlockNode* node) = 0;
-    virtual void visit(ComparisonExpressionNode* node) = 0;
-    virtual void visit(TypeCastExpressionNode* node) = 0;
-    virtual void visit(AssignmentExpressionNode* node) = 0;
-    virtual void visit(ContinueExpressionNode* node) = 0;
-    virtual void visit(UnderscoreExpressionNode* node) = 0;
-    virtual void visit(JumpExpressionNode* node) = 0;
-    virtual void visit(LogicOrExpressionNode* node) = 0;
-    virtual void visit(LogicAndExpressionNode* node) = 0;
-    virtual void visit(BitwiseOrExpressionNode* node) = 0;
-    virtual void visit(BitwiseXorExpressionNode* node) = 0;
-    virtual void visit(BitwiseAndExpressionNode* node) = 0;
-    virtual void visit(ShiftExpressionNode* node) = 0;
-    virtual void visit(AddMinusExpressionNode* node) = 0;
-    virtual void visit(MulDivModExpressionNode* node) = 0;
-    virtual void visit(UnaryExpressionNode* node) = 0;
-    virtual void visit(FunctionCallExpressionNode* node) = 0;
-    virtual void visit(ArrayIndexExpressionNode* node) = 0;
-    virtual void visit(MemberAccessExpressionNode* node) = 0;
+    virtual void visit(ConstantItemNode *node) = 0;
 
-    virtual void visit(BlockExpressionNode* node) = 0;
-    virtual void visit(LoopExpressionNode* node) = 0;
-    virtual void visit(InfiniteLoopExpressionNode* node) = 0;
-    virtual void visit(PredicateLoopExpressionNode* node) = 0;
-    virtual void visit(IfExpressionNode* node) = 0;
-    virtual void visit(MatchExpressionNode* node) = 0;
+    virtual void visit(TraitNode *node) = 0;
 
-    virtual void visit(LiteralExpressionNode* node) = 0;
-    virtual void visit(CharLiteralNode* node) = 0;
-    virtual void visit(StringLiteralNode* node) = 0;
-    virtual void visit(CStringLiteralNode* node) = 0;
-    virtual void visit(IntLiteralNode* node) = 0;
-    virtual void visit(BoolLiteralNode* node) = 0;
-    virtual void visit(ArrayLiteralNode* node) = 0;
+    virtual void visit(ImplementationNode *node) = 0;
 
-    virtual void visit(PathExpressionNode* node) = 0;
-    virtual void visit(PathInExpressionNode* node) = 0;
-    virtual void visit(QualifiedPathInExpressionNode* node) = 0;
-    virtual void visit(PathIndentSegmentNode* node) = 0;
+    virtual void visit(AssociatedItemNode *node) = 0;
 
-    virtual void visit(StructExpressionNode* node) = 0;
-    virtual void visit(StructExprFieldsNode* node) = 0;
-    virtual void visit(StructExprFieldNode* node) = 0;
-    virtual void visit(StructBaseNode* node) = 0;
+    virtual void visit(InherentImplNode *node) = 0;
 
-    virtual void visit(GroupedExpressionNode* node) = 0;
-    virtual void visit(TupleExpressionNode* node) = 0;
-    virtual void visit(ConditionsNode* node) = 0;
-    virtual void visit(LetChainNode* node) = 0;
+    virtual void visit(TraitImplNode *node) = 0;
 
-    virtual void visit(MatchArmsNode* node) = 0;
-    virtual void visit(MatchArmNode* node) = 0;
-    virtual void visit(MatchArmGuardNode* node) = 0;
+    virtual void visit(FunctionParametersNode *node) = 0;
 
-    virtual void visit(PatternNode* node) = 0;
-    virtual void visit(PatternNoTopAltNode* node) = 0;
-    virtual void visit(PatternWithoutRangeNode* node) = 0;
-    virtual void visit(LiteralPatternNode* node) = 0;
-    virtual void visit(IdentifierPatternNode* node) = 0;
-    virtual void visit(WildcardPatternNode* node) = 0;
-    virtual void visit(RestPatternNode* node) = 0;
-    virtual void visit(GroupedPatternNode* node) = 0;
-    virtual void visit(SlicePatternNode* node) = 0;
-    virtual void visit(PathPatternNode* node) = 0;
+    virtual void visit(FunctionParamNode *node) = 0;
 
-    virtual void visit(TypeNode* node) = 0;
-    virtual void visit(TypeNoBoundsNode* node) = 0;
-    virtual void visit(ParenthesizedTypeNode* node) = 0;
-    virtual void visit(TypePathNode* node) = 0;
-    virtual void visit(TypePathSegmentNode* node) = 0;
-    virtual void visit(TupleTypeNode* node) = 0;
-    virtual void visit(ArrayTypeNode* node) = 0;
-    virtual void visit(SliceTypeNode* node) = 0;
-    virtual void visit(InferredTypeNode* node) = 0;
+    virtual void visit(FunctionParamPatternNode *node) = 0;
 
+    virtual void visit(StructFieldNode *node) = 0;
+
+    virtual void visit(EnumVariantNode *node) = 0;
+
+    virtual void visit(EnumVariantStructNode *node) = 0;
+
+    virtual void visit(EnumVariantDiscriminantNode *node) = 0;
+
+    virtual void visit(TypeParamBoundsNode *node) = 0;
+
+    virtual void visit(TypeParamNode *node) = 0;
+
+    virtual void visit(ConstParamNode *node) = 0;
+
+    virtual void visit(StatementNode *node) = 0;
+
+    virtual void visit(StatementsNode *node) = 0;
+
+    virtual void visit(EmptyStatementNode *node) = 0;
+
+    virtual void visit(LetStatementNode *node) = 0;
+
+    virtual void visit(ExpressionStatementNode *node) = 0;
+
+    virtual void visit(ExpressionNode *node) = 0;
+
+    virtual void visit(ExpressionWithoutBlockNode *node) = 0;
+
+    virtual void visit(ExpressionWithBlockNode *node) = 0;
+
+    virtual void visit(ComparisonExpressionNode *node) = 0;
+
+    virtual void visit(TypeCastExpressionNode *node) = 0;
+
+    virtual void visit(AssignmentExpressionNode *node) = 0;
+
+    virtual void visit(ContinueExpressionNode *node) = 0;
+
+    virtual void visit(UnderscoreExpressionNode *node) = 0;
+
+    virtual void visit(JumpExpressionNode *node) = 0;
+
+    virtual void visit(LogicOrExpressionNode *node) = 0;
+
+    virtual void visit(LogicAndExpressionNode *node) = 0;
+
+    virtual void visit(BitwiseOrExpressionNode *node) = 0;
+
+    virtual void visit(BitwiseXorExpressionNode *node) = 0;
+
+    virtual void visit(BitwiseAndExpressionNode *node) = 0;
+
+    virtual void visit(ShiftExpressionNode *node) = 0;
+
+    virtual void visit(AddMinusExpressionNode *node) = 0;
+
+    virtual void visit(MulDivModExpressionNode *node) = 0;
+
+    virtual void visit(UnaryExpressionNode *node) = 0;
+
+    virtual void visit(FunctionCallExpressionNode *node) = 0;
+
+    virtual void visit(ArrayIndexExpressionNode *node) = 0;
+
+    virtual void visit(MemberAccessExpressionNode *node) = 0;
+
+    virtual void visit(BlockExpressionNode *node) = 0;
+
+    virtual void visit(LoopExpressionNode *node) = 0;
+
+    virtual void visit(InfiniteLoopExpressionNode *node) = 0;
+
+    virtual void visit(PredicateLoopExpressionNode *node) = 0;
+
+    virtual void visit(IfExpressionNode *node) = 0;
+
+    virtual void visit(MatchExpressionNode *node) = 0;
+
+    virtual void visit(LiteralExpressionNode *node) = 0;
+
+    virtual void visit(CharLiteralNode *node) = 0;
+
+    virtual void visit(StringLiteralNode *node) = 0;
+
+    virtual void visit(CStringLiteralNode *node) = 0;
+
+    virtual void visit(IntLiteralNode *node) = 0;
+
+    virtual void visit(BoolLiteralNode *node) = 0;
+
+    virtual void visit(ArrayLiteralNode *node) = 0;
+
+    virtual void visit(PathExpressionNode *node) = 0;
+
+    virtual void visit(PathInExpressionNode *node) = 0;
+
+    virtual void visit(QualifiedPathInExpressionNode *node) = 0;
+
+    virtual void visit(PathIndentSegmentNode *node) = 0;
+
+    virtual void visit(StructExpressionNode *node) = 0;
+
+    virtual void visit(StructExprFieldsNode *node) = 0;
+
+    virtual void visit(StructExprFieldNode *node) = 0;
+
+    virtual void visit(StructBaseNode *node) = 0;
+
+    virtual void visit(GroupedExpressionNode *node) = 0;
+
+    virtual void visit(TupleExpressionNode *node) = 0;
+
+    virtual void visit(ConditionsNode *node) = 0;
+
+    virtual void visit(LetChainNode *node) = 0;
+
+    virtual void visit(MatchArmsNode *node) = 0;
+
+    virtual void visit(MatchArmNode *node) = 0;
+
+    virtual void visit(MatchArmGuardNode *node) = 0;
+
+    virtual void visit(PatternNode *node) = 0;
+
+    virtual void visit(PatternNoTopAltNode *node) = 0;
+
+    virtual void visit(PatternWithoutRangeNode *node) = 0;
+
+    virtual void visit(LiteralPatternNode *node) = 0;
+
+    virtual void visit(IdentifierPatternNode *node) = 0;
+
+    virtual void visit(WildcardPatternNode *node) = 0;
+
+    virtual void visit(RestPatternNode *node) = 0;
+
+    virtual void visit(GroupedPatternNode *node) = 0;
+
+    virtual void visit(SlicePatternNode *node) = 0;
+
+    virtual void visit(PathPatternNode *node) = 0;
+
+    virtual void visit(TypeNode *node) = 0;
+
+    virtual void visit(TypeNoBoundsNode *node) = 0;
+
+    virtual void visit(ParenthesizedTypeNode *node) = 0;
+
+    virtual void visit(TypePathNode *node) = 0;
+
+    virtual void visit(TypePathSegmentNode *node) = 0;
+
+    virtual void visit(TupleTypeNode *node) = 0;
+
+    virtual void visit(ArrayTypeNode *node) = 0;
+
+    virtual void visit(SliceTypeNode *node) = 0;
+
+    virtual void visit(InferredTypeNode *node) = 0;
 };
 #endif //ASTVISITOR_H

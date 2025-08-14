@@ -2,7 +2,7 @@
 #include "Error.h"
 #include "Util.h"
 
-void Parser::ConsumeString(const std::string& str) {
+void Parser::ConsumeString(const std::string &str) {
     if (tokens[parseIndex].token == str) {
         parseIndex++;
     } else {
@@ -11,30 +11,30 @@ void Parser::ConsumeString(const std::string& str) {
 }
 
 /****************  Items  ****************/
-CrateNode* Parser::ParseCrate() {
+CrateNode *Parser::ParseCrate() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<VisItemNode*> items;
+    std::vector<VisItemNode *> items;
     try {
         while (parseIndex != tokens.size()) {
-            auto* tmp = ParseVisItem();
+            auto *tmp = ParseVisItem();
             items.emplace_back(tmp);
         }
         return new CrateNode(pos, items);
-    } catch (std::exception&) {
-        for (const auto& it: items) {
+    } catch (std::exception &) {
+        for (const auto &it: items) {
             delete it;
         }
         throw;
     }
 }
 
-VisItemNode* Parser::ParseVisItem() {
+VisItemNode *Parser::ParseVisItem() {
     uint32_t start = parseIndex;
-    VisItemNode* node = nullptr;
+    VisItemNode *node = nullptr;
     try {
         node = ParseFunction();
         return node;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete node;
         node = nullptr;
         parseIndex = start;
@@ -58,18 +58,18 @@ VisItemNode* Parser::ParseVisItem() {
             return node;
         }
         return nullptr;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete node;
         throw;
     }
     // TODO Parse Other Items
 }
 
-FunctionNode* Parser::ParseFunction() {
+FunctionNode *Parser::ParseFunction() {
     Position pos = tokens[parseIndex].pos;
-    FunctionParametersNode* function_parameters_node = nullptr;
-    TypeNode* type_node = nullptr;
-    BlockExpressionNode* block_expression_node = nullptr;
+    FunctionParametersNode *function_parameters_node = nullptr;
+    TypeNode *type_node = nullptr;
+    BlockExpressionNode *block_expression_node = nullptr;
     try {
         bool is_const = false;
         if (tokens[parseIndex].type == TokenType::Const) {
@@ -103,8 +103,8 @@ FunctionNode* Parser::ParseFunction() {
             ConsumeString(";");
         }
         return new FunctionNode(pos, is_const, identifier, function_parameters_node,
-            type_node, block_expression_node);
-    } catch (std::exception&) {
+                                type_node, block_expression_node);
+    } catch (std::exception &) {
         delete type_node;
         delete function_parameters_node;
         delete block_expression_node;
@@ -113,22 +113,22 @@ FunctionNode* Parser::ParseFunction() {
 }
 
 TypeNode *Parser::ParseFunctionReturnType() {
-    TypeNode* type = nullptr;
+    TypeNode *type = nullptr;
     try {
         ConsumeString("->");
         type = ParseType();
         return type;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete type;
         throw;
     }
 }
 
 
-FunctionParametersNode* Parser::ParseFunctionParameters() {
+FunctionParametersNode *Parser::ParseFunctionParameters() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<FunctionParamNode*> function_param_nodes;
-    FunctionParamNode* tmp = nullptr;
+    std::vector<FunctionParamNode *> function_param_nodes;
+    FunctionParamNode *tmp = nullptr;
     try {
         tmp = ParseFunctionParam();
         function_param_nodes.emplace_back(tmp);
@@ -141,9 +141,9 @@ FunctionParametersNode* Parser::ParseFunctionParameters() {
             }
         }
         return new FunctionParametersNode(pos, function_param_nodes);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete tmp;
-        for (auto& it: function_param_nodes) {
+        for (auto &it: function_param_nodes) {
             delete it;
         }
         throw;
@@ -153,8 +153,8 @@ FunctionParametersNode* Parser::ParseFunctionParameters() {
 FunctionParamNode *Parser::ParseFunctionParam() {
     Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
-    FunctionParamPatternNode* function_param_pattern_node = nullptr;
-    TypeNode* type_node = nullptr;
+    FunctionParamPatternNode *function_param_pattern_node = nullptr;
+    TypeNode *type_node = nullptr;
     if (tokens[parseIndex].type == TokenType::DotDotDot) {
         ConsumeString("...");
         return new FunctionParamNode(pos, function_param_pattern_node, type_node, true);
@@ -162,21 +162,21 @@ FunctionParamNode *Parser::ParseFunctionParam() {
     try {
         type_node = ParseType();
         return new FunctionParamNode(pos, function_param_pattern_node, type_node, false);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
     try {
         function_param_pattern_node = ParseFunctionParamPattern();
         return new FunctionParamNode(pos, function_param_pattern_node, type_node, false);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw ParseError("Parse Error: Failed to Match FunctionParam", pos);
     }
 }
 
 FunctionParamPatternNode *Parser::ParseFunctionParamPattern() {
     Position pos = tokens[parseIndex].pos;
-    PatternNoTopAltNode* pattern_no_top_alt_node = nullptr;
-    TypeNode* type_node = nullptr;
+    PatternNoTopAltNode *pattern_no_top_alt_node = nullptr;
+    TypeNode *type_node = nullptr;
     try {
         pattern_no_top_alt_node = ParsePatternNoTopAlt();
         ConsumeString(":");
@@ -186,17 +186,17 @@ FunctionParamPatternNode *Parser::ParseFunctionParamPattern() {
         }
         type_node = ParseType();
         return new FunctionParamPatternNode(pos, pattern_no_top_alt_node, type_node, false);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete pattern_no_top_alt_node;
         delete type_node;
         throw;
     }
 }
 
-StructNode* Parser::ParseStruct() {
+StructNode *Parser::ParseStruct() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<StructFieldNode*> struct_field_nodes;
-    StructFieldNode* struct_field_node = nullptr;
+    std::vector<StructFieldNode *> struct_field_nodes;
+    StructFieldNode *struct_field_node = nullptr;
     try {
         ConsumeString("struct");
         if (tokens[parseIndex].type != TokenType::Identifier) {
@@ -223,8 +223,8 @@ StructNode* Parser::ParseStruct() {
         }
         ConsumeString("}");
         return new StructNode(pos, identifier, struct_field_nodes);
-    } catch (std::exception&) {
-        for (auto& it: struct_field_nodes) {
+    } catch (std::exception &) {
+        for (auto &it: struct_field_nodes) {
             delete it;
         }
         delete struct_field_node;
@@ -232,9 +232,9 @@ StructNode* Parser::ParseStruct() {
     }
 }
 
-StructFieldNode* Parser::ParseStructFieldNode() {
+StructFieldNode *Parser::ParseStructFieldNode() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode* type_node = nullptr;
+    TypeNode *type_node = nullptr;
     try {
         if (tokens[parseIndex].type != TokenType::Identifier) {
             throw ParseError("Parse Error: Identifier Not Found", tokens[parseIndex].pos);
@@ -243,7 +243,7 @@ StructFieldNode* Parser::ParseStructFieldNode() {
         ConsumeString(":");
         type_node = ParseType();
         return new StructFieldNode(pos, identifier, type_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete type_node;
         throw;
     }
@@ -251,8 +251,8 @@ StructFieldNode* Parser::ParseStructFieldNode() {
 
 EnumerationNode *Parser::ParseEnumeration() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<EnumVariantNode*> enum_variant_nodes;
-    EnumVariantNode* enum_variant_node;
+    std::vector<EnumVariantNode *> enum_variant_nodes;
+    EnumVariantNode *enum_variant_node;
     try {
         ConsumeString("enum");
         if (tokens[parseIndex].type != TokenType::Identifier) {
@@ -278,8 +278,8 @@ EnumerationNode *Parser::ParseEnumeration() {
         }
         ConsumeString("}");
         return new EnumerationNode(pos, identifier, enum_variant_nodes);
-    } catch (std::exception&) {
-        for (auto& it: enum_variant_nodes) {
+    } catch (std::exception &) {
+        for (auto &it: enum_variant_nodes) {
             delete it;
         }
         delete enum_variant_node;
@@ -289,8 +289,8 @@ EnumerationNode *Parser::ParseEnumeration() {
 
 EnumVariantNode *Parser::ParseEnumVariant() {
     Position pos = tokens[parseIndex].pos;
-    EnumVariantStructNode* enum_variant_struct_node = nullptr;
-    EnumVariantDiscriminantNode* enum_variant_discriminant_node = nullptr;
+    EnumVariantStructNode *enum_variant_struct_node = nullptr;
+    EnumVariantDiscriminantNode *enum_variant_discriminant_node = nullptr;
     try {
         if (tokens[parseIndex].type != TokenType::Identifier) {
             throw ParseError("Parse Error: Identifier Not Found", tokens[parseIndex].pos);
@@ -303,8 +303,8 @@ EnumVariantNode *Parser::ParseEnumVariant() {
             enum_variant_discriminant_node = ParseEnumVariantDiscriminant();
         }
         return new EnumVariantNode(pos, identifier, enum_variant_struct_node,
-            enum_variant_discriminant_node);
-    } catch (std::exception&) {
+                                   enum_variant_discriminant_node);
+    } catch (std::exception &) {
         delete enum_variant_struct_node;
         delete enum_variant_discriminant_node;
         throw;
@@ -313,8 +313,8 @@ EnumVariantNode *Parser::ParseEnumVariant() {
 
 EnumVariantStructNode *Parser::ParseEnumVariantStruct() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<StructFieldNode*> struct_field_nodes;
-    StructFieldNode* struct_field_node = nullptr;
+    std::vector<StructFieldNode *> struct_field_nodes;
+    StructFieldNode *struct_field_node = nullptr;
     try {
         ConsumeString("{");
         struct_field_node = ParseStructFieldNode();
@@ -329,9 +329,9 @@ EnumVariantStructNode *Parser::ParseEnumVariantStruct() {
         }
         ConsumeString("}");
         return new EnumVariantStructNode(pos, struct_field_nodes);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete struct_field_node;
-        for (auto& it: struct_field_nodes) {
+        for (auto &it: struct_field_nodes) {
             delete it;
         }
         throw;
@@ -340,21 +340,21 @@ EnumVariantStructNode *Parser::ParseEnumVariantStruct() {
 
 EnumVariantDiscriminantNode *Parser::ParseEnumVariantDiscriminant() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* expression_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
     try {
         ConsumeString("=");
         expression_node = ParseExpression();
         return new EnumVariantDiscriminantNode(pos, expression_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete expression_node;
         throw;
     }
 }
 
-ConstantItemNode* Parser::ParseConstantItem() {
+ConstantItemNode *Parser::ParseConstantItem() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode* type_node = nullptr;
-    ExpressionNode* expression_node = nullptr;
+    TypeNode *type_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
     try {
         bool is_underscore = false;
         std::string identifier;
@@ -374,17 +374,17 @@ ConstantItemNode* Parser::ParseConstantItem() {
             expression_node = ParseExpression();
         }
         return new ConstantItemNode(pos, identifier, is_underscore, type_node, expression_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete type_node;
         delete expression_node;
         throw;
     }
 }
 
-AssociatedItemNode* Parser::ParseAssociatedItem() {
+AssociatedItemNode *Parser::ParseAssociatedItem() {
     Position pos = tokens[parseIndex].pos;
-    ConstantItemNode* constant_item_node = nullptr;
-    FunctionNode* function_node = nullptr;
+    ConstantItemNode *constant_item_node = nullptr;
+    FunctionNode *function_node = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::Const) {
             constant_item_node = ParseConstantItem();
@@ -392,19 +392,19 @@ AssociatedItemNode* Parser::ParseAssociatedItem() {
             function_node = ParseFunction();
         }
         return new AssociatedItemNode(pos, constant_item_node, function_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete constant_item_node;
         delete function_node;
         throw;
     }
 }
 
-ImplementationNode* Parser::ParseImplementation() {
-    ImplementationNode* ret = nullptr;
+ImplementationNode *Parser::ParseImplementation() {
+    ImplementationNode *ret = nullptr;
     try {
         ret = ParseInherentImpl();
         return ret;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete ret;
         throw;
     }
@@ -414,9 +414,9 @@ ImplementationNode* Parser::ParseImplementation() {
 
 InherentImplNode *Parser::ParseInherentImpl() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode* type_node = nullptr;
-    std::vector<AssociatedItemNode*> associated_item_nodes;
-    AssociatedItemNode* associated_item_node = nullptr;
+    TypeNode *type_node = nullptr;
+    std::vector<AssociatedItemNode *> associated_item_nodes;
+    AssociatedItemNode *associated_item_node = nullptr;
     try {
         ConsumeString("impl");
         type_node = ParseType();
@@ -427,10 +427,10 @@ InherentImplNode *Parser::ParseInherentImpl() {
         }
         ConsumeString("}");
         return new InherentImplNode(pos, type_node, associated_item_nodes);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete type_node;
         delete associated_item_node;
-        for (auto& it: associated_item_nodes) {
+        for (auto &it: associated_item_nodes) {
             delete it;
         }
         throw;
@@ -441,23 +441,23 @@ InherentImplNode *Parser::ParseInherentImpl() {
 ExpressionNode *Parser::ParseExpression() {
     uint32_t start = parseIndex;
     try {
-        auto* ret = ParseExpressionWithBlock();
+        auto *ret = ParseExpressionWithBlock();
         return ret;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
-        auto* ret = ParseExpressionWithoutBlock();
+        auto *ret = ParseExpressionWithoutBlock();
         return ret;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
 
 /****************  Expression With Block  ****************/
-ExpressionNode* Parser::ParseExpressionWithBlock() {
-    ExpressionWithBlockNode* node = nullptr;
+ExpressionNode *Parser::ParseExpressionWithBlock() {
+    ExpressionWithBlockNode *node = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::Const) {
             node = ParseConstBlockExpression();
@@ -473,75 +473,75 @@ ExpressionNode* Parser::ParseExpressionWithBlock() {
             node = ParseBlockExpression();
         }
         return node;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete node;
         throw;
     }
 }
 
-BlockExpressionNode* Parser::ParseBlockExpression() {
+BlockExpressionNode *Parser::ParseBlockExpression() {
     Position pos = tokens[parseIndex].pos;
     try {
-        StatementsNode* node = nullptr;
+        StatementsNode *node = nullptr;
         ConsumeString("{");
         if (tokens[parseIndex].type != TokenType::RBrace) {
             node = ParseStatements();
         }
         ConsumeString("}");
         return new BlockExpressionNode(pos, false, node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
 
-BlockExpressionNode* Parser::ParseConstBlockExpression() {
+BlockExpressionNode *Parser::ParseConstBlockExpression() {
     Position pos = tokens[parseIndex].pos;
     ConsumeString("const");
     try {
-        StatementsNode* node = nullptr;
+        StatementsNode *node = nullptr;
         ConsumeString("{");
         if (tokens[parseIndex].type != TokenType::RBrace) {
             node = ParseStatements();
         }
         ConsumeString("}");
         return new BlockExpressionNode(pos, true, node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
 
 
-InfiniteLoopExpressionNode* Parser::ParseInfiniteLoopExpression() {
+InfiniteLoopExpressionNode *Parser::ParseInfiniteLoopExpression() {
     Position pos = tokens[parseIndex].pos;
     ConsumeString("loop");
     try {
-        auto* node = ParseBlockExpression();
+        auto *node = ParseBlockExpression();
         return new InfiniteLoopExpressionNode(pos, node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
 
-PredicateLoopExpressionNode* Parser::ParsePredicateLoopExpression() {
+PredicateLoopExpressionNode *Parser::ParsePredicateLoopExpression() {
     Position pos = tokens[parseIndex].pos;
-    ConditionsNode* conditions = nullptr;
+    ConditionsNode *conditions = nullptr;
     try {
         ConsumeString("while");
         conditions = ParseConditions();
-        auto* node = ParseBlockExpression();
+        auto *node = ParseBlockExpression();
         return new PredicateLoopExpressionNode(pos, conditions, node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete conditions;
         throw;
     }
 }
 
-IfExpressionNode* Parser::ParseIfExpression() {
+IfExpressionNode *Parser::ParseIfExpression() {
     Position pos = tokens[parseIndex].pos;
-    ConditionsNode* conditions_node = nullptr;
-    BlockExpressionNode* true_block_expression_node = nullptr;
-    BlockExpressionNode* false_block_expression_node = nullptr;
-    IfExpressionNode* if_expression_node = nullptr;
+    ConditionsNode *conditions_node = nullptr;
+    BlockExpressionNode *true_block_expression_node = nullptr;
+    BlockExpressionNode *false_block_expression_node = nullptr;
+    IfExpressionNode *if_expression_node = nullptr;
     try {
         ConsumeString("if");
         conditions_node = ParseConditions();
@@ -555,8 +555,8 @@ IfExpressionNode* Parser::ParseIfExpression() {
             }
         }
         return new IfExpressionNode(pos, conditions_node, true_block_expression_node,
-            false_block_expression_node, if_expression_node);
-    } catch (std::exception&) {
+                                    false_block_expression_node, if_expression_node);
+    } catch (std::exception &) {
         delete conditions_node;
         delete true_block_expression_node;
         delete false_block_expression_node;
@@ -565,10 +565,10 @@ IfExpressionNode* Parser::ParseIfExpression() {
     }
 }
 
-MatchExpressionNode* Parser::ParseMatchExpression() {
+MatchExpressionNode *Parser::ParseMatchExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* expression_node = nullptr;
-    MatchArmsNode* match_arms_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
+    MatchArmsNode *match_arms_node = nullptr;
     try {
         ConsumeString("match");
         expression_node = ParseExpression(); // TODO Check whether it is a StructExpression
@@ -578,19 +578,19 @@ MatchExpressionNode* Parser::ParseMatchExpression() {
         }
         ConsumeString("}");
         return new MatchExpressionNode(pos, expression_node, match_arms_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete expression_node;
         delete match_arms_node;
         throw;
     }
 }
 
-MatchArmsNode* Parser::ParseMatchArms() {
+MatchArmsNode *Parser::ParseMatchArms() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<MatchArmNode*> match_arms_nodes;
-    MatchArmNode* match_arm_node = nullptr;
-    std::vector<ExpressionNode*> expression_nodes;
-    ExpressionNode* expression_node = nullptr;
+    std::vector<MatchArmNode *> match_arms_nodes;
+    MatchArmNode *match_arm_node = nullptr;
+    std::vector<ExpressionNode *> expression_nodes;
+    ExpressionNode *expression_node = nullptr;
     try {
         while (tokens[parseIndex].type != TokenType::RBrace) {
             match_arm_node = ParseMatchArm();
@@ -598,7 +598,7 @@ MatchArmsNode* Parser::ParseMatchArms() {
             ConsumeString("=>");
             expression_node = ParseExpression();
             expression_nodes.emplace_back(expression_node);
-            if (dynamic_cast<BlockExpressionNode*>(expression_node) != nullptr) {
+            if (dynamic_cast<BlockExpressionNode *>(expression_node) != nullptr) {
                 if (tokens[parseIndex].type == TokenType::Comma) {
                     ConsumeString(",");
                 }
@@ -611,23 +611,23 @@ MatchArmsNode* Parser::ParseMatchArms() {
             }
         }
         return new MatchArmsNode(pos, match_arms_nodes, expression_nodes);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete expression_node;
         delete match_arm_node;
-        for (auto& it: expression_nodes) {
+        for (auto &it: expression_nodes) {
             delete it;
         }
-        for (auto& it: match_arms_nodes) {
+        for (auto &it: match_arms_nodes) {
             delete it;
         }
         throw;
     }
 }
 
-MatchArmNode* Parser::ParseMatchArm() {
+MatchArmNode *Parser::ParseMatchArm() {
     Position pos = tokens[parseIndex].pos;
-    PatternNode* pattern_node = nullptr;
-    ExpressionNode* expression_node = nullptr;
+    PatternNode *pattern_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
     try {
         pattern_node = ParsePattern();
         if (tokens[parseIndex].type == TokenType::If) {
@@ -635,7 +635,7 @@ MatchArmNode* Parser::ParseMatchArm() {
             expression_node = ParseExpression();
         }
         return new MatchArmNode(pos, pattern_node, expression_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete pattern_node;
         delete expression_node;
         throw;
@@ -643,9 +643,9 @@ MatchArmNode* Parser::ParseMatchArm() {
 }
 
 /****************  Expression Without Block  ****************/
-ExpressionNode* Parser::ParseExpressionWithoutBlock() {
+ExpressionNode *Parser::ParseExpressionWithoutBlock() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* expression_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
     if (tokens[parseIndex].type == TokenType::Continue) {
         ConsumeString("continue");
         return new ContinueExpressionNode(pos);
@@ -653,7 +653,7 @@ ExpressionNode* Parser::ParseExpressionWithoutBlock() {
     try {
         expression_node = ParseJumpExpression();
         return expression_node;
-    } catch(std::exception&) {
+    } catch (std::exception &) {
         delete expression_node;
         throw;
     }
@@ -661,21 +661,21 @@ ExpressionNode* Parser::ParseExpressionWithoutBlock() {
 
 ExpressionNode *Parser::ParseTupleExpression() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<ExpressionNode*> expression_nodes;
+    std::vector<ExpressionNode *> expression_nodes;
     try {
         ConsumeString("(");
         while (tokens[parseIndex].token != ")") {
-            auto* tmp = ParseExpression();
+            auto *tmp = ParseExpression();
             expression_nodes.emplace_back(tmp);
         }
         ConsumeString(")");
         return new TupleExpressionNode(pos, expression_nodes);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseJumpExpression() {
+ExpressionNode *Parser::ParseJumpExpression() {
     Position pos = tokens[parseIndex].pos;
     try {
         TokenType type;
@@ -686,20 +686,20 @@ ExpressionNode* Parser::ParseJumpExpression() {
             type = TokenType::Return;
             parseIndex++;
         } else {
-            auto* tmp = ParseAssignmentExpression();
+            auto *tmp = ParseAssignmentExpression();
             return tmp;
         }
-        auto* tmp = ParseAssignmentExpression();
+        auto *tmp = ParseAssignmentExpression();
         return new JumpExpressionNode(pos, type, tmp);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseAssignmentExpression() {
+ExpressionNode *Parser::ParseAssignmentExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseLogicalOrExpression();
         if (tokens[parseIndex].type == TokenType::Eq || tokens[parseIndex].type == TokenType::PlusEq ||
@@ -715,17 +715,17 @@ ExpressionNode* Parser::ParseAssignmentExpression() {
             return new AssignmentExpressionNode(pos, type, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseLogicalOrExpression() {
+ExpressionNode *Parser::ParseLogicalOrExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseLogicalAndExpression();
         while (tokens[parseIndex].type == TokenType::OrOr) {
@@ -734,17 +734,17 @@ ExpressionNode* Parser::ParseLogicalOrExpression() {
             lhs_ = new LogicOrExpressionNode(pos, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseLogicalAndExpression() {
+ExpressionNode *Parser::ParseLogicalAndExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseComparisonExpression();
         while (tokens[parseIndex].type == TokenType::AndAnd) {
@@ -753,39 +753,39 @@ ExpressionNode* Parser::ParseLogicalAndExpression() {
             lhs_ = new LogicAndExpressionNode(pos, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseComparisonExpression() {
+ExpressionNode *Parser::ParseComparisonExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseBitwiseOrExpression();
         while (tokens[parseIndex].type == TokenType::Lt || tokens[parseIndex].type == TokenType::Gt
-            || tokens[parseIndex].type == TokenType::LEq || tokens[parseIndex].type == TokenType::GEq
-            || tokens[parseIndex].type == TokenType::EqEq || tokens[parseIndex].type == TokenType::NEq) {
+               || tokens[parseIndex].type == TokenType::LEq || tokens[parseIndex].type == TokenType::GEq
+               || tokens[parseIndex].type == TokenType::EqEq || tokens[parseIndex].type == TokenType::NEq) {
             TokenType type = tokens[parseIndex].type;
             parseIndex++;
             rhs_ = ParseBitwiseOrExpression();
             lhs_ = new ComparisonExpressionNode(pos, type, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseBitwiseOrExpression() {
+ExpressionNode *Parser::ParseBitwiseOrExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseBitwiseXorExpression();
         while (tokens[parseIndex].type == TokenType::Or) {
@@ -794,17 +794,17 @@ ExpressionNode* Parser::ParseBitwiseOrExpression() {
             lhs_ = new BitwiseOrExpressionNode(pos, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseBitwiseXorExpression() {
+ExpressionNode *Parser::ParseBitwiseXorExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseBitwiseAndExpression();
         while (tokens[parseIndex].type == TokenType::Xor) {
@@ -813,17 +813,17 @@ ExpressionNode* Parser::ParseBitwiseXorExpression() {
             lhs_ = new BitwiseXorExpressionNode(pos, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseBitwiseAndExpression() {
+ExpressionNode *Parser::ParseBitwiseAndExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseShiftExpression();
         while (tokens[parseIndex].type == TokenType::Or) {
@@ -832,17 +832,17 @@ ExpressionNode* Parser::ParseBitwiseAndExpression() {
             lhs_ = new BitwiseAndExpressionNode(pos, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseShiftExpression() {
+ExpressionNode *Parser::ParseShiftExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseAddMinusExpression();
         while (tokens[parseIndex].type == TokenType::SL || tokens[parseIndex].type == TokenType::SR) {
@@ -852,17 +852,17 @@ ExpressionNode* Parser::ParseShiftExpression() {
             lhs_ = new ShiftExpressionNode(pos, type, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseAddMinusExpression() {
+ExpressionNode *Parser::ParseAddMinusExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseMulDivModExpression();
         while (tokens[parseIndex].type == TokenType::Plus || tokens[parseIndex].type == TokenType::Minus) {
@@ -872,38 +872,38 @@ ExpressionNode* Parser::ParseAddMinusExpression() {
             lhs_ = new AddMinusExpressionNode(pos, type, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseMulDivModExpression() {
+ExpressionNode *Parser::ParseMulDivModExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseTypeCastExpression();
         while (tokens[parseIndex].type == TokenType::Mul || tokens[parseIndex].type == TokenType::Div
-            || tokens[parseIndex].type == TokenType::MOD) {
+               || tokens[parseIndex].type == TokenType::MOD) {
             TokenType type = tokens[parseIndex].type;
             parseIndex++;
             rhs_ = ParseTypeCastExpression();
             lhs_ = new MulDivModExpressionNode(pos, type, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseTypeCastExpression() {
+ExpressionNode *Parser::ParseTypeCastExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    TypeNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    TypeNode *rhs_ = nullptr;
     try {
         lhs_ = ParseUnaryExpression();
         while (tokens[parseIndex].type == TokenType::As) {
@@ -912,16 +912,16 @@ ExpressionNode* Parser::ParseTypeCastExpression() {
             lhs_ = new TypeCastExpressionNode(pos, rhs_, lhs_);
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseUnaryExpression() {
+ExpressionNode *Parser::ParseUnaryExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
     try {
         while (tokens[parseIndex].type == TokenType::Minus || tokens[parseIndex].type == TokenType::Not) {
             TokenType type = tokens[parseIndex].type;
@@ -930,24 +930,24 @@ ExpressionNode* Parser::ParseUnaryExpression() {
             return new UnaryExpressionNode(pos, type, rhs_);
         }
         return ParseCallExpression();
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete rhs_;
         throw;
     }
 }
 
-ExpressionNode* Parser::ParseCallExpression() {
+ExpressionNode *Parser::ParseCallExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* lhs_ = nullptr;
-    std::vector<ExpressionNode*> params_;
-    ExpressionNode* expression_node = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    std::vector<ExpressionNode *> params_;
+    ExpressionNode *expression_node = nullptr;
     try {
         lhs_ = ParsePrimaryExpression();
         while (true) {
             if (tokens[parseIndex].type == TokenType::LParen) {
                 ConsumeString("(");
                 while (tokens[parseIndex].type != TokenType::RParen) {
-                    auto* tmp = ParseExpression();
+                    auto *tmp = ParseExpression();
                     params_.push_back(tmp);
                     if (tokens[parseIndex].type == TokenType::Comma) {
                         ConsumeString(",");
@@ -976,31 +976,31 @@ ExpressionNode* Parser::ParseCallExpression() {
             }
         }
         return lhs_;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete lhs_;
         delete expression_node;
-        for (auto& it: params_) {
+        for (auto &it: params_) {
             delete it;
         }
         throw;
     }
 }
 
-ExpressionNode* Parser::ParsePrimaryExpression() {
+ExpressionNode *Parser::ParsePrimaryExpression() {
     Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
-    std::vector<ExpressionNode*> expression_nodes;
+    std::vector<ExpressionNode *> expression_nodes;
     try {
-        auto* tmp = ParseLiteral();
+        auto *tmp = ParseLiteral();
         return tmp;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
-        auto* tmp = ParseStructExpression();
+        auto *tmp = ParseStructExpression();
         return tmp;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
@@ -1010,11 +1010,11 @@ ExpressionNode* Parser::ParsePrimaryExpression() {
         }
         if (tokens[parseIndex].type == TokenType::LParen) {
             ConsumeString("(");
-            auto* first = ParseExpression();
+            auto *first = ParseExpression();
             if (tokens[parseIndex].type == TokenType::Comma) {
                 expression_nodes.emplace_back(first);
                 while (tokens[parseIndex].type != TokenType::RParen) {
-                    auto* tmp = ParseExpression();
+                    auto *tmp = ParseExpression();
                     expression_nodes.push_back(tmp);
                     if (tokens[parseIndex].type == TokenType::Comma) {
                         ConsumeString(",");
@@ -1028,19 +1028,19 @@ ExpressionNode* Parser::ParsePrimaryExpression() {
             return new GroupedExpressionNode(pos, first);
         }
         throw ParseError("Parse Error: Invalid Primary Expression", pos);
-    } catch (std::exception&) {
-        for (auto& it: expression_nodes) {
+    } catch (std::exception &) {
+        for (auto &it: expression_nodes) {
             delete it;
         }
         throw;
     }
 }
 
-StructExpressionNode* Parser::ParseStructExpression() {
+StructExpressionNode *Parser::ParseStructExpression() {
     Position pos = tokens[parseIndex].pos;
-    PathInExpressionNode* path_in_expression_node = nullptr;
-    StructExprFieldsNode* struct_field_node = nullptr;
-    StructBaseNode* struct_base_node = nullptr;
+    PathInExpressionNode *path_in_expression_node = nullptr;
+    StructExprFieldsNode *struct_field_node = nullptr;
+    StructBaseNode *struct_base_node = nullptr;
     try {
         path_in_expression_node = ParsePathInExpression();
         ConsumeString("{");
@@ -1051,8 +1051,8 @@ StructExpressionNode* Parser::ParseStructExpression() {
         }
         ConsumeString("}");
         return new StructExpressionNode(pos, path_in_expression_node,
-                struct_field_node, struct_base_node);
-    } catch (std::exception&) {
+                                        struct_field_node, struct_base_node);
+    } catch (std::exception &) {
         delete path_in_expression_node;
         delete struct_field_node;
         delete struct_base_node;
@@ -1060,9 +1060,9 @@ StructExpressionNode* Parser::ParseStructExpression() {
     }
 }
 
-StructExprFieldNode* Parser::ParseStructExprField() {
+StructExprFieldNode *Parser::ParseStructExprField() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* expr = nullptr;
+    ExpressionNode *expr = nullptr;
     try {
         if (tokens[parseIndex].type != TokenType::Identifier) {
             throw ParseError("Parse Error: Identifier Not Found", pos);
@@ -1074,17 +1074,17 @@ StructExprFieldNode* Parser::ParseStructExprField() {
             expr = ParseExpression();
         }
         return new StructExprFieldNode(pos, identifier, expr);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete expr;
         throw;
     }
 }
 
-StructExprFieldsNode* Parser::ParseStructExprFields() {
+StructExprFieldsNode *Parser::ParseStructExprFields() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<StructExprFieldNode*> fields;
-    StructExprFieldNode* field_node = nullptr;
-    StructBaseNode* base = nullptr;
+    std::vector<StructExprFieldNode *> fields;
+    StructExprFieldNode *field_node = nullptr;
+    StructBaseNode *base = nullptr;
     try {
         field_node = ParseStructExprField();
         fields.emplace_back(field_node);
@@ -1101,8 +1101,8 @@ StructExprFieldsNode* Parser::ParseStructExprFields() {
             fields.emplace_back(field_node);
         }
         return new StructExprFieldsNode(pos, fields, base);
-    } catch (const ParseError&) {
-        for (auto it : fields) {
+    } catch (const ParseError &) {
+        for (auto it: fields) {
             delete it;
         }
         delete field_node;
@@ -1111,14 +1111,14 @@ StructExprFieldsNode* Parser::ParseStructExprFields() {
     }
 }
 
-StructBaseNode* Parser::ParseStructBase() {
+StructBaseNode *Parser::ParseStructBase() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* expr = nullptr;
+    ExpressionNode *expr = nullptr;
     try {
         ConsumeString("..");
         expr = ParseExpression();
         return new StructBaseNode(pos, expr);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete expr;
         throw;
     }
@@ -1126,9 +1126,9 @@ StructBaseNode* Parser::ParseStructBase() {
 
 ExpressionNode *Parser::ParseLiteral() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<ExpressionNode*> expression_nodes;
-    ExpressionNode* lhs = nullptr;
-    ExpressionNode* rhs = nullptr;
+    std::vector<ExpressionNode *> expression_nodes;
+    ExpressionNode *lhs = nullptr;
+    ExpressionNode *rhs = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::IntegerLiteral) {
             return new IntLiteralNode(pos, StringToInt(tokens[parseIndex++].token));
@@ -1158,7 +1158,7 @@ ExpressionNode *Parser::ParseLiteral() {
                 ConsumeString("]");
                 return new ArrayLiteralNode(pos, expression_nodes, lhs, rhs);
             }
-            auto* tmp = ParseExpression();
+            auto *tmp = ParseExpression();
             if (tokens[parseIndex].type == TokenType::Semicolon) {
                 lhs = tmp;
                 ConsumeString(";");
@@ -1176,8 +1176,8 @@ ExpressionNode *Parser::ParseLiteral() {
             return new ArrayLiteralNode(pos, expression_nodes, lhs, rhs);
         }
         throw ParseError("Parse Error: Not A Literal", pos);
-    } catch (std::exception&) {
-        for (auto& it: expression_nodes) {
+    } catch (std::exception &) {
+        for (auto &it: expression_nodes) {
             delete it;
         }
         delete lhs;
@@ -1187,21 +1187,21 @@ ExpressionNode *Parser::ParseLiteral() {
 }
 
 PathExpressionNode *Parser::ParsePathExpression() {
-    PathInExpressionNode* path_in_expression_node = nullptr;
+    PathInExpressionNode *path_in_expression_node = nullptr;
     try {
         path_in_expression_node = ParsePathInExpression();
         return path_in_expression_node;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete path_in_expression_node;
         throw;
     }
 }
 
 
-PathInExpressionNode* Parser::ParsePathInExpression() {
+PathInExpressionNode *Parser::ParsePathInExpression() {
     Position pos = tokens[parseIndex].pos;
-    PathIndentSegmentNode* tmp = nullptr;
-    std::vector<PathIndentSegmentNode*> simple_path_segments;
+    PathIndentSegmentNode *tmp = nullptr;
+    std::vector<PathIndentSegmentNode *> simple_path_segments;
     try {
         if (tokens[parseIndex].type == TokenType::ColonColon) {
             ConsumeString("::");
@@ -1214,9 +1214,9 @@ PathInExpressionNode* Parser::ParsePathInExpression() {
             simple_path_segments.emplace_back(tmp);
         }
         return new PathInExpressionNode(pos, simple_path_segments);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete tmp;
-        for (auto& it: simple_path_segments) {
+        for (auto &it: simple_path_segments) {
             delete it;
         }
         throw;
@@ -1225,24 +1225,24 @@ PathInExpressionNode* Parser::ParsePathInExpression() {
 
 StatementsNode *Parser::ParseStatements() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<StatementNode*> statement_nodes;
-    ExpressionNode* expression_node = nullptr;
+    std::vector<StatementNode *> statement_nodes;
+    ExpressionNode *expression_node = nullptr;
     while (tokens[parseIndex].type != TokenType::RBrace) {
-        StatementNode* tmp;
+        StatementNode *tmp;
         uint32_t start = parseIndex;
         try {
             tmp = ParseStatement();
             statement_nodes.emplace_back(tmp);
             continue;
-        } catch (std::exception&) {
+        } catch (std::exception &) {
             parseIndex = start;
         }
 
         try {
             expression_node = ParseExpressionWithoutBlock();
             break;
-        } catch (std::exception&) {
-            for (auto& it: statement_nodes) {
+        } catch (std::exception &) {
+            for (auto &it: statement_nodes) {
                 delete it;
             }
             throw;
@@ -1253,12 +1253,12 @@ StatementsNode *Parser::ParseStatements() {
 
 ConditionsNode *Parser::ParseConditions() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* tmp = nullptr;
+    ExpressionNode *tmp = nullptr;
     try {
         tmp = ParseExpression();
         // TODO Parse LetChain
         return new ConditionsNode(pos, tmp);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete tmp;
         throw;
     }
@@ -1266,7 +1266,7 @@ ConditionsNode *Parser::ParseConditions() {
 
 
 /****************  Statement  ****************/
-StatementNode* Parser::ParseStatement() {
+StatementNode *Parser::ParseStatement() {
     Position pos = tokens[parseIndex].pos;
     try {
         if (tokens[parseIndex].type == TokenType::Semicolon) {
@@ -1274,22 +1274,22 @@ StatementNode* Parser::ParseStatement() {
             return new EmptyStatementNode(pos);
         }
         if (tokens[parseIndex].type == TokenType::Let) {
-            auto* node = ParseLetStatement();
+            auto *node = ParseLetStatement();
             return node;
         }
-        auto* node = ParseExpressionStatement();
+        auto *node = ParseExpressionStatement();
         return node;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
 
 LetStatementNode *Parser::ParseLetStatement() {
     Position pos = tokens[parseIndex].pos;
-    PatternNoTopAltNode* pattern_no_top_alt_node = nullptr;
-    TypeNode* type_node = nullptr;
-    ExpressionNode* expression_node = nullptr;
-    BlockExpressionNode* block_expression_node = nullptr;
+    PatternNoTopAltNode *pattern_no_top_alt_node = nullptr;
+    TypeNode *type_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
+    BlockExpressionNode *block_expression_node = nullptr;
     try {
         ConsumeString("let");
         pattern_no_top_alt_node = ParsePatternNoTopAlt();
@@ -1306,8 +1306,8 @@ LetStatementNode *Parser::ParseLetStatement() {
         }
         ConsumeString(";");
         return new LetStatementNode(pos, pattern_no_top_alt_node, type_node,
-            expression_node, block_expression_node);
-    } catch (std::exception&) {
+                                    expression_node, block_expression_node);
+    } catch (std::exception &) {
         delete pattern_no_top_alt_node;
         delete type_node;
         delete expression_node;
@@ -1319,12 +1319,12 @@ LetStatementNode *Parser::ParseLetStatement() {
 ExpressionStatementNode *Parser::ParseExpressionStatement() {
     Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
-    ExpressionNode* expression_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
     try {
         expression_node = ParseExpressionWithoutBlock();
         ConsumeString(";");
         return new ExpressionStatementNode(pos, expression_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete expression_node;
         expression_node = nullptr;
         parseIndex = start;
@@ -1336,19 +1336,18 @@ ExpressionStatementNode *Parser::ParseExpressionStatement() {
             ConsumeString(";");
         }
         return new ExpressionStatementNode(pos, expression_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete expression_node;
         throw ParseError("Parse Error: Failed to match ExpressionStatement", pos);
     }
 }
 
 
-
 /****************  Pattern  ****************/
-PatternNode* Parser::ParsePattern() {
+PatternNode *Parser::ParsePattern() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<PatternNoTopAltNode*> pattern_no_top_alt_nodes;
-    PatternNoTopAltNode* tmp = nullptr;
+    std::vector<PatternNoTopAltNode *> pattern_no_top_alt_nodes;
+    PatternNoTopAltNode *tmp = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::Or) {
             ConsumeString("|");
@@ -1361,20 +1360,20 @@ PatternNode* Parser::ParsePattern() {
             pattern_no_top_alt_nodes.emplace_back(tmp);
         }
         return new PatternNode(pos, pattern_no_top_alt_nodes);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete tmp;
-        for (auto& it: pattern_no_top_alt_nodes) {
+        for (auto &it: pattern_no_top_alt_nodes) {
             delete it;
         }
         throw;
     }
 }
 
-PatternNoTopAltNode* Parser::ParsePatternNoTopAlt() {
+PatternNoTopAltNode *Parser::ParsePatternNoTopAlt() {
     try {
-        PatternNoTopAltNode* ret = ParsePatternWithoutRange();
+        PatternNoTopAltNode *ret = ParsePatternWithoutRange();
         return ret;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
@@ -1382,33 +1381,33 @@ PatternNoTopAltNode* Parser::ParsePatternNoTopAlt() {
 PatternWithoutRangeNode *Parser::ParsePatternWithoutRange() {
     Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
-    PatternWithoutRangeNode* tmp = nullptr;
-    PatternNode* pattern_node = nullptr;
+    PatternWithoutRangeNode *tmp = nullptr;
+    PatternNode *pattern_node = nullptr;
     try {
         tmp = ParseLiteralPattern();
         return tmp;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
         tmp = ParseIdentifierPattern();
         return tmp;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
         ConsumeString("_");
         return new WildcardPatternNode(pos);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
         ConsumeString("..");
         return new RestPatternNode(pos);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
@@ -1417,28 +1416,28 @@ PatternWithoutRangeNode *Parser::ParsePatternWithoutRange() {
         pattern_node = ParsePattern();
         ConsumeString(")");
         return new GroupedPatternNode(pos, pattern_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
         tmp = ParseSlicePattern();
         return tmp;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
         tmp = ParsePathPattern();
         return tmp;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw ParseError("Parse Error: Failed to Parse PatternWithoutRange", pos);
     }
 }
 
-LiteralPatternNode* Parser::ParseLiteralPattern() {
+LiteralPatternNode *Parser::ParseLiteralPattern() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* expression_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
     try {
         bool have_minus_ = false;
         if (tokens[parseIndex].type == TokenType::Minus) {
@@ -1447,15 +1446,15 @@ LiteralPatternNode* Parser::ParseLiteralPattern() {
         }
         expression_node = ParseLiteral();
         return new LiteralPatternNode(pos, have_minus_, expression_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete expression_node;
         throw;
     }
 }
 
-IdentifierPatternNode* Parser::ParseIdentifierPattern() {
+IdentifierPatternNode *Parser::ParseIdentifierPattern() {
     Position pos = tokens[parseIndex].pos;
-    PatternNoTopAltNode* pattern_no_top_alt_node = nullptr;
+    PatternNoTopAltNode *pattern_no_top_alt_node = nullptr;
     try {
         bool is_ref_ = false;
         bool is_mut_ = false;
@@ -1477,16 +1476,16 @@ IdentifierPatternNode* Parser::ParseIdentifierPattern() {
             pattern_no_top_alt_node = ParsePatternNoTopAlt();
         }
         return new IdentifierPatternNode(pos, is_ref_, is_mut_, identifier, pattern_no_top_alt_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete pattern_no_top_alt_node;
         throw;
     }
 }
 
-SlicePatternNode* Parser::ParseSlicePattern() {
+SlicePatternNode *Parser::ParseSlicePattern() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<PatternNode*> pattern_nodes;
-    PatternNode* tmp = nullptr;
+    std::vector<PatternNode *> pattern_nodes;
+    PatternNode *tmp = nullptr;
     try {
         ConsumeString("[");
         tmp = ParsePattern();
@@ -1500,102 +1499,102 @@ SlicePatternNode* Parser::ParseSlicePattern() {
             pattern_nodes.emplace_back(tmp);
         }
         return new SlicePatternNode(pos, pattern_nodes);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete tmp;
-        for (auto& it: pattern_nodes) {
+        for (auto &it: pattern_nodes) {
             delete it;
         }
         throw;
     }
 }
 
-PathPatternNode* Parser::ParsePathPattern() {
+PathPatternNode *Parser::ParsePathPattern() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode* expression_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
     try {
         expression_node = ParsePathExpression();
         return new PathPatternNode(pos, expression_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete expression_node;
         throw;
     }
 }
 
 /****************  Types  ****************/
-TypeNode* Parser::ParseType() {
-    TypeNode* type_node = nullptr;
+TypeNode *Parser::ParseType() {
+    TypeNode *type_node = nullptr;
     try {
         type_node = ParseTypeNoBounds();
         return type_node;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete type_node;
         throw;
     }
 }
 
-TypeNoBoundsNode* Parser::ParseTypeNoBounds() {
+TypeNoBoundsNode *Parser::ParseTypeNoBounds() {
     Position pos = tokens[parseIndex].pos;
-    TypeNoBoundsNode* ret = nullptr;
+    TypeNoBoundsNode *ret = nullptr;
     uint32_t start = parseIndex;
     try {
         ret = ParseParenthesizedType();
         return ret;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
         ret = ParseTypePath();
         return ret;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
         ret = ParseTupleType();
         return ret;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
         ret = ParseArrayType();
         return ret;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
         ret = ParseSliceType();
         return ret;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         parseIndex = start;
     }
 
     try {
         ret = ParseInferredType();
         return ret;
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw ParseError("Parse Error: Failed to Parse Type", pos);
     }
 }
 
-ParenthesizedTypeNode* Parser::ParseParenthesizedType() {
+ParenthesizedTypeNode *Parser::ParseParenthesizedType() {
     Position pos = tokens[parseIndex].pos;
     try {
         ConsumeString("(");
-        auto* tmp = ParseType();
+        auto *tmp = ParseType();
         ConsumeString(")");
         return new ParenthesizedTypeNode(pos, tmp);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
 
-TypePathNode* Parser::ParseTypePath() {
+TypePathNode *Parser::ParseTypePath() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<TypePathSegmentNode*> type_path_segment_nodes;
-    TypePathSegmentNode* tmp = nullptr;
+    std::vector<TypePathSegmentNode *> type_path_segment_nodes;
+    TypePathSegmentNode *tmp = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::ColonColon) {
             ConsumeString("::");
@@ -1607,34 +1606,34 @@ TypePathNode* Parser::ParseTypePath() {
             type_path_segment_nodes.emplace_back(tmp);
         }
         return new TypePathNode(pos, type_path_segment_nodes);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete tmp;
-        for (auto& it: type_path_segment_nodes) {
+        for (auto &it: type_path_segment_nodes) {
             delete it;
         }
         throw;
     }
 }
 
-TypePathSegmentNode* Parser::ParseTypePathSegment() {
+TypePathSegmentNode *Parser::ParseTypePathSegment() {
     Position pos = tokens[parseIndex].pos;
-    PathIndentSegmentNode* tmp = nullptr;
+    PathIndentSegmentNode *tmp = nullptr;
     try {
         tmp = ParsePathIndentSegment();
         return new TypePathSegmentNode(pos, tmp);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete tmp;
         throw;
     }
 }
 
-TupleTypeNode* Parser::ParseTupleType() {
+TupleTypeNode *Parser::ParseTupleType() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<TypeNode*> type_nodes;
+    std::vector<TypeNode *> type_nodes;
     try {
         ConsumeString("(");
         while (tokens[parseIndex].type != TokenType::RParen) {
-            auto* tmp = ParseType();
+            auto *tmp = ParseType();
             type_nodes.emplace_back(tmp);
             if (tokens[parseIndex].type == TokenType::Comma) {
                 ConsumeString(",");
@@ -1644,15 +1643,15 @@ TupleTypeNode* Parser::ParseTupleType() {
         }
         ConsumeString(")");
         return new TupleTypeNode(pos, type_nodes);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
 
-ArrayTypeNode* Parser::ParseArrayType() {
+ArrayTypeNode *Parser::ParseArrayType() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode* type_node = nullptr;
-    ExpressionNode* expression_node = nullptr;
+    TypeNode *type_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
     try {
         ConsumeString("[");
         type_node = ParseType();
@@ -1660,33 +1659,33 @@ ArrayTypeNode* Parser::ParseArrayType() {
         expression_node = ParseExpression();
         ConsumeString("]");
         return new ArrayTypeNode(pos, type_node, expression_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete type_node;
         delete expression_node;
         throw;
     }
 }
 
-SliceTypeNode* Parser::ParseSliceType() {
+SliceTypeNode *Parser::ParseSliceType() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode* type_node = nullptr;
+    TypeNode *type_node = nullptr;
     try {
         ConsumeString("[");
         type_node = ParseType();
         ConsumeString("]");
         return new SliceTypeNode(pos, type_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete type_node;
         throw;
     }
 }
 
-InferredTypeNode* Parser::ParseInferredType() {
+InferredTypeNode *Parser::ParseInferredType() {
     Position pos = tokens[parseIndex].pos;
     try {
         ConsumeString("_");
         return new InferredTypeNode(pos);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }
@@ -1702,7 +1701,7 @@ PathIndentSegmentNode *Parser::ParsePathIndentSegment() {
             return new PathIndentSegmentNode(pos, tokens[parseIndex].type, tokens[parseIndex++].token);
         }
         throw ParseError("Parse Error: Invalid SimplePathSegment", pos);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         throw;
     }
 }

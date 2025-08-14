@@ -116,47 +116,48 @@ public:
 
     virtual ~ASTNode() = default;
 
-    virtual void accept(ASTVisitor* visitor) = 0;
+    virtual void accept(ASTVisitor *visitor) = 0;
 };
 
 /****************  Items  ****************/
-class CrateNode: public ASTNode {
+class CrateNode : public ASTNode {
 public:
-    std::vector<VisItemNode*> items_;
+    std::vector<VisItemNode *> items_;
 
-    CrateNode(Position pos, const std::vector<VisItemNode*>& items): ASTNode(pos) {
+    CrateNode(Position pos, const std::vector<VisItemNode *> &items): ASTNode(pos) {
         items_ = items;
     }
 
     ~CrateNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class VisItemNode: public ASTNode {
+class VisItemNode : public ASTNode {
 public:
-    explicit VisItemNode(Position pos): ASTNode(pos) {}
+    explicit VisItemNode(Position pos): ASTNode(pos) {
+    }
 
     ~VisItemNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class FunctionNode: public VisItemNode {
+class FunctionNode : public VisItemNode {
 public:
     bool is_const_;
     std::string identifier_;
-    FunctionParametersNode* function_parameters_ = nullptr;
-    TypeNode* type_ = nullptr;
-    BlockExpressionNode* block_expression_ = nullptr;
+    FunctionParametersNode *function_parameters_ = nullptr;
+    TypeNode *type_ = nullptr;
+    BlockExpressionNode *block_expression_ = nullptr;
 
-    FunctionNode(Position pos, bool is_const, const std::string& identifier,
-        FunctionParametersNode* function_parameters, TypeNode* type,
-        BlockExpressionNode* block_expression): VisItemNode(pos) {
+    FunctionNode(Position pos, bool is_const, const std::string &identifier,
+                 FunctionParametersNode *function_parameters, TypeNode *type,
+                 BlockExpressionNode *block_expression): VisItemNode(pos) {
         is_const_ = is_const;
         identifier_ = identifier;
         function_parameters_ = function_parameters;
@@ -166,35 +167,34 @@ public:
 
     ~FunctionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class FunctionParametersNode: public ASTNode {
+class FunctionParametersNode : public ASTNode {
 public:
-    std::vector<FunctionParamNode*> function_params_;
+    std::vector<FunctionParamNode *> function_params_;
 
-    FunctionParametersNode(Position pos, const std::vector<FunctionParamNode*>& function_params):
-        ASTNode(pos) {
+    FunctionParametersNode(Position pos, const std::vector<FunctionParamNode *> &function_params): ASTNode(pos) {
         function_params_ = function_params;
     }
 
     ~FunctionParametersNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class FunctionParamNode: public ASTNode {
+class FunctionParamNode : public ASTNode {
 public:
-    FunctionParamPatternNode* function_param_pattern_ = nullptr;
-    TypeNode* type_ = nullptr;
+    FunctionParamPatternNode *function_param_pattern_ = nullptr;
+    TypeNode *type_ = nullptr;
     bool is_DotDotDot_ = false;
 
-    FunctionParamNode(Position pos, FunctionParamPatternNode* function_param_pattern,
-        TypeNode* type, bool is_DotDotDot): ASTNode(pos) {
+    FunctionParamNode(Position pos, FunctionParamPatternNode *function_param_pattern,
+                      TypeNode *type, bool is_DotDotDot): ASTNode(pos) {
         function_param_pattern_ = function_param_pattern;
         type_ = type;
         is_DotDotDot_ = is_DotDotDot;
@@ -202,19 +202,19 @@ public:
 
     ~FunctionParamNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class FunctionParamPatternNode: public ASTNode {
+class FunctionParamPatternNode : public ASTNode {
 public:
-    PatternNoTopAltNode* pattern_no_top_alt_;
-    TypeNode* type_;
+    PatternNoTopAltNode *pattern_no_top_alt_;
+    TypeNode *type_;
     bool is_DotDotDot_ = false;
 
-    FunctionParamPatternNode(Position pos, PatternNoTopAltNode* pattern_no_top_alt,
-        TypeNode* type, bool is_DotDotDot): ASTNode(pos) {
+    FunctionParamPatternNode(Position pos, PatternNoTopAltNode *pattern_no_top_alt,
+                             TypeNode *type, bool is_DotDotDot): ASTNode(pos) {
         pattern_no_top_alt_ = pattern_no_top_alt;
         type_ = type;
         is_DotDotDot_ = is_DotDotDot;
@@ -222,73 +222,73 @@ public:
 
     ~FunctionParamPatternNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class StructNode: public VisItemNode {
+class StructNode : public VisItemNode {
 public:
     std::string identifier_;
-    std::vector<StructFieldNode*> struct_field_nodes_;
+    std::vector<StructFieldNode *> struct_field_nodes_;
 
-    StructNode(Position pos, const std::string& identifier,
-        const std::vector<StructFieldNode*>& struct_field_nodes): VisItemNode(pos) {
+    StructNode(Position pos, const std::string &identifier,
+               const std::vector<StructFieldNode *> &struct_field_nodes): VisItemNode(pos) {
         identifier_ = identifier;
         struct_field_nodes_ = struct_field_nodes;
     }
 
     ~StructNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class StructFieldNode: public ASTNode {
+class StructFieldNode : public ASTNode {
 public:
     std::string identifier_;
-    TypeNode* type_node_;
+    TypeNode *type_node_;
 
-    StructFieldNode(Position pos, const std::string& identifier, TypeNode* type_node):
-        ASTNode(pos) {
+    StructFieldNode(Position pos, const std::string &identifier, TypeNode *type_node): ASTNode(pos) {
         identifier_ = identifier;
         type_node_ = type_node;
     }
 
     ~StructFieldNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class EnumerationNode: public VisItemNode {
+class EnumerationNode : public VisItemNode {
 public:
     std::string identifier_;
-    std::vector<EnumVariantNode*> enum_variant_nodes_;
+    std::vector<EnumVariantNode *> enum_variant_nodes_;
 
-    EnumerationNode(Position pos, const std::string& identifier,
-        const std::vector<EnumVariantNode*>& enum_variant_nodes): VisItemNode(pos) {
+    EnumerationNode(Position pos, const std::string &identifier,
+                    const std::vector<EnumVariantNode *> &enum_variant_nodes): VisItemNode(pos) {
         identifier_ = identifier;
         enum_variant_nodes_ = enum_variant_nodes;
     }
 
     ~EnumerationNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class EnumVariantNode: public ASTNode {
+class EnumVariantNode : public ASTNode {
 public:
     std::string identifier_;
-    EnumVariantStructNode* enum_variant_struct_node_ = nullptr;
-    EnumVariantDiscriminantNode* enum_variant_discriminant_node_ = nullptr;
-    EnumVariantNode(Position pos, const std::string& identifier,
-        EnumVariantStructNode* enum_variant_struct_node,
-        EnumVariantDiscriminantNode* enum_variant_discriminant_node): ASTNode(pos) {
+    EnumVariantStructNode *enum_variant_struct_node_ = nullptr;
+    EnumVariantDiscriminantNode *enum_variant_discriminant_node_ = nullptr;
+
+    EnumVariantNode(Position pos, const std::string &identifier,
+                    EnumVariantStructNode *enum_variant_struct_node,
+                    EnumVariantDiscriminantNode *enum_variant_discriminant_node): ASTNode(pos) {
         identifier_ = identifier;
         enum_variant_struct_node_ = enum_variant_struct_node;
         enum_variant_discriminant_node_ = enum_variant_discriminant_node;
@@ -296,51 +296,50 @@ public:
 
     ~EnumVariantNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class EnumVariantStructNode: public ASTNode {
+class EnumVariantStructNode : public ASTNode {
 public:
-    std::vector<StructFieldNode*> struct_field_nodes_;
+    std::vector<StructFieldNode *> struct_field_nodes_;
 
-    EnumVariantStructNode(Position pos, const std::vector<StructFieldNode*>& struct_field_nodes):
-        ASTNode(pos) {
+    EnumVariantStructNode(Position pos, const std::vector<StructFieldNode *> &struct_field_nodes): ASTNode(pos) {
         struct_field_nodes_ = struct_field_nodes;
     }
 
     ~EnumVariantStructNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class EnumVariantDiscriminantNode: public ASTNode {
+class EnumVariantDiscriminantNode : public ASTNode {
 public:
-    ExpressionNode* expression_node_;
+    ExpressionNode *expression_node_;
 
-    EnumVariantDiscriminantNode(Position pos, ExpressionNode* expression_node): ASTNode(pos) {
+    EnumVariantDiscriminantNode(Position pos, ExpressionNode *expression_node): ASTNode(pos) {
         expression_node_ = expression_node;
     }
 
     ~EnumVariantDiscriminantNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class ConstantItemNode: public VisItemNode {
+class ConstantItemNode : public VisItemNode {
 public:
     std::string identifier_;
     bool is_underscore_ = false;
-    TypeNode* type_node_;
-    ExpressionNode* expression_node_;
+    TypeNode *type_node_;
+    ExpressionNode *expression_node_;
 
-    ConstantItemNode(Position pos, const std::string& identifier, bool is_underscore,
-        TypeNode* type_node, ExpressionNode* expression_node): VisItemNode(pos) {
+    ConstantItemNode(Position pos, const std::string &identifier, bool is_underscore,
+                     TypeNode *type_node, ExpressionNode *expression_node): VisItemNode(pos) {
         identifier_ = identifier;
         is_underscore_ = is_underscore;
         type_node_ = type_node;
@@ -349,55 +348,55 @@ public:
 
     ~ConstantItemNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class AssociatedItemNode: public VisItemNode {
+class AssociatedItemNode : public VisItemNode {
 public:
-    ConstantItemNode* constant_item_node_;
-    FunctionNode* function_node_;
+    ConstantItemNode *constant_item_node_;
+    FunctionNode *function_node_;
 
-    AssociatedItemNode(Position pos, ConstantItemNode* constant_item_node,
-        FunctionNode* function_node): VisItemNode(pos) {
+    AssociatedItemNode(Position pos, ConstantItemNode *constant_item_node,
+                       FunctionNode *function_node): VisItemNode(pos) {
         constant_item_node_ = constant_item_node;
         function_node_ = function_node;
     }
 
     ~AssociatedItemNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class ImplementationNode: public VisItemNode {
+class ImplementationNode : public VisItemNode {
 public:
-    explicit ImplementationNode(Position pos): VisItemNode(pos) {}
+    explicit ImplementationNode(Position pos): VisItemNode(pos) {
+    }
 
     ~ImplementationNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class InherentImplNode: public ImplementationNode {
+class InherentImplNode : public ImplementationNode {
 public:
-    TypeNode* type_node_;
-    std::vector<AssociatedItemNode*> associated_item_nodes_;
+    TypeNode *type_node_;
+    std::vector<AssociatedItemNode *> associated_item_nodes_;
 
-    InherentImplNode(Position pos, TypeNode* type_node,
-        const std::vector<AssociatedItemNode*>& associated_item_nodes):
-        ImplementationNode(pos) {
+    InherentImplNode(Position pos, TypeNode *type_node,
+                     const std::vector<AssociatedItemNode *> &associated_item_nodes): ImplementationNode(pos) {
         type_node_ = type_node;
         associated_item_nodes_ = associated_item_nodes;
     }
 
     ~InherentImplNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
@@ -405,7 +404,7 @@ public:
 // TODO Define TraitImplNode
 
 /****************  Expression With Block  ****************/
-class ExpressionNode: public ASTNode {
+class ExpressionNode : public ASTNode {
 public:
     bool is_assignable_ = false;
 
@@ -415,95 +414,95 @@ public:
 
     ~ExpressionNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class ExpressionWithBlockNode: public ExpressionNode {
+class ExpressionWithBlockNode : public ExpressionNode {
 public:
-    explicit ExpressionWithBlockNode(Position pos): ExpressionNode(pos, false) {}
+    explicit ExpressionWithBlockNode(Position pos): ExpressionNode(pos, false) {
+    }
 
     ~ExpressionWithBlockNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class BlockExpressionNode: public ExpressionWithBlockNode {
+class BlockExpressionNode : public ExpressionWithBlockNode {
 public:
     bool is_const_;
-    StatementsNode* statements_;
+    StatementsNode *statements_;
 
-    BlockExpressionNode(Position pos, bool is_const, StatementsNode* statements):
-        ExpressionWithBlockNode(pos) {
+    BlockExpressionNode(Position pos, bool is_const, StatementsNode *statements): ExpressionWithBlockNode(pos) {
         is_const_ = is_const;
         statements_ = statements;
     }
 
     ~BlockExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class LoopExpressionNode: public ExpressionWithBlockNode {
+class LoopExpressionNode : public ExpressionWithBlockNode {
 public:
-    explicit LoopExpressionNode(Position pos): ExpressionWithBlockNode(pos) {};
+    explicit LoopExpressionNode(Position pos): ExpressionWithBlockNode(pos) {
+    };
 
     ~LoopExpressionNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class InfiniteLoopExpressionNode: public LoopExpressionNode {
+class InfiniteLoopExpressionNode : public LoopExpressionNode {
 public:
-    BlockExpressionNode* block_expression_ = nullptr;
+    BlockExpressionNode *block_expression_ = nullptr;
 
-    InfiniteLoopExpressionNode(Position pos, BlockExpressionNode* block_expression):
-        LoopExpressionNode(pos) {
+    InfiniteLoopExpressionNode(Position pos, BlockExpressionNode *block_expression): LoopExpressionNode(pos) {
         block_expression_ = block_expression;
     }
 
     ~InfiniteLoopExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class PredicateLoopExpressionNode: public LoopExpressionNode {
+class PredicateLoopExpressionNode : public LoopExpressionNode {
 public:
-    ConditionsNode* conditions_ = nullptr;
-    BlockExpressionNode* block_expression_ = nullptr;
+    ConditionsNode *conditions_ = nullptr;
+    BlockExpressionNode *block_expression_ = nullptr;
 
-    PredicateLoopExpressionNode(Position pos, ConditionsNode* conditions,
-        BlockExpressionNode* block_expression): LoopExpressionNode(pos) {
+    PredicateLoopExpressionNode(Position pos, ConditionsNode *conditions,
+                                BlockExpressionNode *block_expression): LoopExpressionNode(pos) {
         conditions_ = conditions;
         block_expression_ = block_expression;
     }
 
     ~PredicateLoopExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class IfExpressionNode: public ExpressionWithBlockNode {
+class IfExpressionNode : public ExpressionWithBlockNode {
 public:
-    ConditionsNode* conditions_ = nullptr;
-    BlockExpressionNode* true_block_expression_ = nullptr;
-    BlockExpressionNode* false_block_expression_ = nullptr;
-    IfExpressionNode* if_expression_ = nullptr;
+    ConditionsNode *conditions_ = nullptr;
+    BlockExpressionNode *true_block_expression_ = nullptr;
+    BlockExpressionNode *false_block_expression_ = nullptr;
+    IfExpressionNode *if_expression_ = nullptr;
 
-    IfExpressionNode(Position pos, ConditionsNode* conditions,
-        BlockExpressionNode* true_block_expression, BlockExpressionNode* false_block_expression,
-        IfExpressionNode* if_expression): ExpressionWithBlockNode(pos) {
+    IfExpressionNode(Position pos, ConditionsNode *conditions,
+                     BlockExpressionNode *true_block_expression, BlockExpressionNode *false_block_expression,
+                     IfExpressionNode *if_expression): ExpressionWithBlockNode(pos) {
         conditions_ = conditions;
         true_block_expression_ = true_block_expression;
         false_block_expression_ = false_block_expression;
@@ -512,109 +511,108 @@ public:
 
     ~IfExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class MatchExpressionNode: public ExpressionWithBlockNode {
+class MatchExpressionNode : public ExpressionWithBlockNode {
 public:
-    ExpressionNode* expression_ = nullptr; // Except StructExpression
-    MatchArmsNode* match_arms_ = nullptr;
+    ExpressionNode *expression_ = nullptr; // Except StructExpression
+    MatchArmsNode *match_arms_ = nullptr;
 
-    MatchExpressionNode(Position pos, ExpressionNode* expression, MatchArmsNode* match_arms_node):
-        ExpressionWithBlockNode(pos) {
+    MatchExpressionNode(Position pos, ExpressionNode *expression,
+                        MatchArmsNode *match_arms_node): ExpressionWithBlockNode(pos) {
         expression_ = expression;
         match_arms_ = match_arms_node;
     }
 
     ~MatchExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
 /****************  Expression Without Block  ****************/
-class ExpressionWithoutBlockNode: public ExpressionNode {
+class ExpressionWithoutBlockNode : public ExpressionNode {
 public:
-    ExpressionWithoutBlockNode(Position pos, bool is_assignable):
-        ExpressionNode(pos, is_assignable) {}
+    ExpressionWithoutBlockNode(Position pos, bool is_assignable): ExpressionNode(pos, is_assignable) {
+    }
 
     ~ExpressionWithoutBlockNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class ContinueExpressionNode: public ExpressionWithoutBlockNode {
+class ContinueExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    explicit ContinueExpressionNode(Position pos):
-        ExpressionWithoutBlockNode(pos, false) {}
+    explicit ContinueExpressionNode(Position pos): ExpressionWithoutBlockNode(pos, false) {
+    }
 
     ~ContinueExpressionNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class TupleExpressionNode: public ExpressionWithoutBlockNode {
+class TupleExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    std::vector<ExpressionNode*> expressions_;
+    std::vector<ExpressionNode *> expressions_;
 
-    TupleExpressionNode(Position pos, const std::vector<ExpressionNode*>& expressions):
-        ExpressionWithoutBlockNode(pos, false) {
+    TupleExpressionNode(Position pos, const std::vector<ExpressionNode *> &expressions): ExpressionWithoutBlockNode(
+        pos, false) {
         expressions_ = expressions;
     }
 
     ~TupleExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class UnderscoreExpressionNode: public ExpressionWithoutBlockNode {
+class UnderscoreExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    explicit UnderscoreExpressionNode(Position pos): ExpressionWithoutBlockNode(pos, true) {}
+    explicit UnderscoreExpressionNode(Position pos): ExpressionWithoutBlockNode(pos, true) {
+    }
 
     ~UnderscoreExpressionNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class JumpExpressionNode: public ExpressionWithoutBlockNode {
+class JumpExpressionNode : public ExpressionWithoutBlockNode {
 public:
     TokenType type_;
-    ExpressionNode* expression_;
+    ExpressionNode *expression_;
 
     JumpExpressionNode(Position pos, TokenType type,
-        ExpressionNode* assignment_expression):
-        ExpressionWithoutBlockNode(pos, false) {
+                       ExpressionNode *assignment_expression): ExpressionWithoutBlockNode(pos, false) {
         type_ = type;
         expression_ = assignment_expression;
     }
 
     ~JumpExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class AssignmentExpressionNode: public ExpressionWithoutBlockNode {
+class AssignmentExpressionNode : public ExpressionWithoutBlockNode {
 public:
     TokenType type_;
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
 
     AssignmentExpressionNode(Position pos, TokenType type,
-        ExpressionNode* lhs, ExpressionNode* rhs):
-        ExpressionWithoutBlockNode(pos, false) {
+                             ExpressionNode *lhs, ExpressionNode *rhs): ExpressionWithoutBlockNode(pos, false) {
         type_ = type;
         lhs_ = lhs;
         rhs_ = rhs;
@@ -622,55 +620,55 @@ public:
 
     ~AssignmentExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class LogicOrExpressionNode: public ExpressionWithoutBlockNode {
+class LogicOrExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
 
-    LogicOrExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
-        ExpressionWithoutBlockNode(pos, false) {
+    LogicOrExpressionNode(Position pos, ExpressionNode *lhs, ExpressionNode *rhs): ExpressionWithoutBlockNode(
+        pos, false) {
         lhs_ = lhs;
         rhs_ = rhs;
     }
 
     ~LogicOrExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class LogicAndExpressionNode: public ExpressionWithoutBlockNode {
+class LogicAndExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    ExpressionNode* lhs_ = nullptr;
-    ExpressionNode* rhs_ = nullptr;
+    ExpressionNode *lhs_ = nullptr;
+    ExpressionNode *rhs_ = nullptr;
 
-    LogicAndExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
-        ExpressionWithoutBlockNode(pos, false) {
+    LogicAndExpressionNode(Position pos, ExpressionNode *lhs, ExpressionNode *rhs): ExpressionWithoutBlockNode(
+        pos, false) {
         lhs_ = lhs;
         rhs_ = rhs;
     }
 
     ~LogicAndExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class ComparisonExpressionNode: public ExpressionWithoutBlockNode {
+class ComparisonExpressionNode : public ExpressionWithoutBlockNode {
 public:
     TokenType type_;
-    ExpressionNode* lhs_;
-    ExpressionNode* rhs_;
+    ExpressionNode *lhs_;
+    ExpressionNode *rhs_;
 
-    ComparisonExpressionNode(Position pos, TokenType type, ExpressionNode* lhs,
-        ExpressionNode* rhs): ExpressionWithoutBlockNode(pos, false) {
+    ComparisonExpressionNode(Position pos, TokenType type, ExpressionNode *lhs,
+                             ExpressionNode *rhs): ExpressionWithoutBlockNode(pos, false) {
         type_ = type;
         lhs_ = lhs;
         rhs_ = rhs;
@@ -678,74 +676,73 @@ public:
 
     ~ComparisonExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class BitwiseOrExpressionNode: public ExpressionWithoutBlockNode {
+class BitwiseOrExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    ExpressionNode* lhs_;
-    ExpressionNode* rhs_;
+    ExpressionNode *lhs_;
+    ExpressionNode *rhs_;
 
-    BitwiseOrExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
-        ExpressionWithoutBlockNode(pos, false) {
+    BitwiseOrExpressionNode(Position pos, ExpressionNode *lhs, ExpressionNode *rhs): ExpressionWithoutBlockNode(
+        pos, false) {
         lhs_ = lhs;
         rhs_ = rhs;
     }
 
     ~BitwiseOrExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class BitwiseXorExpressionNode: public ExpressionWithoutBlockNode {
+class BitwiseXorExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    ExpressionNode* lhs_;
-    ExpressionNode* rhs_;
+    ExpressionNode *lhs_;
+    ExpressionNode *rhs_;
 
-    BitwiseXorExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
-        ExpressionWithoutBlockNode(pos, false) {
+    BitwiseXorExpressionNode(Position pos, ExpressionNode *lhs, ExpressionNode *rhs): ExpressionWithoutBlockNode(
+        pos, false) {
         lhs_ = lhs;
         rhs_ = rhs;
     }
 
     ~BitwiseXorExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class BitwiseAndExpressionNode: public ExpressionWithoutBlockNode {
+class BitwiseAndExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    ExpressionNode* lhs_;
-    ExpressionNode* rhs_;
+    ExpressionNode *lhs_;
+    ExpressionNode *rhs_;
 
-    BitwiseAndExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
-        ExpressionWithoutBlockNode(pos, false) {
+    BitwiseAndExpressionNode(Position pos, ExpressionNode *lhs, ExpressionNode *rhs): ExpressionWithoutBlockNode(
+        pos, false) {
         lhs_ = lhs;
         rhs_ = rhs;
     }
 
     ~BitwiseAndExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class ShiftExpressionNode: public ExpressionWithoutBlockNode {
+class ShiftExpressionNode : public ExpressionWithoutBlockNode {
 public:
     TokenType type_;
-    ExpressionNode* lhs_;
-    ExpressionNode* rhs_;
+    ExpressionNode *lhs_;
+    ExpressionNode *rhs_;
 
     ShiftExpressionNode(Position pos, TokenType type,
-        ExpressionNode* lhs, ExpressionNode* rhs):
-        ExpressionWithoutBlockNode(pos, false) {
+                        ExpressionNode *lhs, ExpressionNode *rhs): ExpressionWithoutBlockNode(pos, false) {
         type_ = type;
         lhs_ = lhs;
         rhs_ = rhs;
@@ -753,20 +750,19 @@ public:
 
     ~ShiftExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class AddMinusExpressionNode: public ExpressionWithoutBlockNode {
+class AddMinusExpressionNode : public ExpressionWithoutBlockNode {
 public:
     TokenType type_;
-    ExpressionNode* lhs_;
-    ExpressionNode* rhs_;
+    ExpressionNode *lhs_;
+    ExpressionNode *rhs_;
 
     AddMinusExpressionNode(Position pos, TokenType type,
-        ExpressionNode* lhs, ExpressionNode* rhs):
-        ExpressionWithoutBlockNode(pos, false) {
+                           ExpressionNode *lhs, ExpressionNode *rhs): ExpressionWithoutBlockNode(pos, false) {
         type_ = type;
         lhs_ = lhs;
         rhs_ = rhs;
@@ -774,20 +770,19 @@ public:
 
     ~AddMinusExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class MulDivModExpressionNode: public ExpressionWithoutBlockNode {
+class MulDivModExpressionNode : public ExpressionWithoutBlockNode {
 public:
     TokenType type_;
-    ExpressionNode* lhs_;
-    ExpressionNode* rhs_;
+    ExpressionNode *lhs_;
+    ExpressionNode *rhs_;
 
     MulDivModExpressionNode(Position pos, TokenType type,
-        ExpressionNode* lhs, ExpressionNode* rhs):
-        ExpressionWithoutBlockNode(pos, false) {
+                            ExpressionNode *lhs, ExpressionNode *rhs): ExpressionWithoutBlockNode(pos, false) {
         type_ = type;
         lhs_ = lhs;
         rhs_ = rhs;
@@ -795,126 +790,125 @@ public:
 
     ~MulDivModExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class TypeCastExpressionNode: public ExpressionWithoutBlockNode {
+class TypeCastExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    TypeNode* type_;
-    ExpressionNode* expression_;
+    TypeNode *type_;
+    ExpressionNode *expression_;
 
-    TypeCastExpressionNode(Position pos, TypeNode* type, ExpressionNode* expression):
-        ExpressionWithoutBlockNode(pos, false) {
+    TypeCastExpressionNode(Position pos, TypeNode *type, ExpressionNode *expression): ExpressionWithoutBlockNode(
+        pos, false) {
         type_ = type;
         expression_ = expression;
     }
 
     ~TypeCastExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class UnaryExpressionNode: public ExpressionWithoutBlockNode {
+class UnaryExpressionNode : public ExpressionWithoutBlockNode {
 public:
     TokenType type_;
-    ExpressionNode* expression_;
+    ExpressionNode *expression_;
 
     UnaryExpressionNode(Position pos, TokenType type,
-        ExpressionNode* expression): ExpressionWithoutBlockNode(pos, false) {
+                        ExpressionNode *expression): ExpressionWithoutBlockNode(pos, false) {
         type_ = type;
         expression_ = expression;
     }
 
     ~UnaryExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
 class FunctionCallExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    ExpressionNode* callee_;
-    std::vector<ExpressionNode*> params_;
+    ExpressionNode *callee_;
+    std::vector<ExpressionNode *> params_;
 
-    FunctionCallExpressionNode(Position pos, ExpressionNode* callee,
-        const std::vector<ExpressionNode*>& params): ExpressionWithoutBlockNode(pos, false) {
+    FunctionCallExpressionNode(Position pos, ExpressionNode *callee,
+                               const std::vector<ExpressionNode *> &params): ExpressionWithoutBlockNode(pos, false) {
         callee_ = callee;
         params_ = params;
     }
 
     ~FunctionCallExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
 class ArrayIndexExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    ExpressionNode* base_;
-    ExpressionNode* index_;
+    ExpressionNode *base_;
+    ExpressionNode *index_;
 
-    ArrayIndexExpressionNode(Position pos, ExpressionNode* base,
-        ExpressionNode* index): ExpressionWithoutBlockNode(pos, true) {
+    ArrayIndexExpressionNode(Position pos, ExpressionNode *base,
+                             ExpressionNode *index): ExpressionWithoutBlockNode(pos, true) {
         base_ = base;
         index_ = index;
     }
 
     ~ArrayIndexExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
 class MemberAccessExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    ExpressionNode* base_;
+    ExpressionNode *base_;
     Token member_;
 
-    MemberAccessExpressionNode(Position pos, ExpressionNode* base, const Token& member):
-        ExpressionWithoutBlockNode(pos, false) {
+    MemberAccessExpressionNode(Position pos, ExpressionNode *base, const Token &member): ExpressionWithoutBlockNode(
+        pos, false) {
         base_ = base;
         member_ = member;
     }
 
     ~MemberAccessExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class GroupedExpressionNode: public ExpressionWithoutBlockNode {
+class GroupedExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    ExpressionNode* expression_;
+    ExpressionNode *expression_;
 
-    GroupedExpressionNode(Position pos, ExpressionNode* expression):
-        ExpressionWithoutBlockNode(pos, false) {
+    GroupedExpressionNode(Position pos, ExpressionNode *expression): ExpressionWithoutBlockNode(pos, false) {
         expression_ = expression;
     }
 
     ~GroupedExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class StructExpressionNode: public ExpressionWithoutBlockNode {
+class StructExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    PathInExpressionNode* path_in_expression_node_ = nullptr;
-    StructExprFieldsNode* struct_expr_fields_node_ = nullptr;
-    StructBaseNode* struct_base_node_ = nullptr;
+    PathInExpressionNode *path_in_expression_node_ = nullptr;
+    StructExprFieldsNode *struct_expr_fields_node_ = nullptr;
+    StructBaseNode *struct_base_node_ = nullptr;
 
-    StructExpressionNode(Position pos, PathInExpressionNode* path_in_expression_node,
-        StructExprFieldsNode* struct_expr_fields_node, StructBaseNode* struct_base_node):
-        ExpressionWithoutBlockNode(pos, false) {
+    StructExpressionNode(Position pos, PathInExpressionNode *path_in_expression_node,
+                         StructExprFieldsNode *struct_expr_fields_node,
+                         StructBaseNode *struct_base_node): ExpressionWithoutBlockNode(pos, false) {
         path_in_expression_node_ = path_in_expression_node;
         struct_expr_fields_node_ = struct_expr_fields_node;
         struct_base_node_ = struct_base_node;
@@ -922,192 +916,187 @@ public:
 
     ~StructExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class StructExprFieldsNode: public ASTNode {
+class StructExprFieldsNode : public ASTNode {
 public:
-    std::vector<StructExprFieldNode*> struct_expr_field_nodes_;
-    StructBaseNode* struct_base_node_;
+    std::vector<StructExprFieldNode *> struct_expr_field_nodes_;
+    StructBaseNode *struct_base_node_;
 
-    StructExprFieldsNode(Position pos, const std::vector<StructExprFieldNode*>& struct_expr_field_nodes,
-        StructBaseNode* struct_base): ASTNode(pos) {
+    StructExprFieldsNode(Position pos, const std::vector<StructExprFieldNode *> &struct_expr_field_nodes,
+                         StructBaseNode *struct_base): ASTNode(pos) {
         struct_expr_field_nodes_ = struct_expr_field_nodes;
         struct_base_node_ = struct_base;
     }
 
     ~StructExprFieldsNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class StructExprFieldNode: public ASTNode {
+class StructExprFieldNode : public ASTNode {
 public:
     std::string identifier_;
-    ExpressionNode* expression_node_;
+    ExpressionNode *expression_node_;
 
-    StructExprFieldNode(Position pos, const std::string& identifier,
-        ExpressionNode* expression_node): ASTNode(pos) {
+    StructExprFieldNode(Position pos, const std::string &identifier,
+                        ExpressionNode *expression_node): ASTNode(pos) {
         identifier_ = identifier;
         expression_node_ = expression_node;
     }
 
     ~StructExprFieldNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class StructBaseNode: public ASTNode {
+class StructBaseNode : public ASTNode {
 public:
-    ExpressionNode* expression_node_;
+    ExpressionNode *expression_node_;
 
-    StructBaseNode(Position pos, ExpressionNode* expression_node): ASTNode(pos) {
+    StructBaseNode(Position pos, ExpressionNode *expression_node): ASTNode(pos) {
         expression_node_ = expression_node;
     }
 
     ~StructBaseNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class PathExpressionNode: public ExpressionWithoutBlockNode {
+class PathExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    explicit PathExpressionNode(Position pos): ExpressionWithoutBlockNode(pos, true) {}
+    explicit PathExpressionNode(Position pos): ExpressionWithoutBlockNode(pos, true) {
+    }
 
     ~PathExpressionNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class PathInExpressionNode: public PathExpressionNode {
+class PathInExpressionNode : public PathExpressionNode {
 public:
-    std::vector<PathIndentSegmentNode*> path_indent_segments_;
+    std::vector<PathIndentSegmentNode *> path_indent_segments_;
 
     explicit PathInExpressionNode(Position pos,
-        const std::vector<PathIndentSegmentNode*>& simple_path_segments):
-        PathExpressionNode(pos) {
+                                  const std::vector<PathIndentSegmentNode *> &simple_path_segments): PathExpressionNode(
+        pos) {
         path_indent_segments_ = simple_path_segments;
     }
 
     ~PathInExpressionNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
 /****************  Literal Node  ****************/
-class LiteralExpressionNode: public ExpressionWithoutBlockNode {
+class LiteralExpressionNode : public ExpressionWithoutBlockNode {
 public:
-    explicit LiteralExpressionNode(Position pos):
-        ExpressionWithoutBlockNode(pos, false) {}
+    explicit LiteralExpressionNode(Position pos): ExpressionWithoutBlockNode(pos, false) {
+    }
 
     ~LiteralExpressionNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class CharLiteralNode: public LiteralExpressionNode {
+class CharLiteralNode : public LiteralExpressionNode {
 public:
     char char_literal_;
 
-    CharLiteralNode(Position pos, const char& char_literal):
-        LiteralExpressionNode(pos) {
+    CharLiteralNode(Position pos, const char &char_literal): LiteralExpressionNode(pos) {
         char_literal_ = char_literal;
     }
 
     ~CharLiteralNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class StringLiteralNode: public LiteralExpressionNode {
+class StringLiteralNode : public LiteralExpressionNode {
 public:
     std::string string_literal_;
 
-    StringLiteralNode(Position pos, const std::string& string_literal):
-        LiteralExpressionNode(pos) {
+    StringLiteralNode(Position pos, const std::string &string_literal): LiteralExpressionNode(pos) {
         string_literal_ = string_literal;
     }
 
     ~StringLiteralNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class IntLiteralNode: public LiteralExpressionNode {
+class IntLiteralNode : public LiteralExpressionNode {
 public:
     int64_t int_literal_;
 
-    IntLiteralNode(Position pos, const int64_t& int_literal):
-        LiteralExpressionNode(pos) {
+    IntLiteralNode(Position pos, const int64_t &int_literal): LiteralExpressionNode(pos) {
         int_literal_ = int_literal;
     }
 
     ~IntLiteralNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class BoolLiteralNode: public LiteralExpressionNode {
+class BoolLiteralNode : public LiteralExpressionNode {
 public:
     bool bool_literal_;
 
-    BoolLiteralNode(Position pos, const bool& bool_literal):
-        LiteralExpressionNode(pos) {
+    BoolLiteralNode(Position pos, const bool &bool_literal): LiteralExpressionNode(pos) {
         bool_literal_ = bool_literal;
     }
 
     ~BoolLiteralNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class CStringLiteralNode: public LiteralExpressionNode {
+class CStringLiteralNode : public LiteralExpressionNode {
 public:
     std::string c_string_literal_;
 
-    CStringLiteralNode(Position pos, const std::string& c_string_literal):
-        LiteralExpressionNode(pos) {
+    CStringLiteralNode(Position pos, const std::string &c_string_literal): LiteralExpressionNode(pos) {
         c_string_literal_ = c_string_literal;
     }
 
     ~CStringLiteralNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class ArrayLiteralNode: public LiteralExpressionNode {
+class ArrayLiteralNode : public LiteralExpressionNode {
 public:
-    std::vector<ExpressionNode*> expressions_;
-    ExpressionNode* lhs_;
-    ExpressionNode* rhs_;
+    std::vector<ExpressionNode *> expressions_;
+    ExpressionNode *lhs_;
+    ExpressionNode *rhs_;
 
-    ArrayLiteralNode(Position pos, const std::vector<ExpressionNode*>& expression_nodes,
-        ExpressionNode* lhs, ExpressionNode* rhs):
-        LiteralExpressionNode(pos) {
+    ArrayLiteralNode(Position pos, const std::vector<ExpressionNode *> &expression_nodes,
+                     ExpressionNode *lhs, ExpressionNode *rhs): LiteralExpressionNode(pos) {
         expressions_ = expression_nodes;
         lhs_ = lhs;
         rhs_ = rhs;
@@ -1115,77 +1104,77 @@ public:
 
     ~ArrayLiteralNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
 /****************  Support Node for Expression  ****************/
-class ConditionsNode: public ASTNode {
+class ConditionsNode : public ASTNode {
 public:
-    ExpressionNode* expression_ = nullptr;
+    ExpressionNode *expression_ = nullptr;
 
-    ConditionsNode(Position pos, ExpressionNode* expression): ASTNode(pos) {
+    ConditionsNode(Position pos, ExpressionNode *expression): ASTNode(pos) {
         expression_ = expression;
     }
 
     ~ConditionsNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class StatementsNode: public ASTNode {
+class StatementsNode : public ASTNode {
 public:
-    std::vector<StatementNode*> statements_;
-    ExpressionNode* expression_ = nullptr;
+    std::vector<StatementNode *> statements_;
+    ExpressionNode *expression_ = nullptr;
 
-    StatementsNode(Position pos, const std::vector<StatementNode*>& statements,
-        ExpressionNode* expression): ASTNode(pos) {
+    StatementsNode(Position pos, const std::vector<StatementNode *> &statements,
+                   ExpressionNode *expression): ASTNode(pos) {
         statements_ = statements;
         expression_ = expression;
     }
 
     ~StatementsNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class MatchArmsNode: public ASTNode {
+class MatchArmsNode : public ASTNode {
 public:
-    std::vector<MatchArmNode*> match_arm_nodes_;
-    std::vector<ExpressionNode*> expression_nodes_;
+    std::vector<MatchArmNode *> match_arm_nodes_;
+    std::vector<ExpressionNode *> expression_nodes_;
 
-    MatchArmsNode(Position pos, const std::vector<MatchArmNode*>& match_arm_nodes,
-        const std::vector<ExpressionNode*>& expression_nodes): ASTNode(pos) {
+    MatchArmsNode(Position pos, const std::vector<MatchArmNode *> &match_arm_nodes,
+                  const std::vector<ExpressionNode *> &expression_nodes): ASTNode(pos) {
         match_arm_nodes_ = match_arm_nodes;
         expression_nodes_ = expression_nodes;
     }
 
     ~MatchArmsNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class MatchArmNode: public ASTNode {
+class MatchArmNode : public ASTNode {
 public:
-    PatternNode* pattern_node_;
-    ExpressionNode* match_arm_guard_;
+    PatternNode *pattern_node_;
+    ExpressionNode *match_arm_guard_;
 
-    MatchArmNode(Position pos, PatternNode* pattern_node,
-        ExpressionNode* match_arm_guard): ASTNode(pos) {
+    MatchArmNode(Position pos, PatternNode *pattern_node,
+                 ExpressionNode *match_arm_guard): ASTNode(pos) {
         pattern_node_ = pattern_node;
         match_arm_guard_ = match_arm_guard;
     }
 
     ~MatchArmNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
@@ -1193,37 +1182,39 @@ public:
 // TODO Add LetChain
 
 /****************  Statement  ****************/
-class StatementNode: public ASTNode {
+class StatementNode : public ASTNode {
 public:
-    explicit StatementNode(Position pos): ASTNode(pos) {}
+    explicit StatementNode(Position pos): ASTNode(pos) {
+    }
 
     ~StatementNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class EmptyStatementNode: public StatementNode {
+class EmptyStatementNode : public StatementNode {
 public:
-    explicit EmptyStatementNode(Position pos): StatementNode(pos) {}
+    explicit EmptyStatementNode(Position pos): StatementNode(pos) {
+    }
 
     ~EmptyStatementNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class LetStatementNode: public StatementNode {
+class LetStatementNode : public StatementNode {
 public:
-    PatternNoTopAltNode* pattern_no_top_alt_ = nullptr;
-    TypeNode* type_ = nullptr;
-    ExpressionNode* expression_ = nullptr;
-    BlockExpressionNode* block_expression_ = nullptr;
+    PatternNoTopAltNode *pattern_no_top_alt_ = nullptr;
+    TypeNode *type_ = nullptr;
+    ExpressionNode *expression_ = nullptr;
+    BlockExpressionNode *block_expression_ = nullptr;
 
-    LetStatementNode(Position pos, PatternNoTopAltNode* pattern_no_top_alt, TypeNode* type,
-        ExpressionNode* expression, BlockExpressionNode* block_expression): StatementNode(pos) {
+    LetStatementNode(Position pos, PatternNoTopAltNode *pattern_no_top_alt, TypeNode *type,
+                     ExpressionNode *expression, BlockExpressionNode *block_expression): StatementNode(pos) {
         pattern_no_top_alt_ = pattern_no_top_alt;
         type_ = type;
         expression_ = expression;
@@ -1231,94 +1222,94 @@ public:
     }
 
     ~LetStatementNode() override;
-    void accept(ASTVisitor* visitor) override {
+
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
-
 };
 
-class ExpressionStatementNode: public StatementNode {
+class ExpressionStatementNode : public StatementNode {
 public:
-    ExpressionNode* expression_ = nullptr; // Except StructExpression
+    ExpressionNode *expression_ = nullptr; // Except StructExpression
     // TODO: Add LetChain
 
-    ExpressionStatementNode(Position pos, ExpressionNode* expression): StatementNode(pos) {
+    ExpressionStatementNode(Position pos, ExpressionNode *expression): StatementNode(pos) {
         expression_ = expression;
     }
 
     ~ExpressionStatementNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
 /****************  Patterns  ****************/
-class PatternNode: public ASTNode {
+class PatternNode : public ASTNode {
 public:
-    std::vector<PatternNoTopAltNode*> pattern_no_top_alts_;
+    std::vector<PatternNoTopAltNode *> pattern_no_top_alts_;
 
-    PatternNode(Position pos, const std::vector<PatternNoTopAltNode*>& pattern_no_top_alts):
-        ASTNode(pos) {
+    PatternNode(Position pos, const std::vector<PatternNoTopAltNode *> &pattern_no_top_alts): ASTNode(pos) {
         pattern_no_top_alts_ = pattern_no_top_alts;
     }
 
     ~PatternNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class PatternNoTopAltNode: public ASTNode {
+class PatternNoTopAltNode : public ASTNode {
 public:
-    explicit PatternNoTopAltNode(Position pos): ASTNode(pos) {}
+    explicit PatternNoTopAltNode(Position pos): ASTNode(pos) {
+    }
 
     ~PatternNoTopAltNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class PatternWithoutRangeNode: public PatternNoTopAltNode {
+class PatternWithoutRangeNode : public PatternNoTopAltNode {
 public:
-    explicit PatternWithoutRangeNode(Position pos): PatternNoTopAltNode(pos) {}
+    explicit PatternWithoutRangeNode(Position pos): PatternNoTopAltNode(pos) {
+    }
 
     ~PatternWithoutRangeNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class LiteralPatternNode: public PatternWithoutRangeNode {
+class LiteralPatternNode : public PatternWithoutRangeNode {
 public:
     bool have_minus_ = false;
-    ExpressionNode* expression_;
+    ExpressionNode *expression_;
 
-    LiteralPatternNode(Position pos, bool have_minus, ExpressionNode* expression):
-        PatternWithoutRangeNode(pos) {
+    LiteralPatternNode(Position pos, bool have_minus, ExpressionNode *expression): PatternWithoutRangeNode(pos) {
         have_minus_ = have_minus;
         expression_ = expression;
     }
 
     ~LiteralPatternNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class IdentifierPatternNode: public PatternWithoutRangeNode {
+class IdentifierPatternNode : public PatternWithoutRangeNode {
 public:
     bool is_ref_ = false;
     bool is_mut_ = false;
     std::string identifier_;
-    PatternNoTopAltNode* node_ = nullptr;
+    PatternNoTopAltNode *node_ = nullptr;
 
-    IdentifierPatternNode(Position pos, bool is_ref, bool is_mut, const std::string& identifier,
-        PatternNoTopAltNode* node): PatternWithoutRangeNode(pos) {
+    IdentifierPatternNode(Position pos, bool is_ref, bool is_mut, const std::string &identifier,
+                          PatternNoTopAltNode *node): PatternWithoutRangeNode(pos) {
         is_ref_ = is_ref;
         is_mut_ = is_mut;
         identifier_ = identifier;
@@ -1327,29 +1318,31 @@ public:
 
     ~IdentifierPatternNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class WildcardPatternNode: public PatternWithoutRangeNode {
+class WildcardPatternNode : public PatternWithoutRangeNode {
 public:
-    explicit WildcardPatternNode(Position pos): PatternWithoutRangeNode(pos) {}
+    explicit WildcardPatternNode(Position pos): PatternWithoutRangeNode(pos) {
+    }
 
     ~WildcardPatternNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class RestPatternNode: public PatternWithoutRangeNode {
+class RestPatternNode : public PatternWithoutRangeNode {
 public:
-    explicit RestPatternNode(Position pos): PatternWithoutRangeNode(pos) {}
+    explicit RestPatternNode(Position pos): PatternWithoutRangeNode(pos) {
+    }
 
     ~RestPatternNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
@@ -1357,194 +1350,195 @@ public:
 // TODO StructPattern
 // TODO TuplePattern
 
-class GroupedPatternNode: public PatternWithoutRangeNode {
+class GroupedPatternNode : public PatternWithoutRangeNode {
 public:
-    PatternNode* pattern_ = nullptr;
+    PatternNode *pattern_ = nullptr;
 
-    GroupedPatternNode(Position pos, PatternNode* pattern):
-        PatternWithoutRangeNode(pos) {
+    GroupedPatternNode(Position pos, PatternNode *pattern): PatternWithoutRangeNode(pos) {
         pattern_ = pattern;
     }
 
     ~GroupedPatternNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class SlicePatternNode: public PatternWithoutRangeNode {
+class SlicePatternNode : public PatternWithoutRangeNode {
 public:
-    std::vector<PatternNode*> patterns_;
+    std::vector<PatternNode *> patterns_;
 
-    SlicePatternNode(Position pos, const std::vector<PatternNode*> &patterns):
-        PatternWithoutRangeNode(pos) {
+    SlicePatternNode(Position pos, const std::vector<PatternNode *> &patterns): PatternWithoutRangeNode(pos) {
         patterns_ = patterns;
     }
 
     ~SlicePatternNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class PathPatternNode: public PatternWithoutRangeNode {
+class PathPatternNode : public PatternWithoutRangeNode {
 public:
-    ExpressionNode* expression_;
+    ExpressionNode *expression_;
 
-    PathPatternNode(Position pos, ExpressionNode* expression): PatternWithoutRangeNode(pos) {
+    PathPatternNode(Position pos, ExpressionNode *expression): PatternWithoutRangeNode(pos) {
         expression_ = expression;
     }
 
     ~PathPatternNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
 /****************  Types  ****************/
-class TypeNode: public ASTNode {
+class TypeNode : public ASTNode {
 public:
-    explicit TypeNode(Position pos): ASTNode(pos) {}
+    explicit TypeNode(Position pos): ASTNode(pos) {
+    }
 
     ~TypeNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class TypeNoBoundsNode: public TypeNode {
+class TypeNoBoundsNode : public TypeNode {
 public:
-    explicit TypeNoBoundsNode(Position pos): TypeNode(pos) {}
+    explicit TypeNoBoundsNode(Position pos): TypeNode(pos) {
+    }
 
     ~TypeNoBoundsNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class ParenthesizedTypeNode: public TypeNoBoundsNode {
+class ParenthesizedTypeNode : public TypeNoBoundsNode {
 public:
-    TypeNode* type_ = nullptr;
+    TypeNode *type_ = nullptr;
 
-    ParenthesizedTypeNode(Position pos, TypeNode* type): TypeNoBoundsNode(pos) {
+    ParenthesizedTypeNode(Position pos, TypeNode *type): TypeNoBoundsNode(pos) {
         type_ = type;
     }
 
     ~ParenthesizedTypeNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class TypePathNode: public TypeNoBoundsNode {
+class TypePathNode : public TypeNoBoundsNode {
 public:
-    std::vector<TypePathSegmentNode*> type_path_segment_nodes_;
+    std::vector<TypePathSegmentNode *> type_path_segment_nodes_;
 
-    TypePathNode(Position pos, const std::vector<TypePathSegmentNode*>& type_path_segment_nodes):
-        TypeNoBoundsNode(pos) {
+    TypePathNode(Position pos,
+                 const std::vector<TypePathSegmentNode *> &type_path_segment_nodes): TypeNoBoundsNode(pos) {
         type_path_segment_nodes_ = type_path_segment_nodes;
     }
 
     ~TypePathNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class TypePathSegmentNode: public ASTNode {
+class TypePathSegmentNode : public ASTNode {
 public:
-    PathIndentSegmentNode* path_indent_segment_node_ = nullptr;
+    PathIndentSegmentNode *path_indent_segment_node_ = nullptr;
 
-    TypePathSegmentNode(Position pos, PathIndentSegmentNode* path_indent_segment_node): ASTNode(pos) {
+    TypePathSegmentNode(Position pos, PathIndentSegmentNode *path_indent_segment_node): ASTNode(pos) {
         path_indent_segment_node_ = path_indent_segment_node;
     }
 
     ~TypePathSegmentNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class TupleTypeNode: public TypeNoBoundsNode {
+class TupleTypeNode : public TypeNoBoundsNode {
 public:
-    std::vector<TypeNode*> type_nodes_;
+    std::vector<TypeNode *> type_nodes_;
 
-    TupleTypeNode(Position pos, const std::vector<TypeNode*>& type_nodes): TypeNoBoundsNode(pos) {
+    TupleTypeNode(Position pos, const std::vector<TypeNode *> &type_nodes): TypeNoBoundsNode(pos) {
         type_nodes_ = type_nodes;
     }
 
     ~TupleTypeNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class ArrayTypeNode: public TypeNoBoundsNode {
+class ArrayTypeNode : public TypeNoBoundsNode {
 public:
-    TypeNode* type_;
-    ExpressionNode* expression_node_ = nullptr;
+    TypeNode *type_;
+    ExpressionNode *expression_node_ = nullptr;
 
-    ArrayTypeNode(Position pos, TypeNode* type, ExpressionNode* expression_node): TypeNoBoundsNode(pos) {
+    ArrayTypeNode(Position pos, TypeNode *type, ExpressionNode *expression_node): TypeNoBoundsNode(pos) {
         type_ = type;
         expression_node_ = expression_node;
     }
 
     ~ArrayTypeNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class SliceTypeNode: public TypeNoBoundsNode {
+class SliceTypeNode : public TypeNoBoundsNode {
 public:
-    TypeNode* type_ = nullptr;
+    TypeNode *type_ = nullptr;
 
-    SliceTypeNode(Position pos, TypeNode* type): TypeNoBoundsNode(pos) {
+    SliceTypeNode(Position pos, TypeNode *type): TypeNoBoundsNode(pos) {
         type_ = type;
     }
 
     ~SliceTypeNode() override;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
-class InferredTypeNode: public TypeNoBoundsNode {
+class InferredTypeNode : public TypeNoBoundsNode {
 public:
-    explicit InferredTypeNode(Position pos): TypeNoBoundsNode(pos) {}
+    explicit InferredTypeNode(Position pos): TypeNoBoundsNode(pos) {
+    }
 
     ~InferredTypeNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
 
 /****************  Path (Naive Version) ****************/
-class PathIndentSegmentNode: public ASTNode {
+class PathIndentSegmentNode : public ASTNode {
 public:
     TokenType type_;
     std::string identifier_;
 
-    PathIndentSegmentNode(Position pos, TokenType type, const std::string& identifier): ASTNode(pos) {
+    PathIndentSegmentNode(Position pos, TokenType type, const std::string &identifier): ASTNode(pos) {
         type_ = type;
         identifier_ = identifier;
     }
 
     ~PathIndentSegmentNode() override = default;
 
-    void accept(ASTVisitor* visitor) override {
+    void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };

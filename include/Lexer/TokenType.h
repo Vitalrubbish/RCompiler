@@ -1,5 +1,6 @@
 #ifndef TOKENTYPE_H
 #define TOKENTYPE_H
+
 enum class TokenType {
     LineComment,
     BlockComment,

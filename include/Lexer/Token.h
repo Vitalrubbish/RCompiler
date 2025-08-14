@@ -12,10 +12,10 @@ struct Token {
 
     Token() = default;
 
-    explicit Token(const std::string& , const TokenType& );
+    explicit Token(const std::string &, const TokenType &);
 
-    void putPosValue(const Position& pos) {
-        this -> pos = pos;
+    void putPosValue(const Position &pos) {
+        this->pos = pos;
     }
 };
 #endif //TOKEN_H

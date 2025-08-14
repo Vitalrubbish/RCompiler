@@ -7,13 +7,13 @@
 
 Lexer lexer;
 std::vector<Token> tokens;
-ASTNode* root = nullptr;
+ASTNode *root = nullptr;
 
 int main() {
     // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
     // freopen("../testcases/Parser/in01.rs", "r", stdin);
     std::string text, line;
-    while(std::getline(std::cin, line)) {
+    while (std::getline(std::cin, line)) {
         text += line;
     }
     text += '\r';
@@ -41,9 +41,7 @@ int main() {
 
         Parser parser(tokens);
         root = parser.ParseCrate(); // Parser
-
-
-    } catch (std::exception& error) {
+    } catch (std::exception &error) {
         std::cout << error.what() << '\n';
     }
     delete root;

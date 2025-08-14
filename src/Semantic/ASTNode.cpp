@@ -2,7 +2,7 @@
 
 /****************  Items  ****************/
 CrateNode::~CrateNode() {
-    for (auto & it : items_) {
+    for (auto &it: items_) {
         delete it;
     }
 }
@@ -17,13 +17,13 @@ FunctionNode::~FunctionNode() {
 }
 
 FunctionParametersNode::~FunctionParametersNode() {
-    for (auto& it: function_params_) {
+    for (auto &it: function_params_) {
         delete it;
     }
 }
 
 FunctionParamNode::~FunctionParamNode() {
-     // delete function_param_pattern_;
+    // delete function_param_pattern_;
     delete type_;
 }
 
@@ -33,7 +33,7 @@ FunctionParamPatternNode::~FunctionParamPatternNode() {
 }
 
 StructNode::~StructNode() {
-    for (auto& it: struct_field_nodes_) {
+    for (auto &it: struct_field_nodes_) {
         delete it;
     }
 }
@@ -49,7 +49,7 @@ StructExpressionNode::~StructExpressionNode() {
 }
 
 StructExprFieldsNode::~StructExprFieldsNode() {
-    for (auto& it: struct_expr_field_nodes_) {
+    for (auto &it: struct_expr_field_nodes_) {
         delete it;
     }
 }
@@ -63,7 +63,7 @@ StructBaseNode::~StructBaseNode() {
 }
 
 EnumerationNode::~EnumerationNode() {
-    for (auto& it: enum_variant_nodes_) {
+    for (auto &it: enum_variant_nodes_) {
         delete it;
     }
 }
@@ -74,7 +74,7 @@ EnumVariantNode::~EnumVariantNode() {
 }
 
 EnumVariantStructNode::~EnumVariantStructNode() {
-    for (auto& it: struct_field_nodes_) {
+    for (auto &it: struct_field_nodes_) {
         delete it;
     }
 }
@@ -95,7 +95,7 @@ AssociatedItemNode::~AssociatedItemNode() {
 
 InherentImplNode::~InherentImplNode() {
     delete type_node_;
-    for (auto& it: associated_item_nodes_) {
+    for (auto &it: associated_item_nodes_) {
         delete it;
     }
 }
@@ -139,10 +139,10 @@ MatchExpressionNode::~MatchExpressionNode() {
 }
 
 MatchArmsNode::~MatchArmsNode() {
-    for (auto& it: match_arm_nodes_) {
+    for (auto &it: match_arm_nodes_) {
         delete it;
     }
-    for (auto& it: expression_nodes_) {
+    for (auto &it: expression_nodes_) {
         delete it;
     }
 }
@@ -153,7 +153,7 @@ MatchArmNode::~MatchArmNode() {
 }
 
 TupleExpressionNode::~TupleExpressionNode() {
-    for (auto& it: expressions_) {
+    for (auto &it: expressions_) {
         delete it;
     }
 }
@@ -222,7 +222,7 @@ UnaryExpressionNode::~UnaryExpressionNode() {
 
 FunctionCallExpressionNode::~FunctionCallExpressionNode() {
     delete callee_;
-    for (auto& it: params_) {
+    for (auto &it: params_) {
         delete it;
     }
 }
@@ -237,7 +237,7 @@ MemberAccessExpressionNode::~MemberAccessExpressionNode() {
 }
 
 ArrayLiteralNode::~ArrayLiteralNode() {
-    for (auto& it: expressions_) {
+    for (auto &it: expressions_) {
         delete it;
     }
     delete lhs_;
@@ -249,14 +249,14 @@ GroupedExpressionNode::~GroupedExpressionNode() {
 }
 
 PathInExpressionNode::~PathInExpressionNode() {
-    for (auto& it: path_indent_segments_) {
+    for (auto &it: path_indent_segments_) {
         delete it;
     }
 }
 
 /****************  Patterns  ****************/
 PatternNode::~PatternNode() {
-    for (auto& it: pattern_no_top_alts_) {
+    for (auto &it: pattern_no_top_alts_) {
         delete it;
     }
 }
@@ -274,7 +274,7 @@ GroupedPatternNode::~GroupedPatternNode() {
 }
 
 SlicePatternNode::~SlicePatternNode() {
-    for (auto& it: patterns_) {
+    for (auto &it: patterns_) {
         delete it;
     }
 }
@@ -290,7 +290,7 @@ ConditionsNode::~ConditionsNode() {
 }
 
 StatementsNode::~StatementsNode() {
-    for (auto& it: statements_) {
+    for (auto &it: statements_) {
         delete it;
     }
     delete expression_;
@@ -302,7 +302,7 @@ ParenthesizedTypeNode::~ParenthesizedTypeNode() {
 }
 
 TypePathNode::~TypePathNode() {
-    for (auto& it: type_path_segment_nodes_) {
+    for (auto &it: type_path_segment_nodes_) {
         delete it;
     }
 }
@@ -312,7 +312,7 @@ TypePathSegmentNode::~TypePathSegmentNode() {
 }
 
 TupleTypeNode::~TupleTypeNode() {
-    for (auto& it: type_nodes_) {
+    for (auto &it: type_nodes_) {
         delete it;
     }
 }
@@ -325,4 +325,3 @@ ArrayTypeNode::~ArrayTypeNode() {
     delete type_;
     delete expression_node_;
 }
-
