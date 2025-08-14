@@ -106,11 +106,10 @@ class ArrayTypeNode;
 class SliceTypeNode;
 class InferredTypeNode;
 
-
 class ASTNode {
-protected:
-    Position pos_;
 public:
+    Position pos_;
+
     explicit ASTNode(const Position pos) {
         pos_ = pos;
     }
@@ -122,8 +121,9 @@ public:
 
 /****************  Items  ****************/
 class CrateNode: public ASTNode {
-    std::vector<VisItemNode*> items_;
 public:
+    std::vector<VisItemNode*> items_;
+
     CrateNode(Position pos, const std::vector<VisItemNode*>& items): ASTNode(pos) {
         items_ = items;
     }
@@ -147,12 +147,13 @@ public:
 };
 
 class FunctionNode: public VisItemNode {
+public:
     bool is_const_;
     std::string identifier_;
     FunctionParametersNode* function_parameters_ = nullptr;
     TypeNode* type_ = nullptr;
     BlockExpressionNode* block_expression_ = nullptr;
-public:
+
     FunctionNode(Position pos, bool is_const, const std::string& identifier,
         FunctionParametersNode* function_parameters, TypeNode* type,
         BlockExpressionNode* block_expression): VisItemNode(pos) {
@@ -171,8 +172,9 @@ public:
 };
 
 class FunctionParametersNode: public ASTNode {
-    std::vector<FunctionParamNode*> function_params_;
 public:
+    std::vector<FunctionParamNode*> function_params_;
+
     FunctionParametersNode(Position pos, const std::vector<FunctionParamNode*>& function_params):
         ASTNode(pos) {
         function_params_ = function_params;
@@ -186,15 +188,16 @@ public:
 };
 
 class FunctionParamNode: public ASTNode {
+public:
     FunctionParamPatternNode* function_param_pattern_ = nullptr;
     TypeNode* type_ = nullptr;
     bool is_DotDotDot_ = false;
-public:
+
     FunctionParamNode(Position pos, FunctionParamPatternNode* function_param_pattern,
         TypeNode* type, bool is_DotDotDot): ASTNode(pos) {
         function_param_pattern_ = function_param_pattern;
         type_ = type;
-        is_DotDotDot_ =  is_DotDotDot;
+        is_DotDotDot_ = is_DotDotDot;
     }
 
     ~FunctionParamNode() override;
@@ -205,10 +208,11 @@ public:
 };
 
 class FunctionParamPatternNode: public ASTNode {
+public:
     PatternNoTopAltNode* pattern_no_top_alt_;
     TypeNode* type_;
     bool is_DotDotDot_ = false;
-public:
+
     FunctionParamPatternNode(Position pos, PatternNoTopAltNode* pattern_no_top_alt,
         TypeNode* type, bool is_DotDotDot): ASTNode(pos) {
         pattern_no_top_alt_ = pattern_no_top_alt;
@@ -224,11 +228,12 @@ public:
 };
 
 class StructNode: public VisItemNode {
+public:
     std::string identifier_;
     std::vector<StructFieldNode*> struct_field_nodes_;
-public:
+
     StructNode(Position pos, const std::string& identifier,
-        const std::vector<StructFieldNode*>& struct_field_nodes):VisItemNode(pos) {
+        const std::vector<StructFieldNode*>& struct_field_nodes): VisItemNode(pos) {
         identifier_ = identifier;
         struct_field_nodes_ = struct_field_nodes;
     }
@@ -241,9 +246,10 @@ public:
 };
 
 class StructFieldNode: public ASTNode {
+public:
     std::string identifier_;
     TypeNode* type_node_;
-public:
+
     StructFieldNode(Position pos, const std::string& identifier, TypeNode* type_node):
         ASTNode(pos) {
         identifier_ = identifier;
@@ -258,9 +264,10 @@ public:
 };
 
 class EnumerationNode: public VisItemNode {
+public:
     std::string identifier_;
     std::vector<EnumVariantNode*> enum_variant_nodes_;
-public:
+
     EnumerationNode(Position pos, const std::string& identifier,
         const std::vector<EnumVariantNode*>& enum_variant_nodes): VisItemNode(pos) {
         identifier_ = identifier;
@@ -275,10 +282,10 @@ public:
 };
 
 class EnumVariantNode: public ASTNode {
+public:
     std::string identifier_;
     EnumVariantStructNode* enum_variant_struct_node_ = nullptr;
     EnumVariantDiscriminantNode* enum_variant_discriminant_node_ = nullptr;
-public:
     EnumVariantNode(Position pos, const std::string& identifier,
         EnumVariantStructNode* enum_variant_struct_node,
         EnumVariantDiscriminantNode* enum_variant_discriminant_node): ASTNode(pos) {
@@ -295,8 +302,9 @@ public:
 };
 
 class EnumVariantStructNode: public ASTNode {
-    std::vector<StructFieldNode*> struct_field_nodes_;
 public:
+    std::vector<StructFieldNode*> struct_field_nodes_;
+
     EnumVariantStructNode(Position pos, const std::vector<StructFieldNode*>& struct_field_nodes):
         ASTNode(pos) {
         struct_field_nodes_ = struct_field_nodes;
@@ -310,8 +318,9 @@ public:
 };
 
 class EnumVariantDiscriminantNode: public ASTNode {
-    ExpressionNode* expression_node_;
 public:
+    ExpressionNode* expression_node_;
+
     EnumVariantDiscriminantNode(Position pos, ExpressionNode* expression_node): ASTNode(pos) {
         expression_node_ = expression_node;
     }
@@ -324,11 +333,12 @@ public:
 };
 
 class ConstantItemNode: public VisItemNode {
+public:
     std::string identifier_;
     bool is_underscore_ = false;
     TypeNode* type_node_;
     ExpressionNode* expression_node_;
-public:
+
     ConstantItemNode(Position pos, const std::string& identifier, bool is_underscore,
         TypeNode* type_node, ExpressionNode* expression_node): VisItemNode(pos) {
         identifier_ = identifier;
@@ -345,9 +355,10 @@ public:
 };
 
 class AssociatedItemNode: public VisItemNode {
+public:
     ConstantItemNode* constant_item_node_;
     FunctionNode* function_node_;
-public:
+
     AssociatedItemNode(Position pos, ConstantItemNode* constant_item_node,
         FunctionNode* function_node): VisItemNode(pos) {
         constant_item_node_ = constant_item_node;
@@ -373,9 +384,10 @@ public:
 };
 
 class InherentImplNode: public ImplementationNode {
+public:
     TypeNode* type_node_;
     std::vector<AssociatedItemNode*> associated_item_nodes_;
-public:
+
     InherentImplNode(Position pos, TypeNode* type_node,
         const std::vector<AssociatedItemNode*>& associated_item_nodes):
         ImplementationNode(pos) {
@@ -394,9 +406,9 @@ public:
 
 /****************  Expression With Block  ****************/
 class ExpressionNode: public ASTNode {
-protected:
-    bool is_assignable_ = false;
 public:
+    bool is_assignable_ = false;
+
     ExpressionNode(Position pos, bool is_assignable): ASTNode(pos) {
         is_assignable_ = is_assignable;
     }
@@ -420,9 +432,10 @@ public:
 };
 
 class BlockExpressionNode: public ExpressionWithBlockNode {
+public:
     bool is_const_;
     StatementsNode* statements_;
-public:
+
     BlockExpressionNode(Position pos, bool is_const, StatementsNode* statements):
         ExpressionWithBlockNode(pos) {
         is_const_ = is_const;
@@ -436,7 +449,6 @@ public:
     }
 };
 
-
 class LoopExpressionNode: public ExpressionWithBlockNode {
 public:
     explicit LoopExpressionNode(Position pos): ExpressionWithBlockNode(pos) {};
@@ -449,8 +461,9 @@ public:
 };
 
 class InfiniteLoopExpressionNode: public LoopExpressionNode {
-    BlockExpressionNode* block_expression_ = nullptr;
 public:
+    BlockExpressionNode* block_expression_ = nullptr;
+
     InfiniteLoopExpressionNode(Position pos, BlockExpressionNode* block_expression):
         LoopExpressionNode(pos) {
         block_expression_ = block_expression;
@@ -464,9 +477,10 @@ public:
 };
 
 class PredicateLoopExpressionNode: public LoopExpressionNode {
+public:
     ConditionsNode* conditions_ = nullptr;
     BlockExpressionNode* block_expression_ = nullptr;
-public:
+
     PredicateLoopExpressionNode(Position pos, ConditionsNode* conditions,
         BlockExpressionNode* block_expression): LoopExpressionNode(pos) {
         conditions_ = conditions;
@@ -481,11 +495,12 @@ public:
 };
 
 class IfExpressionNode: public ExpressionWithBlockNode {
+public:
     ConditionsNode* conditions_ = nullptr;
     BlockExpressionNode* true_block_expression_ = nullptr;
     BlockExpressionNode* false_block_expression_ = nullptr;
     IfExpressionNode* if_expression_ = nullptr;
-public:
+
     IfExpressionNode(Position pos, ConditionsNode* conditions,
         BlockExpressionNode* true_block_expression, BlockExpressionNode* false_block_expression,
         IfExpressionNode* if_expression): ExpressionWithBlockNode(pos) {
@@ -503,9 +518,10 @@ public:
 };
 
 class MatchExpressionNode: public ExpressionWithBlockNode {
+public:
     ExpressionNode* expression_ = nullptr; // Except StructExpression
     MatchArmsNode* match_arms_ = nullptr;
-public:
+
     MatchExpressionNode(Position pos, ExpressionNode* expression, MatchArmsNode* match_arms_node):
         ExpressionWithBlockNode(pos) {
         expression_ = expression;
@@ -545,8 +561,9 @@ public:
 };
 
 class TupleExpressionNode: public ExpressionWithoutBlockNode {
-    std::vector<ExpressionNode*> expressions_;
 public:
+    std::vector<ExpressionNode*> expressions_;
+
     TupleExpressionNode(Position pos, const std::vector<ExpressionNode*>& expressions):
         ExpressionWithoutBlockNode(pos, false) {
         expressions_ = expressions;
@@ -558,8 +575,6 @@ public:
         visitor->visit(this);
     }
 };
-
-
 
 class UnderscoreExpressionNode: public ExpressionWithoutBlockNode {
 public:
@@ -573,9 +588,10 @@ public:
 };
 
 class JumpExpressionNode: public ExpressionWithoutBlockNode {
+public:
     TokenType type_;
     ExpressionNode* expression_;
-public:
+
     JumpExpressionNode(Position pos, TokenType type,
         ExpressionNode* assignment_expression):
         ExpressionWithoutBlockNode(pos, false) {
@@ -590,12 +606,12 @@ public:
     }
 };
 
-class LogicOrExpressionNode;
 class AssignmentExpressionNode: public ExpressionWithoutBlockNode {
+public:
     TokenType type_;
     ExpressionNode* lhs_ = nullptr;
     ExpressionNode* rhs_ = nullptr;
-public:
+
     AssignmentExpressionNode(Position pos, TokenType type,
         ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
@@ -611,11 +627,11 @@ public:
     }
 };
 
-class LogicAndExpressionNode;
 class LogicOrExpressionNode: public ExpressionWithoutBlockNode {
+public:
     ExpressionNode* lhs_ = nullptr;
     ExpressionNode* rhs_ = nullptr;
-public:
+
     LogicOrExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
         lhs_ = lhs;
@@ -630,9 +646,10 @@ public:
 };
 
 class LogicAndExpressionNode: public ExpressionWithoutBlockNode {
+public:
     ExpressionNode* lhs_ = nullptr;
     ExpressionNode* rhs_ = nullptr;
-public:
+
     LogicAndExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
         lhs_ = lhs;
@@ -646,12 +663,12 @@ public:
     }
 };
 
-class BitwiseOrExpressionNode;
 class ComparisonExpressionNode: public ExpressionWithoutBlockNode {
+public:
     TokenType type_;
     ExpressionNode* lhs_;
     ExpressionNode* rhs_;
-public:
+
     ComparisonExpressionNode(Position pos, TokenType type, ExpressionNode* lhs,
         ExpressionNode* rhs): ExpressionWithoutBlockNode(pos, false) {
         type_ = type;
@@ -666,11 +683,11 @@ public:
     }
 };
 
-class BitwiseXorExpressionNode;
 class BitwiseOrExpressionNode: public ExpressionWithoutBlockNode {
+public:
     ExpressionNode* lhs_;
     ExpressionNode* rhs_;
-public:
+
     BitwiseOrExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
         lhs_ = lhs;
@@ -684,11 +701,11 @@ public:
     }
 };
 
-class BitwiseAndExpressionNode;
 class BitwiseXorExpressionNode: public ExpressionWithoutBlockNode {
+public:
     ExpressionNode* lhs_;
     ExpressionNode* rhs_;
-public:
+
     BitwiseXorExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
         lhs_ = lhs;
@@ -702,11 +719,11 @@ public:
     }
 };
 
-class ShiftExpressionNode;
 class BitwiseAndExpressionNode: public ExpressionWithoutBlockNode {
+public:
     ExpressionNode* lhs_;
     ExpressionNode* rhs_;
-public:
+
     BitwiseAndExpressionNode(Position pos, ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
         lhs_ = lhs;
@@ -720,12 +737,12 @@ public:
     }
 };
 
-class AddMinusExpressionNode;
 class ShiftExpressionNode: public ExpressionWithoutBlockNode {
+public:
     TokenType type_;
     ExpressionNode* lhs_;
     ExpressionNode* rhs_;
-public:
+
     ShiftExpressionNode(Position pos, TokenType type,
         ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
@@ -741,12 +758,12 @@ public:
     }
 };
 
-class MulDivModExpressionNode;
 class AddMinusExpressionNode: public ExpressionWithoutBlockNode {
+public:
     TokenType type_;
     ExpressionNode* lhs_;
     ExpressionNode* rhs_;
-public:
+
     AddMinusExpressionNode(Position pos, TokenType type,
         ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
@@ -763,10 +780,11 @@ public:
 };
 
 class MulDivModExpressionNode: public ExpressionWithoutBlockNode {
+public:
     TokenType type_;
     ExpressionNode* lhs_;
     ExpressionNode* rhs_;
-public:
+
     MulDivModExpressionNode(Position pos, TokenType type,
         ExpressionNode* lhs, ExpressionNode* rhs):
         ExpressionWithoutBlockNode(pos, false) {
@@ -782,11 +800,11 @@ public:
     }
 };
 
-class UnaryExpressionNode;
 class TypeCastExpressionNode: public ExpressionWithoutBlockNode {
+public:
     TypeNode* type_;
     ExpressionNode* expression_;
-public:
+
     TypeCastExpressionNode(Position pos, TypeNode* type, ExpressionNode* expression):
         ExpressionWithoutBlockNode(pos, false) {
         type_ = type;
@@ -801,9 +819,10 @@ public:
 };
 
 class UnaryExpressionNode: public ExpressionWithoutBlockNode {
+public:
     TokenType type_;
     ExpressionNode* expression_;
-public:
+
     UnaryExpressionNode(Position pos, TokenType type,
         ExpressionNode* expression): ExpressionWithoutBlockNode(pos, false) {
         type_ = type;
@@ -818,9 +837,10 @@ public:
 };
 
 class FunctionCallExpressionNode : public ExpressionWithoutBlockNode {
+public:
     ExpressionNode* callee_;
     std::vector<ExpressionNode*> params_;
-public:
+
     FunctionCallExpressionNode(Position pos, ExpressionNode* callee,
         const std::vector<ExpressionNode*>& params): ExpressionWithoutBlockNode(pos, false) {
         callee_ = callee;
@@ -835,9 +855,10 @@ public:
 };
 
 class ArrayIndexExpressionNode : public ExpressionWithoutBlockNode {
+public:
     ExpressionNode* base_;
     ExpressionNode* index_;
-public:
+
     ArrayIndexExpressionNode(Position pos, ExpressionNode* base,
         ExpressionNode* index): ExpressionWithoutBlockNode(pos, true) {
         base_ = base;
@@ -852,9 +873,10 @@ public:
 };
 
 class MemberAccessExpressionNode : public ExpressionWithoutBlockNode {
+public:
     ExpressionNode* base_;
     Token member_;
-public:
+
     MemberAccessExpressionNode(Position pos, ExpressionNode* base, const Token& member):
         ExpressionWithoutBlockNode(pos, false) {
         base_ = base;
@@ -869,8 +891,9 @@ public:
 };
 
 class GroupedExpressionNode: public ExpressionWithoutBlockNode {
-    ExpressionNode* expression_;
 public:
+    ExpressionNode* expression_;
+
     GroupedExpressionNode(Position pos, ExpressionNode* expression):
         ExpressionWithoutBlockNode(pos, false) {
         expression_ = expression;
@@ -883,14 +906,12 @@ public:
     }
 };
 
-class StructExprFieldsNode;
-class StructBaseNode;
-
 class StructExpressionNode: public ExpressionWithoutBlockNode {
+public:
     PathInExpressionNode* path_in_expression_node_ = nullptr;
     StructExprFieldsNode* struct_expr_fields_node_ = nullptr;
     StructBaseNode* struct_base_node_ = nullptr;
-public:
+
     StructExpressionNode(Position pos, PathInExpressionNode* path_in_expression_node,
         StructExprFieldsNode* struct_expr_fields_node, StructBaseNode* struct_base_node):
         ExpressionWithoutBlockNode(pos, false) {
@@ -907,9 +928,10 @@ public:
 };
 
 class StructExprFieldsNode: public ASTNode {
+public:
     std::vector<StructExprFieldNode*> struct_expr_field_nodes_;
     StructBaseNode* struct_base_node_;
-public:
+
     StructExprFieldsNode(Position pos, const std::vector<StructExprFieldNode*>& struct_expr_field_nodes,
         StructBaseNode* struct_base): ASTNode(pos) {
         struct_expr_field_nodes_ = struct_expr_field_nodes;
@@ -924,9 +946,10 @@ public:
 };
 
 class StructExprFieldNode: public ASTNode {
+public:
     std::string identifier_;
     ExpressionNode* expression_node_;
-public:
+
     StructExprFieldNode(Position pos, const std::string& identifier,
         ExpressionNode* expression_node): ASTNode(pos) {
         identifier_ = identifier;
@@ -941,8 +964,9 @@ public:
 };
 
 class StructBaseNode: public ASTNode {
-    ExpressionNode* expression_node_;
 public:
+    ExpressionNode* expression_node_;
+
     StructBaseNode(Position pos, ExpressionNode* expression_node): ASTNode(pos) {
         expression_node_ = expression_node;
     }
@@ -965,10 +989,10 @@ public:
     }
 };
 
-class PathIndentSegmentNode;
 class PathInExpressionNode: public PathExpressionNode {
-    std::vector<PathIndentSegmentNode*> path_indent_segments_;
 public:
+    std::vector<PathIndentSegmentNode*> path_indent_segments_;
+
     explicit PathInExpressionNode(Position pos,
         const std::vector<PathIndentSegmentNode*>& simple_path_segments):
         PathExpressionNode(pos) {
@@ -996,8 +1020,9 @@ public:
 };
 
 class CharLiteralNode: public LiteralExpressionNode {
-    char char_literal_;
 public:
+    char char_literal_;
+
     CharLiteralNode(Position pos, const char& char_literal):
         LiteralExpressionNode(pos) {
         char_literal_ = char_literal;
@@ -1011,8 +1036,9 @@ public:
 };
 
 class StringLiteralNode: public LiteralExpressionNode {
-    std::string string_literal_;
 public:
+    std::string string_literal_;
+
     StringLiteralNode(Position pos, const std::string& string_literal):
         LiteralExpressionNode(pos) {
         string_literal_ = string_literal;
@@ -1026,8 +1052,9 @@ public:
 };
 
 class IntLiteralNode: public LiteralExpressionNode {
-    int64_t int_literal_;
 public:
+    int64_t int_literal_;
+
     IntLiteralNode(Position pos, const int64_t& int_literal):
         LiteralExpressionNode(pos) {
         int_literal_ = int_literal;
@@ -1041,8 +1068,9 @@ public:
 };
 
 class BoolLiteralNode: public LiteralExpressionNode {
-    bool bool_literal_;
 public:
+    bool bool_literal_;
+
     BoolLiteralNode(Position pos, const bool& bool_literal):
         LiteralExpressionNode(pos) {
         bool_literal_ = bool_literal;
@@ -1056,8 +1084,9 @@ public:
 };
 
 class CStringLiteralNode: public LiteralExpressionNode {
-    std::string c_string_literal_;
 public:
+    std::string c_string_literal_;
+
     CStringLiteralNode(Position pos, const std::string& c_string_literal):
         LiteralExpressionNode(pos) {
         c_string_literal_ = c_string_literal;
@@ -1071,10 +1100,11 @@ public:
 };
 
 class ArrayLiteralNode: public LiteralExpressionNode {
+public:
     std::vector<ExpressionNode*> expressions_;
     ExpressionNode* lhs_;
     ExpressionNode* rhs_;
-public:
+
     ArrayLiteralNode(Position pos, const std::vector<ExpressionNode*>& expression_nodes,
         ExpressionNode* lhs, ExpressionNode* rhs):
         LiteralExpressionNode(pos) {
@@ -1091,10 +1121,10 @@ public:
 };
 
 /****************  Support Node for Expression  ****************/
-
 class ConditionsNode: public ASTNode {
-    ExpressionNode* expression_ = nullptr;
 public:
+    ExpressionNode* expression_ = nullptr;
+
     ConditionsNode(Position pos, ExpressionNode* expression): ASTNode(pos) {
         expression_ = expression;
     }
@@ -1107,9 +1137,10 @@ public:
 };
 
 class StatementsNode: public ASTNode {
+public:
     std::vector<StatementNode*> statements_;
     ExpressionNode* expression_ = nullptr;
-public:
+
     StatementsNode(Position pos, const std::vector<StatementNode*>& statements,
         ExpressionNode* expression): ASTNode(pos) {
         statements_ = statements;
@@ -1123,11 +1154,11 @@ public:
     }
 };
 
-class MatchArmNode;
 class MatchArmsNode: public ASTNode {
+public:
     std::vector<MatchArmNode*> match_arm_nodes_;
     std::vector<ExpressionNode*> expression_nodes_;
-public:
+
     MatchArmsNode(Position pos, const std::vector<MatchArmNode*>& match_arm_nodes,
         const std::vector<ExpressionNode*>& expression_nodes): ASTNode(pos) {
         match_arm_nodes_ = match_arm_nodes;
@@ -1141,11 +1172,11 @@ public:
     }
 };
 
-class MatchArmGuardNode;
 class MatchArmNode: public ASTNode {
+public:
     PatternNode* pattern_node_;
     ExpressionNode* match_arm_guard_;
-public:
+
     MatchArmNode(Position pos, PatternNode* pattern_node,
         ExpressionNode* match_arm_guard): ASTNode(pos) {
         pattern_node_ = pattern_node;
@@ -1185,11 +1216,12 @@ public:
 };
 
 class LetStatementNode: public StatementNode {
+public:
     PatternNoTopAltNode* pattern_no_top_alt_ = nullptr;
     TypeNode* type_ = nullptr;
     ExpressionNode* expression_ = nullptr;
     BlockExpressionNode* block_expression_ = nullptr;
-public:
+
     LetStatementNode(Position pos, PatternNoTopAltNode* pattern_no_top_alt, TypeNode* type,
         ExpressionNode* expression, BlockExpressionNode* block_expression): StatementNode(pos) {
         pattern_no_top_alt_ = pattern_no_top_alt;
@@ -1199,16 +1231,17 @@ public:
     }
 
     ~LetStatementNode() override;
-
     void accept(ASTVisitor* visitor) override {
         visitor->visit(this);
     }
+
 };
 
 class ExpressionStatementNode: public StatementNode {
+public:
     ExpressionNode* expression_ = nullptr; // Except StructExpression
     // TODO: Add LetChain
-public:
+
     ExpressionStatementNode(Position pos, ExpressionNode* expression): StatementNode(pos) {
         expression_ = expression;
     }
@@ -1222,8 +1255,9 @@ public:
 
 /****************  Patterns  ****************/
 class PatternNode: public ASTNode {
-    std::vector<PatternNoTopAltNode*> pattern_no_top_alts_;
 public:
+    std::vector<PatternNoTopAltNode*> pattern_no_top_alts_;
+
     PatternNode(Position pos, const std::vector<PatternNoTopAltNode*>& pattern_no_top_alts):
         ASTNode(pos) {
         pattern_no_top_alts_ = pattern_no_top_alts;
@@ -1259,9 +1293,10 @@ public:
 };
 
 class LiteralPatternNode: public PatternWithoutRangeNode {
+public:
     bool have_minus_ = false;
     ExpressionNode* expression_;
-public:
+
     LiteralPatternNode(Position pos, bool have_minus, ExpressionNode* expression):
         PatternWithoutRangeNode(pos) {
         have_minus_ = have_minus;
@@ -1276,11 +1311,12 @@ public:
 };
 
 class IdentifierPatternNode: public PatternWithoutRangeNode {
+public:
     bool is_ref_ = false;
     bool is_mut_ = false;
     std::string identifier_;
     PatternNoTopAltNode* node_ = nullptr;
-public:
+
     IdentifierPatternNode(Position pos, bool is_ref, bool is_mut, const std::string& identifier,
         PatternNoTopAltNode* node): PatternWithoutRangeNode(pos) {
         is_ref_ = is_ref;
@@ -1319,12 +1355,12 @@ public:
 };
 
 // TODO StructPattern
-
 // TODO TuplePattern
 
 class GroupedPatternNode: public PatternWithoutRangeNode {
-    PatternNode* pattern_ = nullptr;
 public:
+    PatternNode* pattern_ = nullptr;
+
     GroupedPatternNode(Position pos, PatternNode* pattern):
         PatternWithoutRangeNode(pos) {
         pattern_ = pattern;
@@ -1338,8 +1374,9 @@ public:
 };
 
 class SlicePatternNode: public PatternWithoutRangeNode {
-    std::vector<PatternNode*> patterns_;
 public:
+    std::vector<PatternNode*> patterns_;
+
     SlicePatternNode(Position pos, const std::vector<PatternNode*> &patterns):
         PatternWithoutRangeNode(pos) {
         patterns_ = patterns;
@@ -1353,8 +1390,9 @@ public:
 };
 
 class PathPatternNode: public PatternWithoutRangeNode {
-    ExpressionNode* expression_;
 public:
+    ExpressionNode* expression_;
+
     PathPatternNode(Position pos, ExpressionNode* expression): PatternWithoutRangeNode(pos) {
         expression_ = expression;
     }
@@ -1390,8 +1428,9 @@ public:
 };
 
 class ParenthesizedTypeNode: public TypeNoBoundsNode {
-    TypeNode* type_ = nullptr;
 public:
+    TypeNode* type_ = nullptr;
+
     ParenthesizedTypeNode(Position pos, TypeNode* type): TypeNoBoundsNode(pos) {
         type_ = type;
     }
@@ -1403,10 +1442,10 @@ public:
     }
 };
 
-class TypePathSegmentNode;
 class TypePathNode: public TypeNoBoundsNode {
-    std::vector<TypePathSegmentNode*> type_path_segment_nodes_;
 public:
+    std::vector<TypePathSegmentNode*> type_path_segment_nodes_;
+
     TypePathNode(Position pos, const std::vector<TypePathSegmentNode*>& type_path_segment_nodes):
         TypeNoBoundsNode(pos) {
         type_path_segment_nodes_ = type_path_segment_nodes;
@@ -1419,10 +1458,10 @@ public:
     }
 };
 
-class PathIndentSegmentNode;
 class TypePathSegmentNode: public ASTNode {
-    PathIndentSegmentNode* path_indent_segment_node_ = nullptr;
 public:
+    PathIndentSegmentNode* path_indent_segment_node_ = nullptr;
+
     TypePathSegmentNode(Position pos, PathIndentSegmentNode* path_indent_segment_node): ASTNode(pos) {
         path_indent_segment_node_ = path_indent_segment_node;
     }
@@ -1435,8 +1474,9 @@ public:
 };
 
 class TupleTypeNode: public TypeNoBoundsNode {
-    std::vector<TypeNode*> type_nodes_;
 public:
+    std::vector<TypeNode*> type_nodes_;
+
     TupleTypeNode(Position pos, const std::vector<TypeNode*>& type_nodes): TypeNoBoundsNode(pos) {
         type_nodes_ = type_nodes;
     }
@@ -1449,9 +1489,10 @@ public:
 };
 
 class ArrayTypeNode: public TypeNoBoundsNode {
+public:
     TypeNode* type_;
     ExpressionNode* expression_node_ = nullptr;
-public:
+
     ArrayTypeNode(Position pos, TypeNode* type, ExpressionNode* expression_node): TypeNoBoundsNode(pos) {
         type_ = type;
         expression_node_ = expression_node;
@@ -1465,8 +1506,9 @@ public:
 };
 
 class SliceTypeNode: public TypeNoBoundsNode {
-    TypeNode* type_ = nullptr;
 public:
+    TypeNode* type_ = nullptr;
+
     SliceTypeNode(Position pos, TypeNode* type): TypeNoBoundsNode(pos) {
         type_ = type;
     }
@@ -1491,9 +1533,10 @@ public:
 
 /****************  Path (Naive Version) ****************/
 class PathIndentSegmentNode: public ASTNode {
+public:
     TokenType type_;
     std::string identifier_;
-public:
+
     PathIndentSegmentNode(Position pos, TokenType type, const std::string& identifier): ASTNode(pos) {
         type_ = type;
         identifier_ = identifier;

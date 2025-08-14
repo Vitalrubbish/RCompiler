@@ -1,17 +1,39 @@
 #ifndef TYPE_H
 #define TYPE_H
+
 #include <string>
 #include <vector>
+#include <cstdint>
+
+class Type;
+class FunctionType;
+
+struct Method {
+    std::string name_;
+    Type* type_;
+};
+
 enum class TypeKind {
-    Primitive, Function, Struct, Enumeration, ConstantItem, Tuple,
+    Primitive, Function, Struct, Enumeration, Tuple,
     Slice, Inferred
 };
+
 class Type {
 public:
+    std::vector<Method> methods_;
+
     Type() = default;
-    virtual ~Type() = 0;
+
+    virtual ~Type() {
+        for (auto& method : methods_) {
+            delete method.type_;
+        }
+    }
+
     [[nodiscard]] virtual TypeKind getKind() const = 0;
+
     [[nodiscard]] virtual std::string toString() const = 0;
+
     virtual bool equal(Type* other) const = 0;
 };
 
@@ -33,15 +55,41 @@ public:
     }
 
     bool equal(Type* other) const override {
-        if (!other || other -> getKind() != TypeKind::Primitive) {
-            return false;
-        }
-        auto* tmp = dynamic_cast<PrimitiveType*>(other);
-        if (name_ == tmp -> name_) {
-            return true;
-        }
-        return false;
+        return this == other;
     }
+};
+
+struct StructMember {
+    std::string name_;
+    Type* type_;
+};
+
+class StructType: public Type {
+    std::string name_;
+    std::vector<StructMember> members_;
+public:
+    explicit StructType(const std::string& name, const std::vector<StructMember>& members) {
+        name_ = name;
+        members_ = members;
+    }
+
+    ~StructType() override = default;
+
+    [[nodiscard]] TypeKind getKind() const override {
+        return TypeKind::Struct;
+    }
+
+    [[nodiscard]] std::string toString() const override {
+        return name_;
+    }
+
+    bool equal(Type* other) const override {
+        return this == other;
+    }
+};
+
+class EnumerationType: public Type {
+    // TODO
 };
 
 class FunctionType: public Type {
@@ -53,95 +101,35 @@ public:
         ret_ = ret;
     }
 
-    ~FunctionType() override {
-        delete ret_;
-        for (auto& it: params_) {
-            delete it;
-        }
-    }
+    ~FunctionType() override = default;
 
     [[nodiscard]] TypeKind getKind() const override {
         return TypeKind::Function;
     }
 
     [[nodiscard]] std::string toString() const override {
-        std::string str;
-        str += "fn ( ";
-        for (auto& it: params_) {
-            str += it -> toString();
+        std::string str = "fn ( ";
+        for (auto param : params_) {
+            str += param -> toString();
             str += ", ";
         }
-        str += ") -> ";
-        str += ret_ -> toString();
+        str += ") -> " + ret_ -> toString();
         return str;
     }
 
     bool equal(Type* other) const override {
-        if (!other || other -> getKind() != TypeKind::Function) {
+        if (!other || other->getKind() != TypeKind::Function) {
             return false;
         }
         auto* tmp = dynamic_cast<FunctionType*>(other);
-        if (tmp -> ret_ != ret_) {
+        if (!ret_->equal(tmp -> ret_)) {
             return false;
         }
-        if (tmp -> params_.size() != params_.size()) {
+        if (params_.size() != tmp -> params_.size()) {
             return false;
         }
         for (uint32_t i = 0; i < params_.size(); i++) {
             if (!params_[i] -> equal(tmp -> params_[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-};
-
-struct StructMember {
-    std::string name_;
-    Type* type_;
-};
-
-class StructType: public Type {
-    std::vector<StructMember> members_;
-public:
-    explicit StructType(const std::vector<StructMember>& members) {
-        members_ = members;
-    }
-
-    ~StructType() override {
-        for (auto& it: members_) {
-            delete it.type_;
-        }
-    }
-
-    [[nodiscard]] TypeKind getKind() const override {
-        return TypeKind::Struct;
-    }
-
-    [[nodiscard]] std::string toString() const override {
-        std::string str;
-        str += "struct { ";
-        for (auto& it: members_) {
-            str += it.name_;
-            str += ":";
-            str += it.type_ -> toString();
-            str += ", ";
-        }
-        str += "}";
-        return str;
-    }
-
-    bool equal(Type* other) const override {
-        if (!other || other -> getKind() != TypeKind::Struct) {
-            return false;
-        }
-        auto* tmp = dynamic_cast<StructType*>(other);
-        if (tmp -> members_.size() != members_.size()) {
-            return false;
-        }
-        for (uint32_t i = 0; i < members_.size(); i++) {
-            if (members_[i].name_ != tmp -> members_[i].name_ ||
-                !members_[i].type_ -> equal(tmp -> members_[i].type_)) {
                 return false;
             }
         }
@@ -156,24 +144,17 @@ public:
         types_ = types;
     }
 
-    ~TupleType() override {
-        for (auto& it: types_) {
-            delete it;
-        }
-    }
+    ~TupleType() override = default;
 
-    [[nodiscard]] TypeKind getKind() const override {
-        return TypeKind::Tuple;
-    }
+    [[nodiscard]] TypeKind getKind() const override { return TypeKind::Tuple; }
 
     [[nodiscard]] std::string toString() const override {
-        std::string str;
-        str += "( ";
-        for (auto& it: types_) {
-            str += it -> toString();
+        std::string str = "( ";
+        for (auto type : types_) {
+            str += type -> toString();
             str += ", ";
         }
-        str += ")";
+        str += " )";
         return str;
     }
 
@@ -181,7 +162,7 @@ public:
         if (!other || other -> getKind() != TypeKind::Tuple) {
             return false;
         }
-        auto* tmp = dynamic_cast<TupleType*> (other);
+        auto* tmp = dynamic_cast<TupleType*>(other);
         if (types_.size() != tmp -> types_.size()) {
             return false;
         }
@@ -197,43 +178,35 @@ public:
 class SliceType: public Type {
     Type* type_ = nullptr;
 public:
-    explicit SliceType(Type* type) {
+    explicit SliceType(Type* type){
         type_ = type;
     }
 
-    ~SliceType() override {
-        delete type_;
-    }
+    ~SliceType() override = default;
 
     [[nodiscard]] TypeKind getKind() const override {
         return TypeKind::Slice;
     }
 
     [[nodiscard]] std::string toString() const override {
-        std::string str;
-        str += "[ ";
-        str += type_ -> toString();
-        str += " ]";
-        return str;
+        return "[" + type_ -> toString() + "]";
     }
 
     bool equal(Type *other) const override {
         if (!other || other -> getKind() != TypeKind::Slice) {
             return false;
         }
-        auto* tmp = dynamic_cast<SliceType*> (other);
-        if (!type_ -> equal(tmp -> type_)) {
-            return false;
-        }
-        return true;
+        auto* tmp = dynamic_cast<SliceType*>(other);
+        return type_ -> equal(tmp -> type_);
     }
 };
 
-class EnumerationType: public Type {
-    // TODO Hard......
+class ArrayType: public Type {
+    // TODO
 };
 
 class InferredType: public Type {
-    // TODO Hard......
+    // TODO
 };
+
 #endif //TYPE_H
