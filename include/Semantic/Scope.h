@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include "Symbol.h"
-#include "../../error/Error.h"
+#include "Error.h"
 class Scope {
     std::unordered_map<std::string, Symbol*> symbols_;
 public:

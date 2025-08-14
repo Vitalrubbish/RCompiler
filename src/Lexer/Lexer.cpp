@@ -1,6 +1,6 @@
 #include <vector>
-#include "../../error/Error.h"
-#include "../../include/Lexer/Lexer.h"
+#include "Error.h"
+#include "Lexer/Lexer.h"
 
 Lexer::Lexer() {
     letter_rules.emplace_back(TokenType::As, std::regex("as"));

@@ -1,10 +1,9 @@
 #include <iostream>
 #include <string>
-#include <chrono>
-#include "error/Error.h"
-#include "include/Lexer/Lexer.h"
-#include "include/Parser/Parser.h"
-#include "include/Semantic/ASTNode.h"
+#include "Error.h"
+#include "Lexer/Lexer.h"
+#include "Parser/Parser.h"
+#include "Semantic/ASTNode.h"
 
 Lexer lexer;
 std::vector<Token> tokens;

@@ -4,7 +4,7 @@
 #include <exception>
 #include <utility>
 #include <iostream>
-#include "../util/Position.h"
+#include "Position.h"
 class LexError : public std::exception {
 public:
     explicit LexError(std::string msg) : message(std::move(msg)) {}

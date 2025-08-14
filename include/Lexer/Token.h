@@ -2,7 +2,7 @@
 #define TOKEN_H
 #include <string>
 #include "TokenType.h"
-#include "../../util/Position.h"
+#include "Position.h"
 
 
 struct Token {

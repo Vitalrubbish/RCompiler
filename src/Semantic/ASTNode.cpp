@@ -1,4 +1,4 @@
-#include "../../include/Semantic/ASTNode.h"
+#include "Semantic/ASTNode.h"
 
 /****************  Items  ****************/
 CrateNode::~CrateNode() {

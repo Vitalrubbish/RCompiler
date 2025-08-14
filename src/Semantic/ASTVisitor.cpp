@@ -1,5 +1,5 @@
-#include "../../include/Semantic/ASTVisitor.h"
-#include "../../include/Semantic/ASTNode.h"
+#include "Semantic/ASTVisitor.h"
+#include "Semantic/ASTNode.h"
 
 void ASTVisitor::visit(ASTNode* node) {}
 

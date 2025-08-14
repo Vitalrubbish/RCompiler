@@ -2,7 +2,7 @@
 #define TYPEMANAGER_H
 #include <unordered_map>
 #include "Type.h"
-#include "../../error/Error.h"
+#include "Error.h"
 
 class TypeManager {
     std::unordered_map<std::string, Type*> primitive_map_;

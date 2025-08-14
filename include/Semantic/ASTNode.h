@@ -2,10 +2,10 @@
 #define ASTNODE_H
 #include <vector>
 #include <string>
-#include "../../util/Position.h"
-#include "../Lexer/TokenType.h"
-#include "../Lexer/Token.h"
-#include "ASTVisitor.h"
+#include "Position.h"
+#include "Lexer/TokenType.h"
+#include "Lexer/Token.h"
+#include "Semantic/ASTVisitor.h"
 
 // Forward declarations
 class ASTVisitor;

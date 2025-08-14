@@ -1,9 +1,6 @@
-#include "../../include/Parser/Parser.h"
-
-#include <random>
-
-#include "../../Error/error.h"
-#include "../../util/Util.h"
+#include "Parser/Parser.h"
+#include "Error/error.h"
+#include "Util.h"
 
 void Parser::ConsumeString(const std::string& str) {
     if (tokens[parseIndex].token == str) {

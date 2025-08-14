@@ -2,7 +2,7 @@
 #define SYMBOL_H
 #include <string>
 #include "Type.h"
-#include "../../util/Position.h"
+#include "Position.h"
 enum class SymbolType {
     Variable, Function, Type, Constant, Enumeration, Struct
 };
