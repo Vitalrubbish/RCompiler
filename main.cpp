@@ -4,6 +4,7 @@
 #include "error/Error.h"
 #include "include/Lexer/Lexer.h"
 #include "include/Parser/Parser.h"
+#include "include/Semantic/ASTNode.h"
 
 Lexer lexer;
 std::vector<Token> tokens;
@@ -41,6 +42,8 @@ int main() {
 
         Parser parser(tokens);
         root = parser.ParseCrate(); // Parser
+
+
     } catch (std::exception& error) {
         std::cout << error.what() << '\n';
     }
