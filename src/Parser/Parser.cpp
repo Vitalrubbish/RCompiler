@@ -1,5 +1,5 @@
 #include "Parser/Parser.h"
-#include "error.h"
+#include "Error.h"
 #include "Util.h"
 
 void Parser::ConsumeString(const std::string& str) {
