@@ -23,7 +23,7 @@ FunctionParametersNode::~FunctionParametersNode() {
 }
 
 FunctionParamNode::~FunctionParamNode() {
-    // delete function_param_pattern_;
+    delete pattern_no_top_alt_node_;
     delete type_;
 }
 
@@ -121,6 +121,9 @@ PredicateLoopExpressionNode::~PredicateLoopExpressionNode() {
     delete block_expression_;
 }
 
+VisItemStatementNode::~VisItemStatementNode() {
+    delete vis_item_node_;
+}
 /****************  Expression  ****************/
 BlockExpressionNode::~BlockExpressionNode() {
     delete statements_;

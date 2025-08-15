@@ -30,7 +30,11 @@ file(GLOB_RECURSE HEADERS
 )
 
 # 添加可执行文件
-add_executable(RCompiler ${SOURCES} ${HEADERS})
+add_executable(RCompiler ${SOURCES} ${HEADERS}
+        include/Semantic/SymbolCollector.h
+        include/Semantic/SemanticChecker.h
+        src/Semantic/SymbolCollector.cpp
+        src/Semantic/SemanticChecker.cpp)
 
 # 调试模式设置
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

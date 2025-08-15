@@ -1,0 +1,15 @@
+fn outer_function() {
+    struct Point {
+        x: i32,
+        y: i32,
+    }
+    fn print_point(p: Point) {
+        println("Point is at ({}, {})", p.x, p.y);
+    }
+    let my_point = Point { x: 10, y: 20 };
+    print_point(my_point);
+}
+
+fn main() {
+    outer_function();
+}

@@ -37,8 +37,8 @@ private:
 
 class SemanticError : public std::exception {
 public:
-    explicit SemanticError(std::string msg, Position pos) : message(std::move(msg)), pos(pos) {
-    }
+    explicit SemanticError(std::string msg, Position pos = Position(0)) :
+        message(std::move(msg)), pos(pos) {}
 
     [[nodiscard]] const char *what() const noexcept override {
         std::cout << pos.GetRow() << ": ";

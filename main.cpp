@@ -4,14 +4,21 @@
 #include "Lexer/Lexer.h"
 #include "Parser/Parser.h"
 #include "Semantic/ASTNode.h"
+#include "Semantic/ASTVisitor.h"
+#include "Semantic/SemanticChecker.h"
+#include "Semantic/SymbolCollector.h"
 
 Lexer lexer;
 std::vector<Token> tokens;
 ASTNode *root = nullptr;
+TypeManager type_manager;
+ScopeManager scope_manager;
+SymbolCollector* symbol_collector = new SymbolCollector{type_manager, scope_manager};
+SemanticChecker* semantic_checker = new SemanticChecker{type_manager, scope_manager};
 
 int main() {
     // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
-    // freopen("../testcases/Parser/in01.rs", "r", stdin);
+    freopen("../testcases/Parser/in07.rx", "r", stdin);
     std::string text, line;
     while (std::getline(std::cin, line)) {
         text += line;
@@ -41,6 +48,8 @@ int main() {
 
         Parser parser(tokens);
         root = parser.ParseCrate(); // Parser
+
+        root -> accept(semantic_checker);
     } catch (std::exception &error) {
         std::cout << error.what() << '\n';
     }

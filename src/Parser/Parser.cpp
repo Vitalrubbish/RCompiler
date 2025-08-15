@@ -82,21 +82,14 @@ FunctionNode *Parser::ParseFunction() {
         }
         std::string identifier = tokens[parseIndex].token;
         parseIndex++;
-
         ConsumeString("(");
-
         if (tokens[parseIndex].type != TokenType::RParen) {
             function_parameters_node = ParseFunctionParameters();
         }
-
         ConsumeString(")");
-
         if (tokens[parseIndex].type == TokenType::RArrow) {
             type_node = ParseFunctionReturnType();
         }
-
-        // TODO ParseWhereClause
-
         if (tokens[parseIndex].type != TokenType::Semicolon) {
             block_expression_node = ParseBlockExpression();
         } else {
@@ -152,21 +145,16 @@ FunctionParametersNode *Parser::ParseFunctionParameters() {
 
 FunctionParamNode *Parser::ParseFunctionParam() {
     Position pos = tokens[parseIndex].pos;
-    uint32_t start = parseIndex;
-    FunctionParamPatternNode *function_param_pattern_node = nullptr;
+    PatternNoTopAltNode *function_param_pattern_node = nullptr;
     TypeNode *type_node = nullptr;
-    if (tokens[parseIndex].type == TokenType::DotDotDot) {
-        ConsumeString("...");
-        return new FunctionParamNode(pos, function_param_pattern_node, type_node, true);
-    }
     try {
+        if (tokens[parseIndex].type == TokenType::DotDotDot) {
+            ConsumeString("...");
+            return new FunctionParamNode(pos, function_param_pattern_node, type_node, true);
+        }
+        function_param_pattern_node = ParsePatternNoTopAlt();
+        ConsumeString(":");
         type_node = ParseType();
-        return new FunctionParamNode(pos, function_param_pattern_node, type_node, false);
-    } catch (std::exception &) {
-        parseIndex = start;
-    }
-    try {
-        function_param_pattern_node = ParseFunctionParamPattern();
         return new FunctionParamNode(pos, function_param_pattern_node, type_node, false);
     } catch (std::exception &) {
         throw ParseError("Parse Error: Failed to Match FunctionParam", pos);
@@ -951,7 +939,7 @@ ExpressionNode *Parser::ParseCallExpression() {
                     params_.push_back(tmp);
                     if (tokens[parseIndex].type == TokenType::Comma) {
                         ConsumeString(",");
-                    } else if (tokens[parseIndex].type != TokenType::RBracket) {
+                    } else if (tokens[parseIndex].type != TokenType::RParen) {
                         throw ParseError("Parse Error: Lack of , to split two params", pos);
                     }
                 }
@@ -1268,18 +1256,32 @@ ConditionsNode *Parser::ParseConditions() {
 /****************  Statement  ****************/
 StatementNode *Parser::ParseStatement() {
     Position pos = tokens[parseIndex].pos;
+    StatementNode* statement_node = nullptr;
+    VisItemNode* vis_item_node = nullptr;
+    uint32_t start = parseIndex;
     try {
         if (tokens[parseIndex].type == TokenType::Semicolon) {
             ConsumeString(";");
             return new EmptyStatementNode(pos);
         }
         if (tokens[parseIndex].type == TokenType::Let) {
-            auto *node = ParseLetStatement();
-            return node;
+            statement_node = ParseLetStatement();
+            return statement_node;
         }
-        auto *node = ParseExpressionStatement();
-        return node;
+        statement_node = ParseExpressionStatement();
+        return statement_node;
     } catch (std::exception &) {
+        parseIndex = start;
+        delete statement_node;
+        statement_node = nullptr;
+    }
+
+    try {
+        vis_item_node = ParseVisItem();
+        return new VisItemStatementNode(pos, vis_item_node);
+    } catch (std::exception&) {
+        delete vis_item_node;
+        delete statement_node;
         throw;
     }
 }

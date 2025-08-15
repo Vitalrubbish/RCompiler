@@ -15,7 +15,7 @@ struct Method {
 
 enum class TypeKind {
     Primitive, Function, Struct, Enumeration, Tuple,
-    Slice, Inferred
+    Slice, Inferred, Array
 };
 
 class Type {
@@ -91,7 +91,28 @@ public:
 };
 
 class EnumerationType : public Type {
-    // TODO
+    std::string name_;
+    std::vector<std::string> variant_;
+public:
+    explicit EnumerationType(const std::string &name,
+        const std::vector<std::string> &variant) {
+        variant_ = variant;
+        name_ = name;
+    }
+
+    ~EnumerationType() override = default;
+
+    [[nodiscard]] TypeKind getKind() const override {
+        return TypeKind::Enumeration;
+    }
+
+    [[nodiscard]] std::string toString() const override {
+        return name_;
+    }
+
+    bool equal(Type *other) const override {
+        return this == other;
+    }
 };
 
 class FunctionType : public Type {
@@ -207,7 +228,27 @@ public:
 };
 
 class ArrayType : public Type {
-    // TODO
+    Type* base_ = nullptr;
+    uint32_t length_ = 0;
+public:
+    ArrayType(Type* base, const uint32_t& length) {
+        base_ = base;
+        length_ = length;
+    }
+
+    ~ArrayType() override = default;
+
+    [[nodiscard]] TypeKind getKind() const override {
+        return TypeKind::Array;
+    }
+
+    [[nodiscard]] std::string toString() const override {
+        return "[" + base_ -> toString() + "; " + "]";
+    }
+
+    bool equal(Type *other) const override {
+        return this == other;
+    }
 };
 
 class InferredType : public Type {

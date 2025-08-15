@@ -12,7 +12,6 @@ class ASTVisitor;
 class ASTNode;
 class CrateNode;
 class VisItemNode;
-class ModuleNode;
 class FunctionNode;
 class StructNode;
 class EnumerationNode;
@@ -27,13 +26,10 @@ class StructFieldNode;
 class EnumVariantNode;
 class EnumVariantStructNode;
 class EnumVariantDiscriminantNode;
-class TypeParamBoundsNode;
 class AssociatedItemNode;
 class InherentImplNode;
 class TraitImplNode;
 class TypePathNode;
-class TypeParamNode;
-class ConstParamNode;
 class StatementNode;
 class EmptyStatementNode;
 class LetStatementNode;
@@ -59,7 +55,6 @@ class IfExpressionNode;
 class MatchExpressionNode;
 class MatchArmsNode;
 class PathInExpressionNode;
-class QualifiedPathInExpressionNode;
 class StatementsNode;
 class ComparisonExpressionNode;
 class TypeCastExpressionNode;
@@ -117,6 +112,28 @@ public:
     virtual ~ASTNode() = default;
 
     virtual void accept(ASTVisitor *visitor) = 0;
+};
+
+/****************  Path (Naive Version) ****************/
+class PathIndentSegmentNode : public ASTNode {
+public:
+    TokenType type_;
+    std::string identifier_;
+
+    PathIndentSegmentNode(Position pos, TokenType type, const std::string &identifier): ASTNode(pos) {
+        type_ = type;
+        identifier_ = identifier;
+    }
+
+    ~PathIndentSegmentNode() override = default;
+
+    [[nodiscard]] std::string toString() const {
+        return identifier_;
+    }
+
+    void accept(ASTVisitor *visitor) override {
+        visitor->visit(this);
+    }
 };
 
 /****************  Items  ****************/
@@ -189,13 +206,13 @@ public:
 
 class FunctionParamNode : public ASTNode {
 public:
-    FunctionParamPatternNode *function_param_pattern_ = nullptr;
+    PatternNoTopAltNode *pattern_no_top_alt_node_ = nullptr;
     TypeNode *type_ = nullptr;
     bool is_DotDotDot_ = false;
 
-    FunctionParamNode(Position pos, FunctionParamPatternNode *function_param_pattern,
+    FunctionParamNode(Position pos, PatternNoTopAltNode *function_param_pattern,
                       TypeNode *type, bool is_DotDotDot): ASTNode(pos) {
-        function_param_pattern_ = function_param_pattern;
+        pattern_no_top_alt_node_ = function_param_pattern;
         type_ = type;
         is_DotDotDot_ = is_DotDotDot;
     }
@@ -402,6 +419,8 @@ public:
 };
 
 // TODO Define TraitImplNode
+
+// TODO Define Trait
 
 /****************  Expression With Block  ****************/
 class ExpressionNode : public ASTNode {
@@ -1244,6 +1263,17 @@ public:
     }
 };
 
+class VisItemStatementNode: public StatementNode {
+public:
+    VisItemNode* vis_item_node_ = nullptr;
+
+    VisItemStatementNode(Position pos, VisItemNode* vis_item_node): StatementNode(pos) {
+        vis_item_node_ = vis_item_node;
+    }
+
+    ~VisItemStatementNode() override;
+};
+
 /****************  Patterns  ****************/
 class PatternNode : public ASTNode {
 public:
@@ -1403,6 +1433,8 @@ public:
 
     ~TypeNode() override = default;
 
+    virtual std::string toString();
+
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
@@ -1430,10 +1462,35 @@ public:
 
     ~ParenthesizedTypeNode() override;
 
+    std::string toString() override {
+        return "( " + type_ -> toString() + " )";
+    }
+
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
 };
+
+
+class TypePathSegmentNode : public ASTNode {
+public:
+    PathIndentSegmentNode *path_indent_segment_node_ = nullptr;
+
+    TypePathSegmentNode(Position pos, PathIndentSegmentNode *path_indent_segment_node): ASTNode(pos) {
+        path_indent_segment_node_ = path_indent_segment_node;
+    }
+
+    ~TypePathSegmentNode() override;
+
+    [[nodiscard]] std::string toString() const {
+        return path_indent_segment_node_ -> toString();
+    }
+
+    void accept(ASTVisitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
 
 class TypePathNode : public TypeNoBoundsNode {
 public:
@@ -1446,20 +1503,13 @@ public:
 
     ~TypePathNode() override;
 
-    void accept(ASTVisitor *visitor) override {
-        visitor->visit(this);
+    std::string toString() override {
+        std::string str;
+        for (auto& it: type_path_segment_nodes_) {
+            str += it -> toString();
+        }
+        return str;
     }
-};
-
-class TypePathSegmentNode : public ASTNode {
-public:
-    PathIndentSegmentNode *path_indent_segment_node_ = nullptr;
-
-    TypePathSegmentNode(Position pos, PathIndentSegmentNode *path_indent_segment_node): ASTNode(pos) {
-        path_indent_segment_node_ = path_indent_segment_node;
-    }
-
-    ~TypePathSegmentNode() override;
 
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
@@ -1475,6 +1525,16 @@ public:
     }
 
     ~TupleTypeNode() override;
+
+    [[nodiscard]] std::string toString() override {
+        std::string str = "( ";
+        for (auto& it: type_nodes_) {
+            str += it -> toString();
+            str += ",";
+        }
+        str += " )";
+        return str;
+    }
 
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
@@ -1493,6 +1553,22 @@ public:
 
     ~ArrayTypeNode() override;
 
+    [[nodiscard]] std::string toString() override {
+        std::string str = "[";
+        str += type_ -> toString();
+        str += ";";
+
+        auto* tmp = dynamic_cast<IntLiteralNode*> (expression_node_);
+        // TODO Now just let it just be an IntLiteral.
+        if (!tmp) {
+            throw SemanticError(
+                "Semantic Error: The size of an array must be a constant in compilation", pos_);
+        }
+        str += std::to_string((tmp -> int_literal_));
+        str += "]";
+        return str;
+    }
+
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
@@ -1507,6 +1583,10 @@ public:
     }
 
     ~SliceTypeNode() override;
+
+    [[nodiscard]] std::string toString() override {
+        return "[" + type_ -> toString() + "]";
+    }
 
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
@@ -1524,23 +1604,4 @@ public:
         visitor->visit(this);
     }
 };
-
-/****************  Path (Naive Version) ****************/
-class PathIndentSegmentNode : public ASTNode {
-public:
-    TokenType type_;
-    std::string identifier_;
-
-    PathIndentSegmentNode(Position pos, TokenType type, const std::string &identifier): ASTNode(pos) {
-        type_ = type;
-        identifier_ = identifier;
-    }
-
-    ~PathIndentSegmentNode() override = default;
-
-    void accept(ASTVisitor *visitor) override {
-        visitor->visit(this);
-    }
-};
-
 #endif //ASTNODE_H

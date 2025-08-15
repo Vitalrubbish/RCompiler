@@ -23,8 +23,6 @@ public:
 
     VisItemNode *ParseVisItem();
 
-    // bool ParseModule();
-
     FunctionNode *ParseFunction();
 
     StructNode *ParseStruct();

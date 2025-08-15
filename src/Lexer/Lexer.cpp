@@ -124,10 +124,6 @@ Lexer::Lexer() {
                                   std::regex(R"('([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-7][0-9a-fA-F])')"));
     // Match Char Literal
 
-    letter_rules.emplace_back(TokenType::ByteLiteral,
-                              std::regex(R"(b'([^'\\\n\r\t]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2})')"));
-    // Match Byte Literal
-
     string_rules.emplace_back(TokenType::StringLiteral,
                               std::regex(R"("([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
     // Match String Literal
@@ -135,14 +131,6 @@ Lexer::Lexer() {
     string_rules.emplace_back(TokenType::RawStringLiteral,
                               std::regex(R"(r(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
     // Match Raw-String Literal
-
-    string_rules.emplace_back(TokenType::ByteStringLiteral,
-                              std::regex(R"(b"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
-    // Match Byte-String Literal
-
-    string_rules.emplace_back(TokenType::RawByteStringLiteral,
-                              std::regex(R"(br(#*)\"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*\"\1)"));
-    // Match Raw-Byte-String Literal
 
     string_rules.emplace_back(TokenType::CStringLiteral,
                               std::regex(R"(c"([^"\\\r]|\\[nrt'"\\0]|\\x[0-9a-fA-F]{2}|\\\r)*")"));
