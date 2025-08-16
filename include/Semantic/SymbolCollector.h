@@ -2,9 +2,9 @@
 #define SYMBOLCOLLECTOR_H
 #include "ASTNode.h"
 class SymbolCollector : public ASTVisitor {
-    ScopeManager scope_manager_;
+    ScopeManager& scope_manager_;
 public:
-    explicit SymbolCollector() = default;
+    explicit SymbolCollector(ScopeManager& scope_manager): scope_manager_(scope_manager) {}
 
     ~SymbolCollector() override = default;
 

@@ -11,13 +11,13 @@ public:
     ScopeManager() {
         Position pos(0);
         pushBack();
-        Type* i32_type = new PrimitiveType("i32");
-        Type* u32_type = new PrimitiveType("u32");
-        Type* bool_type = new PrimitiveType("bool");
-        Type* char_type = new PrimitiveType("char");
-        Type* string_type = new PrimitiveType("string");
-        Type* cstring_type = new PrimitiveType("cstring");
-        Type* void_type = new PrimitiveType("void");
+        std::shared_ptr<Type> i32_type = std::make_shared<PrimitiveType>("i32");
+        std::shared_ptr<Type> u32_type = std::make_shared<PrimitiveType>("u32");
+        std::shared_ptr<Type> bool_type = std::make_shared<PrimitiveType>("bool");
+        std::shared_ptr<Type> char_type = std::make_shared<PrimitiveType>("char");
+        std::shared_ptr<Type> string_type = std::make_shared<PrimitiveType>("string");
+        std::shared_ptr<Type> cstring_type = std::make_shared<PrimitiveType>("cstring");
+        std::shared_ptr<Type> void_type = std::make_shared<PrimitiveType>("void");
         Symbol i32(pos, "i32", i32_type, SymbolType::Type);
         Symbol u32(pos, "u32", u32_type, SymbolType::Type);
         Symbol bool_(pos, "bool", bool_type, SymbolType::Type);
@@ -33,18 +33,36 @@ public:
         declare(cstring_);
         declare(void_);
 
-        Type* print = new FunctionType({string_type}, void_type);
-        Type* println = new FunctionType({string_type}, void_type);
-        Type* printInt = new FunctionType({i32_type}, void_type);
-        Type* printlnInt = new FunctionType({i32_type}, void_type);
-        Type* getString = new FunctionType({void_type}, string_type);
-        Type* getInt = new FunctionType({void_type}, i32_type);
+        std::shared_ptr<Type> print = std::make_shared<FunctionType>(
+            std::vector{string_type},
+            void_type
+        );
+        std::shared_ptr<Type> println = std::make_shared<FunctionType>(
+            std::vector{string_type},
+            void_type
+        );
+        std::shared_ptr<Type> printInt = std::make_shared<FunctionType>(
+            std::vector{i32_type},
+            void_type
+        );
+        std::shared_ptr<Type> printlnInt = std::make_shared<FunctionType>(
+            std::vector{i32_type},
+            void_type
+        );
+        std::shared_ptr<Type> getString = std::make_shared<FunctionType>(
+            std::vector{void_type},
+            string_type
+        );
+        std::shared_ptr<Type> getInt = std::make_shared<FunctionType>(
+            std::vector{void_type},
+            i32_type
+        );
         Symbol print_(pos, "print", print, SymbolType::Function);
         Symbol println_(pos, "println", println, SymbolType::Function);
-        Symbol printInt_(pos, "print_int", printInt, SymbolType::Function);
-        Symbol printlnInt_(pos, "println_int", printlnInt, SymbolType::Function);
-        Symbol getString_(pos, "get_string", getString, SymbolType::Function);
-        Symbol getInt_(pos, "get_int", getInt, SymbolType::Function);
+        Symbol printInt_(pos, "printInt", printInt, SymbolType::Function);
+        Symbol printlnInt_(pos, "printlnInt", printlnInt, SymbolType::Function);
+        Symbol getString_(pos, "getString", getString, SymbolType::Function);
+        Symbol getInt_(pos, "getInt", getInt, SymbolType::Function);
         declare(print_);
         declare(println_);
         declare(printInt_);
@@ -53,9 +71,11 @@ public:
         declare(getInt_);
 
         i32_type->methods_.emplace_back(
-            Method{"to_string", new FunctionType({}, string_type)});
+            Method{"toString", std::make_shared<FunctionType>(
+                std::vector<std::shared_ptr<Type>>{}, string_type)});
         string_type->methods_.emplace_back(
-            Method{"len", new FunctionType({}, u32_type)});
+            Method{"len", std::make_shared<FunctionType>(
+                std::vector<std::shared_ptr<Type>>{}, u32_type)});
     }
 
     void pushBack() {
@@ -79,14 +99,14 @@ public:
         auto len = static_cast<int32_t>(scopes_.size());
         for (int32_t i = len - 1; i >= 0; --i) {
             Symbol ret = scopes_[i].lookup(name);
-            if (ret.symbol_type_ == SymbolType::None) {
+            if (ret.symbol_type_ != SymbolType::None) {
                 return ret;
             }
         }
         throw SemanticError("Semantic Error: Symbol not declared: " + name);
     }
 
-    void ModifyType(const std::string &name, Type* type) {
+    void ModifyType(const std::string &name, const std::shared_ptr<Type>& type) {
         uint32_t len = scopes_.size();
         scopes_[len - 1].ModifyType(name, type);
     }

@@ -1,5 +1,6 @@
 #ifndef SYMBOL_H
 #define SYMBOL_H
+#include <memory>
 #include <string>
 #include "Type.h"
 #include "Position.h"
@@ -10,14 +11,14 @@ enum class SymbolType {
 
 struct Symbol {
     std::string name_;
-    Type *type_;
+    std::shared_ptr<Type> type_ = nullptr;
     SymbolType symbol_type_ = SymbolType::None;
     bool is_mutable_ = false;
     Position pos_;
 
     Symbol() = default;
 
-    Symbol(Position pos, const std::string &name, Type *type, const SymbolType &symbol_type,
+    Symbol(Position pos, const std::string &name, const std::shared_ptr<Type> &type, const SymbolType &symbol_type,
            const bool &is_mutable = false) {
         pos_ = pos;
         name_ = name;

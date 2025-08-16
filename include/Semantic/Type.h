@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <cstdint>
 
 class Type;
@@ -10,7 +11,7 @@ class FunctionType;
 
 struct Method {
     std::string name_;
-    Type *type_;
+    std::shared_ptr<Type> type_;
 };
 
 enum class TypeKind {
@@ -24,28 +25,21 @@ public:
 
     Type() = default;
 
-    virtual ~Type() {
-        for (auto &method: methods_) {
-            delete method.type_;
-        }
-    }
+    virtual ~Type() = default;
 
     [[nodiscard]] virtual TypeKind getKind() const = 0;
 
     [[nodiscard]] virtual std::string toString() const = 0;
 
-    virtual bool equal(Type *other) const = 0;
+    [[nodiscard]] virtual bool equal(const std::shared_ptr<Type> &other) const = 0;
 };
 
 class PrimitiveType : public Type {
     std::string name_;
 
 public:
-    explicit PrimitiveType(const std::string &name) {
-        name_ = name;
+    explicit PrimitiveType(std::string name) : name_(std::move(name)) {
     }
-
-    ~PrimitiveType() override = default;
 
     [[nodiscard]] TypeKind getKind() const override {
         return TypeKind::Primitive;
@@ -55,14 +49,16 @@ public:
         return name_;
     }
 
-    bool equal(Type *other) const override {
-        return this == other;
+    [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
+        if (!other || other->getKind() != TypeKind::Primitive) return false;
+        auto ptr = std::static_pointer_cast<PrimitiveType>(other);
+        return name_ == ptr->name_;
     }
 };
 
 struct StructMember {
     std::string name_;
-    Type *type_;
+    std::shared_ptr<Type> type_;
 };
 
 class StructType : public Type {
@@ -70,12 +66,9 @@ class StructType : public Type {
     std::vector<StructMember> members_;
 
 public:
-    explicit StructType(const std::string &name, const std::vector<StructMember> &members) {
-        name_ = name;
-        members_ = members;
+    StructType(std::string name, std::vector<StructMember> members)
+        : name_(std::move(name)), members_(std::move(members)) {
     }
-
-    ~StructType() override = default;
 
     [[nodiscard]] TypeKind getKind() const override {
         return TypeKind::Struct;
@@ -85,22 +78,28 @@ public:
         return name_;
     }
 
-    bool equal(Type *other) const override {
-        return this == other;
+    [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
+        if (!other || other->getKind() != TypeKind::Struct) return false;
+        auto ptr = std::static_pointer_cast<StructType>(other);
+        if (name_ != ptr->name_ || members_.size() != ptr->members_.size()) return false;
+        for (size_t i = 0; i < members_.size(); i++) {
+            if (members_[i].name_ != ptr->members_[i].name_ ||
+                !members_[i].type_->equal(ptr->members_[i].type_)) {
+                return false;
+            }
+        }
+        return true;
     }
 };
 
 class EnumerationType : public Type {
     std::string name_;
-    std::vector<std::string> variant_;
-public:
-    explicit EnumerationType(const std::string &name,
-        const std::vector<std::string> &variant) {
-        variant_ = variant;
-        name_ = name;
-    }
+    std::vector<std::string> variants_;
 
-    ~EnumerationType() override = default;
+public:
+    EnumerationType(std::string name, std::vector<std::string> variants)
+        : name_(std::move(name)), variants_(std::move(variants)) {
+    }
 
     [[nodiscard]] TypeKind getKind() const override {
         return TypeKind::Enumeration;
@@ -110,105 +109,89 @@ public:
         return name_;
     }
 
-    bool equal(Type *other) const override {
-        return this == other;
+    [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
+        if (!other || other->getKind() != TypeKind::Enumeration) return false;
+        auto ptr = std::static_pointer_cast<EnumerationType>(other);
+        return name_ == ptr->name_ && variants_ == ptr->variants_;
     }
 };
 
 class FunctionType : public Type {
-    std::vector<Type *> params_;
-    Type *ret_;
+    std::vector<std::shared_ptr<Type> > params_;
+    std::shared_ptr<Type> ret_;
 
 public:
-    FunctionType(const std::vector<Type *> &params, Type *ret) {
-        params_ = params;
-        ret_ = ret;
+    FunctionType(std::vector<std::shared_ptr<Type>> params, std::shared_ptr<Type> ret)
+        : params_(std::move(params)), ret_(std::move(ret)) {
     }
-
-    ~FunctionType() override = default;
 
     [[nodiscard]] TypeKind getKind() const override {
         return TypeKind::Function;
     }
 
     [[nodiscard]] std::string toString() const override {
-        std::string str = "fn ( ";
-        for (auto param: params_) {
+        std::string str = "fn(";
+        for (const auto &param: params_) {
             str += param->toString();
-            str += ", ";
+            str += ",";
         }
-        str += ") -> " + ret_->toString();
+        if (!params_.empty()) str.pop_back(); // Remove trailing comma
+        str += ")->" + ret_->toString();
         return str;
     }
 
-    bool equal(Type *other) const override {
-        if (!other || other->getKind() != TypeKind::Function) {
-            return false;
-        }
-        auto *tmp = dynamic_cast<FunctionType *>(other);
-        if (!ret_->equal(tmp->ret_)) {
-            return false;
-        }
-        if (params_.size() != tmp->params_.size()) {
-            return false;
-        }
-        for (uint32_t i = 0; i < params_.size(); i++) {
-            if (!params_[i]->equal(tmp->params_[i])) {
-                return false;
-            }
+    [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
+        if (!other || other->getKind() != TypeKind::Function) return false;
+        auto ptr = std::static_pointer_cast<FunctionType>(other);
+        if (!ret_->equal(ptr->ret_) || params_.size() != ptr->params_.size()) return false;
+        for (size_t i = 0; i < params_.size(); i++) {
+            if (!params_[i]->equal(ptr->params_[i])) return false;
         }
         return true;
     }
 };
 
 class TupleType : public Type {
-    std::vector<Type *> types_;
+    std::vector<std::shared_ptr<Type> > types_;
 
 public:
-    explicit TupleType(const std::vector<Type *> &types) {
-        types_ = types;
+    explicit TupleType(std::vector<std::shared_ptr<Type> > types)
+        : types_(std::move(types)) {
     }
-
-    ~TupleType() override = default;
 
     [[nodiscard]] TypeKind getKind() const override { return TypeKind::Tuple; }
 
     [[nodiscard]] std::string toString() const override {
-        std::string str = "( ";
-        for (auto type: types_) {
+        std::string str = "(";
+        for (const auto &type: types_) {
             str += type->toString();
             str += ", ";
         }
-        str += " )";
+        if (!types_.empty()) {
+            str.pop_back(); // Remove space
+            str.pop_back(); // Remove comma
+        }
+        str += ")";
         return str;
     }
 
-    bool equal(Type *other) const override {
-        if (!other || other->getKind() != TypeKind::Tuple) {
-            return false;
-        }
-        auto *tmp = dynamic_cast<TupleType *>(other);
-        if (types_.size() != tmp->types_.size()) {
-            return false;
-        }
-        for (uint32_t i = 0; i < types_.size(); i++) {
-            if (!types_[i]->equal(tmp->types_[i])) {
-                return false;
-            }
+    [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
+        if (!other || other->getKind() != TypeKind::Tuple) return false;
+        auto ptr = std::static_pointer_cast<TupleType>(other);
+        if (types_.size() != ptr->types_.size()) return false;
+        for (size_t i = 0; i < types_.size(); i++) {
+            if (!types_[i]->equal(ptr->types_[i])) return false;
         }
         return true;
     }
 };
 
 class SliceType : public Type {
-    Type *type_ = nullptr;
+    std::shared_ptr<Type> type_;
 
 public:
-    explicit SliceType(Type *type) {
-        type_ = type;
+    explicit SliceType(std::shared_ptr<Type> type) : type_(std::move(type)) {
     }
-
-    ~SliceType() override = default;
 
     [[nodiscard]] TypeKind getKind() const override {
         return TypeKind::Slice;
@@ -218,41 +201,39 @@ public:
         return "[" + type_->toString() + "]";
     }
 
-    bool equal(Type *other) const override {
-        if (!other || other->getKind() != TypeKind::Slice) {
-            return false;
-        }
-        auto *tmp = dynamic_cast<SliceType *>(other);
-        return type_->equal(tmp->type_);
+    [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
+        if (!other || other->getKind() != TypeKind::Slice) return false;
+        auto ptr = std::static_pointer_cast<SliceType>(other);
+        return type_->equal(ptr->type_);
     }
 };
 
 class ArrayType : public Type {
-    Type* base_ = nullptr;
-    uint32_t length_ = 0;
-public:
-    ArrayType(Type* base, const uint32_t& length) {
-        base_ = base;
-        length_ = length;
-    }
+    std::shared_ptr<Type> base_;
+    uint32_t length_;
 
-    ~ArrayType() override = default;
+public:
+    ArrayType(std::shared_ptr<Type> base, uint32_t length)
+        : base_(std::move(base)), length_(length) {
+    }
 
     [[nodiscard]] TypeKind getKind() const override {
         return TypeKind::Array;
     }
 
     [[nodiscard]] std::string toString() const override {
-        return "[" + base_ -> toString() + "; " + "]";
+        return "[" + base_->toString() + "; " + std::to_string(length_) + "]";
     }
 
-    bool equal(Type *other) const override {
-        return this == other;
+    [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
+        if (!other || other->getKind() != TypeKind::Array) return false;
+        auto ptr = std::static_pointer_cast<ArrayType>(other);
+        return length_ == ptr->length_ && base_->equal(ptr->base_);
     }
 };
 
 class InferredType : public Type {
-    // TODO
+    // TODO: Implementation
 };
 
 #endif //TYPE_H

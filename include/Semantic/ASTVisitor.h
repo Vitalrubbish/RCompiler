@@ -1,7 +1,6 @@
 #ifndef ASTVISITOR_H
 #define ASTVISITOR_H
 #include "ScopeManager.h"
-#include "TypeManager.h"
 
 
 class ASTNode;

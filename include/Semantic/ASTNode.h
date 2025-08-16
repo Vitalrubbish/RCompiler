@@ -1428,12 +1428,11 @@ public:
 /****************  Types  ****************/
 class TypeNode : public ASTNode {
 public:
-    explicit TypeNode(Position pos): ASTNode(pos) {
-    }
+    explicit TypeNode(Position pos): ASTNode(pos) {}
 
     ~TypeNode() override = default;
 
-    virtual std::string toString();
+    virtual std::string toString() = 0;
 
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
@@ -1599,6 +1598,10 @@ public:
     }
 
     ~InferredTypeNode() override = default;
+
+    [[nodiscard]] std::string toString() override {
+        return "_";
+    }
 
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);

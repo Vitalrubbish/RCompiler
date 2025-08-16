@@ -29,6 +29,7 @@ CrateNode *Parser::ParseCrate() {
 }
 
 VisItemNode *Parser::ParseVisItem() {
+    Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
     VisItemNode *node = nullptr;
     try {
@@ -57,7 +58,7 @@ VisItemNode *Parser::ParseVisItem() {
             node = ParseImplementation();
             return node;
         }
-        return nullptr;
+        throw ParseError("Parse Error: VisItem Not Match", pos);
     } catch (std::exception &) {
         delete node;
         throw;

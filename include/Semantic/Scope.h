@@ -27,8 +27,7 @@ public:
         return Symbol{};
     }
 
-    void ModifyType(const std::string &name, Type* type) {
-        delete symbols_[name].type_;
+    void ModifyType(const std::string &name, const std::shared_ptr<Type> &type) {
         symbols_[name].type_ = type;
     }
 };

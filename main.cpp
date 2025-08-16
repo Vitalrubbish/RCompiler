@@ -11,14 +11,13 @@
 Lexer lexer;
 std::vector<Token> tokens;
 ASTNode *root = nullptr;
-TypeManager type_manager;
 ScopeManager scope_manager;
-SymbolCollector* symbol_collector = new SymbolCollector{type_manager, scope_manager};
-SemanticChecker* semantic_checker = new SemanticChecker{type_manager, scope_manager};
+SymbolCollector* symbol_collector = new SymbolCollector{scope_manager};
+SemanticChecker* semantic_checker = new SemanticChecker{scope_manager};
 
 int main() {
     // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
-    freopen("../testcases/Parser/in07.rx", "r", stdin);
+    freopen("../testcases/Semantic/in03.rx", "r", stdin);
     std::string text, line;
     while (std::getline(std::cin, line)) {
         text += line;

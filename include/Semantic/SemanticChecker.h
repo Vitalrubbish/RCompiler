@@ -3,11 +3,10 @@
 #include "ASTNode.h"
 
 class SemanticChecker : public ASTVisitor {
-    TypeManager& type_manager_;
     ScopeManager& scope_manager_;
 public:
-    SemanticChecker(TypeManager & type_manager, ScopeManager & scope_manager):
-        type_manager_(type_manager), scope_manager_(scope_manager) {}
+    explicit SemanticChecker(ScopeManager & scope_manager):
+        scope_manager_(scope_manager) {}
 
     ~SemanticChecker() override = default;
 

@@ -16,9 +16,8 @@ void SymbolCollector::visit(VisItemNode *node) {}
 void SymbolCollector::visit(ModuleNode *node) {}
 
 void SymbolCollector::visit(FunctionNode *node) {
-    if (node->function_parameters_) node->function_parameters_->accept(this);
-    if (node->type_) node->type_->accept(this);
-    if (node->block_expression_) node->block_expression_->accept(this);
+    Symbol symbol(node -> pos_, node -> identifier_, nullptr, SymbolType::Function, false);
+    scope_manager_.declare(symbol);
 }
 
 void SymbolCollector::visit(StructNode *node) {
