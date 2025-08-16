@@ -17,7 +17,7 @@ SemanticChecker* semantic_checker = new SemanticChecker{scope_manager};
 
 int main() {
     // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
-    freopen("../testcases/Semantic/in03.rx", "r", stdin);
+    // freopen("../testcases/Parser/in00.rx", "r", stdin);
     std::string text, line;
     while (std::getline(std::cin, line)) {
         text += line;
@@ -33,7 +33,7 @@ int main() {
                 current_token.type != TokenType::LineComment) {
                 current_token.putPosValue(Position{rowIndex});
                 tokens.push_back(current_token);
-                std::cout << current_token.pos.GetRow() << " : " << current_token.token << '\n';
+                // std::cout << current_token.pos.GetRow() << " : " << current_token.token << '\n';
             }
             if (current_token.type == TokenType::ReservedIntegerLiteral) {
                 throw LexError("Lex Error: Invalid Integer");
@@ -49,8 +49,10 @@ int main() {
         root = parser.ParseCrate(); // Parser
 
         root -> accept(semantic_checker);
+        // std::cout << -1;
     } catch (std::exception &error) {
         std::cout << error.what() << '\n';
+        // std::cout << 0;
     }
     delete root;
 }

@@ -83,6 +83,12 @@ EnumVariantDiscriminantNode::~EnumVariantDiscriminantNode() {
     delete expression_node_;
 }
 
+TraitNode::~TraitNode() {
+    for (auto& it: associated_item_nodes_) {
+        delete it;
+    }
+}
+
 ConstantItemNode::~ConstantItemNode() {
     delete type_node_;
     delete expression_node_;
@@ -94,6 +100,13 @@ AssociatedItemNode::~AssociatedItemNode() {
 }
 
 InherentImplNode::~InherentImplNode() {
+    delete type_node_;
+    for (auto &it: associated_item_nodes_) {
+        delete it;
+    }
+}
+
+TraitImplNode::~TraitImplNode() {
     delete type_node_;
     for (auto &it: associated_item_nodes_) {
         delete it;

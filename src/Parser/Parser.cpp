@@ -58,12 +58,15 @@ VisItemNode *Parser::ParseVisItem() {
             node = ParseImplementation();
             return node;
         }
+        if (tokens[parseIndex].type == TokenType::Trait) {
+            node = ParseTrait();
+            return node;
+        }
         throw ParseError("Parse Error: VisItem Not Match", pos);
     } catch (std::exception &) {
         delete node;
         throw;
     }
-    // TODO Parse Other Items
 }
 
 FunctionNode *Parser::ParseFunction() {
@@ -390,15 +393,23 @@ AssociatedItemNode *Parser::ParseAssociatedItem() {
 
 ImplementationNode *Parser::ParseImplementation() {
     ImplementationNode *ret = nullptr;
+    uint32_t start = parseIndex;
     try {
         ret = ParseInherentImpl();
         return ret;
     } catch (std::exception &) {
         delete ret;
-        throw;
+        ret = nullptr;
+        parseIndex = start;
     }
 
-    // TODO Parse TraitImpl
+    try {
+        ret = ParseTraitImpl();
+        return ret;
+    } catch (std::exception &) {
+        delete ret;
+        throw;
+    }
 }
 
 InherentImplNode *Parser::ParseInherentImpl() {
@@ -418,6 +429,62 @@ InherentImplNode *Parser::ParseInherentImpl() {
         return new InherentImplNode(pos, type_node, associated_item_nodes);
     } catch (std::exception &) {
         delete type_node;
+        delete associated_item_node;
+        for (auto &it: associated_item_nodes) {
+            delete it;
+        }
+        throw;
+    }
+}
+
+TraitImplNode* Parser::ParseTraitImpl() {
+    Position pos = tokens[parseIndex].pos;
+    TypeNode* type_node = nullptr;
+    std::vector<AssociatedItemNode *> associated_item_nodes;
+    AssociatedItemNode *associated_item_node = nullptr;
+    try {
+        ConsumeString("impl");
+        if (tokens[parseIndex].type != TokenType::Identifier) {
+            throw ParseError("Parse Error: Identifier Not Found", tokens[parseIndex].pos);
+        }
+        std::string identifier = tokens[parseIndex++].token;
+        ConsumeString("for");
+        type_node = ParseType();
+        ConsumeString("{");
+        while (tokens[parseIndex].type != TokenType::RBrace) {
+            associated_item_node = ParseAssociatedItem();
+            associated_item_nodes.emplace_back(associated_item_node);
+        }
+        ConsumeString("}");
+        return new TraitImplNode(pos, identifier, type_node, associated_item_nodes);
+    } catch (std::exception &) {
+        delete type_node;
+        delete associated_item_node;
+        for (auto &it: associated_item_nodes) {
+            delete it;
+        }
+        throw;
+    }
+}
+
+TraitNode* Parser::ParseTrait() {
+    Position pos = tokens[parseIndex].pos;
+    std::vector<AssociatedItemNode *> associated_item_nodes;
+    AssociatedItemNode *associated_item_node = nullptr;
+    try {
+        ConsumeString("trait");
+        if (tokens[parseIndex].type != TokenType::Identifier) {
+            throw ParseError("Parse Error: Identifier Not Found", pos);
+        }
+        std::string identifier = tokens[parseIndex++].token;
+        ConsumeString("{");
+        while (tokens[parseIndex].type != TokenType::RBrace) {
+            associated_item_node = ParseAssociatedItem();
+            associated_item_nodes.emplace_back(associated_item_node);
+        }
+        ConsumeString("}");
+        return new TraitNode(pos, identifier, associated_item_nodes);
+    } catch (std::exception &) {
         delete associated_item_node;
         for (auto &it: associated_item_nodes) {
             delete it;

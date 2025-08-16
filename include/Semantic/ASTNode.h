@@ -388,6 +388,24 @@ public:
     }
 };
 
+class TraitNode: public VisItemNode {
+public:
+    std::string identifier_;
+    std::vector<AssociatedItemNode *> associated_item_nodes_;
+
+    TraitNode(Position pos, const std::string& identifier,
+              const std::vector<AssociatedItemNode *> &associated_item_nodes): VisItemNode(pos) {
+        identifier_ = identifier;
+        associated_item_nodes_ = associated_item_nodes;
+    }
+
+    ~TraitNode() override;
+
+    void accept(ASTVisitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
 class ImplementationNode : public VisItemNode {
 public:
     explicit ImplementationNode(Position pos): VisItemNode(pos) {
@@ -418,9 +436,26 @@ public:
     }
 };
 
-// TODO Define TraitImplNode
+class TraitImplNode: public ImplementationNode {
+public:
+    std::string identifier_;
+    TypeNode* type_node_;
+    std::vector<AssociatedItemNode*> associated_item_nodes_;
 
-// TODO Define Trait
+    TraitImplNode(Position pos, const std::string& identifier, TypeNode* type_node,
+              const std::vector<AssociatedItemNode *> &associated_item_nodes): ImplementationNode(pos) {
+        identifier_ = identifier;
+        type_node_ = type_node;
+        associated_item_nodes_ = associated_item_nodes;
+    }
+
+    ~TraitImplNode() override;
+
+    void accept(ASTVisitor *visitor) override {
+        visitor->visit(this);
+    }
+
+};
 
 /****************  Expression With Block  ****************/
 class ExpressionNode : public ASTNode {
@@ -1376,9 +1411,6 @@ public:
         visitor->visit(this);
     }
 };
-
-// TODO StructPattern
-// TODO TuplePattern
 
 class GroupedPatternNode : public PatternWithoutRangeNode {
 public:

@@ -41,11 +41,13 @@ public:
 
     AssociatedItemNode *ParseAssociatedItem();
 
-    // bool ParseTrait();
+    TraitNode *ParseTrait();
 
     ImplementationNode *ParseImplementation();
 
     InherentImplNode *ParseInherentImpl();
+
+    TraitImplNode* ParseTraitImpl();
 
     TypeNode *ParseFunctionReturnType();
 
