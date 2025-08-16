@@ -1309,17 +1309,68 @@ StatementsNode *Parser::ParseStatements() {
 
 ConditionsNode *Parser::ParseConditions() {
     Position pos = tokens[parseIndex].pos;
+    uint32_t start = parseIndex;
     ExpressionNode *tmp = nullptr;
+    LetChainNode* let_chain_node = nullptr;
     try {
         tmp = ParseExpression();
-        // TODO Parse LetChain
-        return new ConditionsNode(pos, tmp);
+        return new ConditionsNode(pos, tmp, let_chain_node);
     } catch (std::exception &) {
         delete tmp;
+        parseIndex = start;
+    }
+
+    try {
+        let_chain_node = ParseLetChain();
+        return new ConditionsNode(pos, tmp, let_chain_node);
+    } catch (std::exception&) {
+        delete let_chain_node;
         throw;
     }
 }
 
+LetChainNode* Parser::ParseLetChain() {
+    Position pos = tokens[parseIndex].pos;
+    std::vector<LetChainConditionNode*> let_chain_condition_nodes;
+    LetChainConditionNode* let_chain_condition_node = nullptr;
+    try {
+        let_chain_condition_node = ParseLetChainCondition();
+        let_chain_condition_nodes.emplace_back(let_chain_condition_node);
+        while (tokens[parseIndex].type == TokenType::AndAnd) {
+            ConsumeString("&&");
+            let_chain_condition_node = ParseLetChainCondition();
+            let_chain_condition_nodes.emplace_back(let_chain_condition_node);
+        }
+        return new LetChainNode(pos, let_chain_condition_nodes);
+    } catch (std::exception&) {
+        for (auto& it: let_chain_condition_nodes) {
+            delete it;
+        }
+        delete let_chain_condition_node;
+        throw;
+    }
+}
+
+LetChainConditionNode* Parser::ParseLetChainCondition() {
+    Position pos = tokens[parseIndex].pos;
+    PatternNode* pattern_node = nullptr;
+    ExpressionNode* expression_node = nullptr;
+    try {
+        if (tokens[parseIndex].type == TokenType::Let) {
+            ConsumeString("let");
+            pattern_node = ParsePattern();
+            ConsumeString("=");
+            expression_node = ParseExpression();
+            return new LetChainConditionNode(pos, pattern_node, expression_node);
+        }
+        expression_node = ParseExpression();
+        return new LetChainConditionNode(pos, pattern_node, expression_node);
+    } catch (std::exception&) {
+        delete pattern_node;
+        delete expression_node;
+        throw;
+    }
+}
 
 /****************  Statement  ****************/
 StatementNode *Parser::ParseStatement() {

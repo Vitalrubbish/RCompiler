@@ -130,6 +130,10 @@ public:
 
     MatchArmNode *ParseMatchArm();
 
+    LetChainNode* ParseLetChain();
+
+    LetChainConditionNode* ParseLetChainCondition();
+
     /****************  Statement  ****************/
     StatementNode *ParseStatement();
 

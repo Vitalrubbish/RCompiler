@@ -1168,11 +1168,50 @@ class ConditionsNode : public ASTNode {
 public:
     ExpressionNode *expression_ = nullptr;
 
-    ConditionsNode(Position pos, ExpressionNode *expression): ASTNode(pos) {
+    LetChainNode* let_chain_node_ = nullptr;
+
+    ConditionsNode(Position pos, ExpressionNode *expression, LetChainNode* let_chain_node):
+        ASTNode(pos) {
         expression_ = expression;
+        let_chain_node_ = let_chain_node;
     }
 
     ~ConditionsNode() override;
+
+    void accept(ASTVisitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class LetChainConditionNode;
+class LetChainNode: public ASTNode {
+public:
+    std::vector<LetChainConditionNode*> let_chain_condition_nodes_;
+
+    LetChainNode(Position pos, const std::vector<LetChainConditionNode*> &let_chain_condition_nodes):
+        ASTNode(pos) {
+        let_chain_condition_nodes_ = let_chain_condition_nodes;
+    }
+
+    ~LetChainNode() override;
+
+    void accept(ASTVisitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class LetChainConditionNode: public ASTNode {
+public:
+    PatternNode* pattern_node_;
+    ExpressionNode* expression_node_;
+
+    LetChainConditionNode(Position pos, PatternNode* pattern_node, ExpressionNode* expression_node):
+        ASTNode(pos) {
+        pattern_node_ = pattern_node;
+        expression_node_ = expression_node;
+    }
+
+    ~LetChainConditionNode() override;
 
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
@@ -1233,7 +1272,7 @@ public:
     }
 };
 
-// TODO Add LetChain
+
 
 /****************  Statement  ****************/
 class StatementNode : public ASTNode {
@@ -1285,7 +1324,6 @@ public:
 class ExpressionStatementNode : public StatementNode {
 public:
     ExpressionNode *expression_ = nullptr; // Except StructExpression
-    // TODO: Add LetChain
 
     ExpressionStatementNode(Position pos, ExpressionNode *expression): StatementNode(pos) {
         expression_ = expression;

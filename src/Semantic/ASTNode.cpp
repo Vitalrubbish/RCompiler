@@ -168,6 +168,17 @@ MatchArmNode::~MatchArmNode() {
     delete match_arm_guard_;
 }
 
+LetChainNode::~LetChainNode() {
+    for (auto& it: let_chain_condition_nodes_) {
+        delete it;
+    }
+}
+
+LetChainConditionNode::~LetChainConditionNode() {
+    delete expression_node_;
+    delete pattern_node_;
+}
+
 TupleExpressionNode::~TupleExpressionNode() {
     for (auto &it: expressions_) {
         delete it;
