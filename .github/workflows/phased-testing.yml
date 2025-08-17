@@ -1,103 +1,27 @@
-name: C++ CI
+name: Phase Unit test
 
+# 触发工作流程的事件
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main, develop ] # 当推送到 main 或 develop 分支时触发
   pull_request:
-    branches: [ "main" ]
+    branches: [ main, develop ] # 当向 main 或 develop 分支发起 Pull Request 时触发
+  workflow_dispatch: # 允许手动触发
 
-env:
-  BUILD_TYPE: Release
-
+# 定义一系列任务
 jobs:
-  build:
-    name: Build
+  # 任务ID，可自定义
+  build-and-test:
+    # 运行此任务的虚拟机环境
     runs-on: ubuntu-latest
+
+    # 任务执行的步骤
     steps:
-      - uses: actions/checkout@v3
+      # 第一步：检出您的代码库
+      # 这样 Runner 才能访问您的代码和 .ci 目录
+      - name: 检出代码
+        uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake build-essential
-
-      - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-
-      - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-      - name: Cache build artifacts and test data
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{github.workspace}}/build
-            ${{github.workspace}}/.ci
-          key: ${{ runner.os }}-build-${{ github.sha }}
-
-  unit-tests:
-    needs: build
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{github.workspace}}/build
-            ${{github.workspace}}/.ci
-          key: ${{ runner.os }}-build-${{ github.sha }}
-
-      - name: Run C++ unit tests
-        working-directory: ${{github.workspace}}/build
-        run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure --test-dir tests/unit
-
-  integration-tests:
-    needs: unit-tests
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{github.workspace}}/build
-            ${{github.workspace}}/.ci
-          key: ${{ runner.os }}-build-${{ github.sha }}
-
-      - name: Run integration tests
-        working-directory: ${{github.workspace}}/build
-        run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure --test-dir tests/integration
-
-  coverage:
-    needs: [unit-tests, integration-tests]
-    name: Code Coverage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install lcov
-        run: sudo apt-get install -y lcov
-
-      - name: Configure CMake with coverage
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON
-
-      - name: Build with coverage
-        run: cmake --build ${{github.workspace}}/build
-
-      - name: Run tests with coverage
-        working-directory: ${{github.workspace}}/build
-        run: |
-          ctest --output-on-failure
-          lcov --capture --directory . --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' --output-file coverage.info
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./build/coverage.info
-          fail_ci_if_error: true
+      - name: Run Build and Test Script
+        # 核心步骤：直接执行我们的脚本q
+        run: ./.ci/run_parser_tests.sh
