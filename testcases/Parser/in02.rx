@@ -1,5 +1,26 @@
-// Test String
 fn main() {
-    let str = "I am a string.\n";
-    let another_str = r#"I am a string\n"#;
+    let arithmetic = 2 + 3 * 4;
+
+    let arithmetic_paren = (2 + 3) * 4;
+
+    let mixed_arithmetic = 8 % 3 + 1;
+
+    let comparison = 2 + 3 == 5 * 1;
+
+    let logical = true || false && true;
+
+    let logical_paren = (true || false) && true;
+
+    let bitwise = 1 << 2 + 3;
+
+    let bitwise_mixed = 0b1010 & 0b1100 | 0b0110;
+
+    let mut x = 5;
+    x += 2 * 3;
+
+    struct Point { x: i32, y: i32 }
+    let point = Point { x: 1, y: 2 };
+    let method_priority = point.x + point.y.abs();
+
+    let complex = 1 + 2 * 3 << 4 == (1 + (2 * 3)) << 4;
 }
