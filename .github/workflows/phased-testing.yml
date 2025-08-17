@@ -1,5 +1,6 @@
 name: Phase Unit test
 
+
 # 触发工作流程的事件
 on:
   push:
@@ -7,6 +8,7 @@ on:
   pull_request:
     branches: [ main, develop ] # 当向 main 或 develop 分支发起 Pull Request 时触发
   workflow_dispatch: # 允许手动触发
+
 
 # 定义一系列任务
 jobs:
@@ -22,6 +24,8 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: Run Build and Test Script
-        # 核心步骤：直接执行我们的脚本q
+      - name: 授予脚本执行权限
+        run: chmod +x ./.ci/run_parser_tests.sh
+
+      - name: 运行自动化测试脚本
         run: ./.ci/run_parser_tests.sh
