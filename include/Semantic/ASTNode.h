@@ -388,12 +388,12 @@ public:
     }
 };
 
-class TraitNode: public VisItemNode {
+class TraitNode : public VisItemNode {
 public:
     std::string identifier_;
     std::vector<AssociatedItemNode *> associated_item_nodes_;
 
-    TraitNode(Position pos, const std::string& identifier,
+    TraitNode(Position pos, const std::string &identifier,
               const std::vector<AssociatedItemNode *> &associated_item_nodes): VisItemNode(pos) {
         identifier_ = identifier;
         associated_item_nodes_ = associated_item_nodes;
@@ -436,14 +436,14 @@ public:
     }
 };
 
-class TraitImplNode: public ImplementationNode {
+class TraitImplNode : public ImplementationNode {
 public:
     std::string identifier_;
-    TypeNode* type_node_;
-    std::vector<AssociatedItemNode*> associated_item_nodes_;
+    TypeNode *type_node_;
+    std::vector<AssociatedItemNode *> associated_item_nodes_;
 
-    TraitImplNode(Position pos, const std::string& identifier, TypeNode* type_node,
-              const std::vector<AssociatedItemNode *> &associated_item_nodes): ImplementationNode(pos) {
+    TraitImplNode(Position pos, const std::string &identifier, TypeNode *type_node,
+                  const std::vector<AssociatedItemNode *> &associated_item_nodes): ImplementationNode(pos) {
         identifier_ = identifier;
         type_node_ = type_node;
         associated_item_nodes_ = associated_item_nodes;
@@ -454,7 +454,6 @@ public:
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);
     }
-
 };
 
 /****************  Expression With Block  ****************/
@@ -1168,10 +1167,9 @@ class ConditionsNode : public ASTNode {
 public:
     ExpressionNode *expression_ = nullptr;
 
-    LetChainNode* let_chain_node_ = nullptr;
+    LetChainNode *let_chain_node_ = nullptr;
 
-    ConditionsNode(Position pos, ExpressionNode *expression, LetChainNode* let_chain_node):
-        ASTNode(pos) {
+    ConditionsNode(Position pos, ExpressionNode *expression, LetChainNode *let_chain_node): ASTNode(pos) {
         expression_ = expression;
         let_chain_node_ = let_chain_node;
     }
@@ -1184,12 +1182,12 @@ public:
 };
 
 class LetChainConditionNode;
-class LetChainNode: public ASTNode {
-public:
-    std::vector<LetChainConditionNode*> let_chain_condition_nodes_;
 
-    LetChainNode(Position pos, const std::vector<LetChainConditionNode*> &let_chain_condition_nodes):
-        ASTNode(pos) {
+class LetChainNode : public ASTNode {
+public:
+    std::vector<LetChainConditionNode *> let_chain_condition_nodes_;
+
+    LetChainNode(Position pos, const std::vector<LetChainConditionNode *> &let_chain_condition_nodes): ASTNode(pos) {
         let_chain_condition_nodes_ = let_chain_condition_nodes;
     }
 
@@ -1200,13 +1198,12 @@ public:
     }
 };
 
-class LetChainConditionNode: public ASTNode {
+class LetChainConditionNode : public ASTNode {
 public:
-    PatternNode* pattern_node_;
-    ExpressionNode* expression_node_;
+    PatternNode *pattern_node_;
+    ExpressionNode *expression_node_;
 
-    LetChainConditionNode(Position pos, PatternNode* pattern_node, ExpressionNode* expression_node):
-        ASTNode(pos) {
+    LetChainConditionNode(Position pos, PatternNode *pattern_node, ExpressionNode *expression_node): ASTNode(pos) {
         pattern_node_ = pattern_node;
         expression_node_ = expression_node;
     }
@@ -1273,7 +1270,6 @@ public:
 };
 
 
-
 /****************  Statement  ****************/
 class StatementNode : public ASTNode {
 public:
@@ -1336,11 +1332,11 @@ public:
     }
 };
 
-class VisItemStatementNode: public StatementNode {
+class VisItemStatementNode : public StatementNode {
 public:
-    VisItemNode* vis_item_node_ = nullptr;
+    VisItemNode *vis_item_node_ = nullptr;
 
-    VisItemStatementNode(Position pos, VisItemNode* vis_item_node): StatementNode(pos) {
+    VisItemStatementNode(Position pos, VisItemNode *vis_item_node): StatementNode(pos) {
         vis_item_node_ = vis_item_node;
     }
 
@@ -1498,7 +1494,8 @@ public:
 /****************  Types  ****************/
 class TypeNode : public ASTNode {
 public:
-    explicit TypeNode(Position pos): ASTNode(pos) {}
+    explicit TypeNode(Position pos): ASTNode(pos) {
+    }
 
     ~TypeNode() override = default;
 
@@ -1532,7 +1529,7 @@ public:
     ~ParenthesizedTypeNode() override;
 
     std::string toString() override {
-        return "( " + type_ -> toString() + " )";
+        return "( " + type_->toString() + " )";
     }
 
     void accept(ASTVisitor *visitor) override {
@@ -1552,7 +1549,7 @@ public:
     ~TypePathSegmentNode() override;
 
     [[nodiscard]] std::string toString() const {
-        return path_indent_segment_node_ -> toString();
+        return path_indent_segment_node_->toString();
     }
 
     void accept(ASTVisitor *visitor) override {
@@ -1574,8 +1571,8 @@ public:
 
     std::string toString() override {
         std::string str;
-        for (auto& it: type_path_segment_nodes_) {
-            str += it -> toString();
+        for (auto &it: type_path_segment_nodes_) {
+            str += it->toString();
         }
         return str;
     }
@@ -1597,8 +1594,8 @@ public:
 
     [[nodiscard]] std::string toString() override {
         std::string str = "( ";
-        for (auto& it: type_nodes_) {
-            str += it -> toString();
+        for (auto &it: type_nodes_) {
+            str += it->toString();
             str += ",";
         }
         str += " )";
@@ -1624,16 +1621,16 @@ public:
 
     [[nodiscard]] std::string toString() override {
         std::string str = "[";
-        str += type_ -> toString();
+        str += type_->toString();
         str += ";";
 
-        auto* tmp = dynamic_cast<IntLiteralNode*> (expression_node_);
+        auto *tmp = dynamic_cast<IntLiteralNode *>(expression_node_);
         // TODO Now just let it just be an IntLiteral.
         if (!tmp) {
             throw SemanticError(
                 "Semantic Error: The size of an array must be a constant in compilation", pos_);
         }
-        str += std::to_string((tmp -> int_literal_));
+        str += std::to_string((tmp->int_literal_));
         str += "]";
         return str;
     }
@@ -1654,7 +1651,7 @@ public:
     ~SliceTypeNode() override;
 
     [[nodiscard]] std::string toString() override {
-        return "[" + type_ -> toString() + "]";
+        return "[" + type_->toString() + "]";
     }
 
     void accept(ASTVisitor *visitor) override {

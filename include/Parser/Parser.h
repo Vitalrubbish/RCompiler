@@ -46,7 +46,7 @@ public:
 
     InherentImplNode *ParseInherentImpl();
 
-    TraitImplNode* ParseTraitImpl();
+    TraitImplNode *ParseTraitImpl();
 
     TypeNode *ParseFunctionReturnType();
 
@@ -129,9 +129,9 @@ public:
 
     MatchArmNode *ParseMatchArm();
 
-    LetChainNode* ParseLetChain();
+    LetChainNode *ParseLetChain();
 
-    LetChainConditionNode* ParseLetChainCondition();
+    LetChainConditionNode *ParseLetChainCondition();
 
     /****************  Statement  ****************/
     StatementNode *ParseStatement();

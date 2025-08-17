@@ -35,7 +35,7 @@ VisItemNode *Parser::ParseVisItem() {
     try {
         node = ParseFunction();
         return node;
-    } catch (std::exception &) {
+    } catch (std::exception &e) {
         delete node;
         node = nullptr;
         parseIndex = start;
@@ -437,9 +437,9 @@ InherentImplNode *Parser::ParseInherentImpl() {
     }
 }
 
-TraitImplNode* Parser::ParseTraitImpl() {
+TraitImplNode *Parser::ParseTraitImpl() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode* type_node = nullptr;
+    TypeNode *type_node = nullptr;
     std::vector<AssociatedItemNode *> associated_item_nodes;
     AssociatedItemNode *associated_item_node = nullptr;
     try {
@@ -467,7 +467,7 @@ TraitImplNode* Parser::ParseTraitImpl() {
     }
 }
 
-TraitNode* Parser::ParseTrait() {
+TraitNode *Parser::ParseTrait() {
     Position pos = tokens[parseIndex].pos;
     std::vector<AssociatedItemNode *> associated_item_nodes;
     AssociatedItemNode *associated_item_node = nullptr;
@@ -743,7 +743,15 @@ ExpressionNode *Parser::ParseJumpExpression() {
             auto *tmp = ParseAssignmentExpression();
             return tmp;
         }
-        auto *tmp = ParseAssignmentExpression();
+
+        ExpressionNode *tmp = nullptr;
+        try {
+            tmp = ParseAssignmentExpression();
+        } catch (std::exception &) {
+            delete tmp;
+            tmp = nullptr;
+        }
+
         return new JumpExpressionNode(pos, type, tmp);
     } catch (std::exception &) {
         throw;
@@ -880,7 +888,7 @@ ExpressionNode *Parser::ParseBitwiseAndExpression() {
     ExpressionNode *rhs_ = nullptr;
     try {
         lhs_ = ParseShiftExpression();
-        while (tokens[parseIndex].type == TokenType::Or) {
+        while (tokens[parseIndex].type == TokenType::And) {
             parseIndex++;
             rhs_ = ParseShiftExpression();
             lhs_ = new BitwiseAndExpressionNode(pos, lhs_, rhs_);
@@ -1309,7 +1317,7 @@ ConditionsNode *Parser::ParseConditions() {
     Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
     ExpressionNode *tmp = nullptr;
-    LetChainNode* let_chain_node = nullptr;
+    LetChainNode *let_chain_node = nullptr;
     try {
         tmp = ParseExpression();
         return new ConditionsNode(pos, tmp, let_chain_node);
@@ -1321,16 +1329,16 @@ ConditionsNode *Parser::ParseConditions() {
     try {
         let_chain_node = ParseLetChain();
         return new ConditionsNode(pos, tmp, let_chain_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete let_chain_node;
         throw;
     }
 }
 
-LetChainNode* Parser::ParseLetChain() {
+LetChainNode *Parser::ParseLetChain() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<LetChainConditionNode*> let_chain_condition_nodes;
-    LetChainConditionNode* let_chain_condition_node = nullptr;
+    std::vector<LetChainConditionNode *> let_chain_condition_nodes;
+    LetChainConditionNode *let_chain_condition_node = nullptr;
     try {
         let_chain_condition_node = ParseLetChainCondition();
         let_chain_condition_nodes.emplace_back(let_chain_condition_node);
@@ -1340,8 +1348,8 @@ LetChainNode* Parser::ParseLetChain() {
             let_chain_condition_nodes.emplace_back(let_chain_condition_node);
         }
         return new LetChainNode(pos, let_chain_condition_nodes);
-    } catch (std::exception&) {
-        for (auto& it: let_chain_condition_nodes) {
+    } catch (std::exception &) {
+        for (auto &it: let_chain_condition_nodes) {
             delete it;
         }
         delete let_chain_condition_node;
@@ -1349,10 +1357,10 @@ LetChainNode* Parser::ParseLetChain() {
     }
 }
 
-LetChainConditionNode* Parser::ParseLetChainCondition() {
+LetChainConditionNode *Parser::ParseLetChainCondition() {
     Position pos = tokens[parseIndex].pos;
-    PatternNode* pattern_node = nullptr;
-    ExpressionNode* expression_node = nullptr;
+    PatternNode *pattern_node = nullptr;
+    ExpressionNode *expression_node = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::Let) {
             ConsumeString("let");
@@ -1363,7 +1371,7 @@ LetChainConditionNode* Parser::ParseLetChainCondition() {
         }
         expression_node = ParseExpression();
         return new LetChainConditionNode(pos, pattern_node, expression_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete pattern_node;
         delete expression_node;
         throw;
@@ -1373,8 +1381,8 @@ LetChainConditionNode* Parser::ParseLetChainCondition() {
 /****************  Statement  ****************/
 StatementNode *Parser::ParseStatement() {
     Position pos = tokens[parseIndex].pos;
-    StatementNode* statement_node = nullptr;
-    VisItemNode* vis_item_node = nullptr;
+    StatementNode *statement_node = nullptr;
+    VisItemNode *vis_item_node = nullptr;
     uint32_t start = parseIndex;
     try {
         if (tokens[parseIndex].type == TokenType::Semicolon) {
@@ -1396,7 +1404,7 @@ StatementNode *Parser::ParseStatement() {
     try {
         vis_item_node = ParseVisItem();
         return new VisItemStatementNode(pos, vis_item_node);
-    } catch (std::exception&) {
+    } catch (std::exception &) {
         delete vis_item_node;
         delete statement_node;
         throw;
