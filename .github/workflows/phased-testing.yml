@@ -1,31 +1,30 @@
 name: Phase Unit test
 
-
-# 触发工作流程的事件
 on:
   push:
-    branches: [ main, develop ] # 当推送到 main 或 develop 分支时触发
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ] # 当向 main 或 develop 分支发起 Pull Request 时触发
-  workflow_dispatch: # 允许手动触发
+    branches: [ main, develop ]
+  workflow_dispatch:
 
-
-# 定义一系列任务
 jobs:
-  # 任务ID，可自定义
   build-and-test:
-    # 运行此任务的虚拟机环境
     runs-on: ubuntu-latest
-
-    # 任务执行的步骤
     steps:
-      # 第一步：检出您的代码库
-      # 这样 Runner 才能访问您的代码和 .ci 目录
-      - name: 检出代码
+      - name: Check code
         uses: actions/checkout@v4
 
-      - name: 授予脚本执行权限
+      - name: Create Directory
+        run: mkdir -p cmake-build-debug
+
+      - name: CMake-test
+        run: cmake -S . -B cmake-build-debug
+
+      - name: Build project
+        run: cmake --build cmake-build-debug --config Release
+
+      - name: Permission
         run: chmod +x ./.ci/run_parser_tests.sh
 
-      - name: 运行自动化测试脚本
+      - name: Run Parser Test
         run: ./.ci/run_parser_tests.sh
