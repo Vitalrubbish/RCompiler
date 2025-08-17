@@ -668,8 +668,6 @@ MatchArmsNode *Parser::ParseMatchArms() {
         }
         return new MatchArmsNode(pos, match_arms_nodes, expression_nodes);
     } catch (std::exception &) {
-        delete expression_node;
-        delete match_arm_node;
         for (auto &it: expression_nodes) {
             delete it;
         }

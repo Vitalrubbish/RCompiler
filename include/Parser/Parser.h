@@ -1,7 +1,6 @@
 #ifndef PARSER_H
 #define PARSER_H
 #include <vector>
-#include "Lexer/Lexer.h"
 #include "Semantic/ASTNode.h"
 
 
