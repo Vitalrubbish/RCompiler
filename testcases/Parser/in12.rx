@@ -1,0 +1,4 @@
+fn main() {
+    const Number: u32 = 114514;
+    let r = Number;
+}

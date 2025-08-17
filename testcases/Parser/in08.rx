@@ -1,0 +1,8 @@
+fn main() {
+    let x = 2;
+    let result = match x {
+        1 => "one",
+        2 => "two",
+        _ => "other",
+    };
+} // Test Match Statement
