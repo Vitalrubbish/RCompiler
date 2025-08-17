@@ -17,7 +17,7 @@ SemanticChecker* semantic_checker = new SemanticChecker{scope_manager};
 
 int main() {
     // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
-    freopen("../testcases/Parser/in02.rx", "r", stdin);
+    // freopen("../testcases/Parser/in02.rx", "r", stdin);
     std::string text, line;
     while (std::getline(std::cin, line)) {
         text += line;
