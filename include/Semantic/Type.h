@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <stdexcept>
 
 class Type;
 class FunctionType;
@@ -27,6 +28,11 @@ public:
 
     virtual ~Type() = default;
 
+    virtual Type &operator=(const Type &other) {
+        methods_ = other.methods_;
+        return *this;
+    }
+
     [[nodiscard]] virtual TypeKind getKind() const = 0;
 
     [[nodiscard]] virtual std::string toString() const = 0;
@@ -41,13 +47,18 @@ public:
     explicit PrimitiveType(std::string name) : name_(std::move(name)) {
     }
 
-    [[nodiscard]] TypeKind getKind() const override {
-        return TypeKind::Primitive;
+    PrimitiveType &operator=(const Type &other) override {
+        methods_ = other.methods_;
+        if (const auto *ptr = dynamic_cast<const PrimitiveType *>(&other)) {
+            name_ = ptr->name_;
+        } else {
+            throw std::runtime_error("Cannot assign non-PrimitiveType to PrimitiveType");
+        }
+        return *this;
     }
 
-    [[nodiscard]] std::string toString() const override {
-        return name_;
-    }
+    [[nodiscard]] TypeKind getKind() const override { return TypeKind::Primitive; }
+    [[nodiscard]] std::string toString() const override { return name_; }
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Primitive) return false;
@@ -70,13 +81,19 @@ public:
         : name_(std::move(name)), members_(std::move(members)) {
     }
 
-    [[nodiscard]] TypeKind getKind() const override {
-        return TypeKind::Struct;
+    StructType &operator=(const Type &other) override {
+        methods_ = other.methods_;
+        if (const auto *ptr = dynamic_cast<const StructType *>(&other)) {
+            name_ = ptr->name_;
+            members_ = ptr->members_;
+        } else {
+            throw std::runtime_error("Cannot assign non-StructType to StructType");
+        }
+        return *this;
     }
 
-    [[nodiscard]] std::string toString() const override {
-        return name_;
-    }
+    [[nodiscard]] TypeKind getKind() const override { return TypeKind::Struct; }
+    [[nodiscard]] std::string toString() const override { return name_; }
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Struct) return false;
@@ -101,13 +118,19 @@ public:
         : name_(std::move(name)), variants_(std::move(variants)) {
     }
 
-    [[nodiscard]] TypeKind getKind() const override {
-        return TypeKind::Enumeration;
+    EnumerationType &operator=(const Type &other) override {
+        methods_ = other.methods_;
+        if (const auto *ptr = dynamic_cast<const EnumerationType *>(&other)) {
+            name_ = ptr->name_;
+            variants_ = ptr->variants_;
+        } else {
+            throw std::runtime_error("Cannot assign non-EnumerationType to EnumerationType");
+        }
+        return *this;
     }
 
-    [[nodiscard]] std::string toString() const override {
-        return name_;
-    }
+    [[nodiscard]] TypeKind getKind() const override { return TypeKind::Enumeration; }
+    [[nodiscard]] std::string toString() const override { return name_; }
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Enumeration) return false;
@@ -121,13 +144,22 @@ public:
     std::vector<std::shared_ptr<Type> > params_;
     std::shared_ptr<Type> ret_;
 
-    FunctionType(std::vector<std::shared_ptr<Type>> params, std::shared_ptr<Type> ret)
+    FunctionType(std::vector<std::shared_ptr<Type> > params, std::shared_ptr<Type> ret)
         : params_(std::move(params)), ret_(std::move(ret)) {
     }
 
-    [[nodiscard]] TypeKind getKind() const override {
-        return TypeKind::Function;
+    FunctionType &operator=(const Type &other) override {
+        methods_ = other.methods_;
+        if (const auto *ptr = dynamic_cast<const FunctionType *>(&other)) {
+            params_ = ptr->params_;
+            ret_ = ptr->ret_;
+        } else {
+            throw std::runtime_error("Cannot assign non-FunctionType to FunctionType");
+        }
+        return *this;
     }
+
+    [[nodiscard]] TypeKind getKind() const override { return TypeKind::Function; }
 
     [[nodiscard]] std::string toString() const override {
         std::string str = "fn(";
@@ -135,7 +167,7 @@ public:
             str += param->toString();
             str += ",";
         }
-        if (!params_.empty()) str.pop_back(); // Remove trailing comma
+        if (!params_.empty()) str.pop_back();
         str += ")->" + ret_->toString();
         return str;
     }
@@ -157,6 +189,16 @@ public:
 
     explicit TupleType(std::vector<std::shared_ptr<Type> > types)
         : types_(std::move(types)) {
+    }
+
+    TupleType &operator=(const Type &other) override {
+        methods_ = other.methods_;
+        if (const auto *ptr = dynamic_cast<const TupleType *>(&other)) {
+            types_ = ptr->types_;
+        } else {
+            throw std::runtime_error("Cannot assign non-TupleType to TupleType");
+        }
+        return *this;
     }
 
     [[nodiscard]] TypeKind getKind() const override { return TypeKind::Tuple; }
@@ -189,9 +231,17 @@ public:
     explicit SliceType(std::shared_ptr<Type> type) : type_(std::move(type)) {
     }
 
-    [[nodiscard]] TypeKind getKind() const override {
-        return TypeKind::Slice;
+    SliceType &operator=(const Type &other) override {
+        methods_ = other.methods_;
+        if (const auto *ptr = dynamic_cast<const SliceType *>(&other)) {
+            type_ = ptr->type_;
+        } else {
+            throw std::runtime_error("Cannot assign non-SliceType to SliceType");
+        }
+        return *this;
     }
+
+    [[nodiscard]] TypeKind getKind() const override { return TypeKind::Slice; }
 
     [[nodiscard]] std::string toString() const override {
         return "[" + type_->toString() + "]";
@@ -213,9 +263,18 @@ public:
         : base_(std::move(base)), length_(length) {
     }
 
-    [[nodiscard]] TypeKind getKind() const override {
-        return TypeKind::Array;
+    ArrayType &operator=(const Type &other) override {
+        methods_ = other.methods_;
+        if (const auto *ptr = dynamic_cast<const ArrayType *>(&other)) {
+            base_ = ptr->base_;
+            length_ = ptr->length_;
+        } else {
+            throw std::runtime_error("Cannot assign non-ArrayType to ArrayType");
+        }
+        return *this;
     }
+
+    [[nodiscard]] TypeKind getKind() const override { return TypeKind::Array; }
 
     [[nodiscard]] std::string toString() const override {
         return "[" + base_->toString() + "; " + std::to_string(length_) + "]";

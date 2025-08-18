@@ -15,12 +15,18 @@ void SymbolCollector::visit(VisItemNode *node) {
 }
 
 void SymbolCollector::visit(FunctionNode *node) {
-    Symbol symbol(node->pos_, node->identifier_, nullptr, SymbolType::Function, false);
+    std::shared_ptr<Type> type = std::make_shared<FunctionType>(
+        std::vector<std::shared_ptr<Type>>{}, std::make_shared<PrimitiveType>("void"));
+    Symbol symbol(node->pos_, node->identifier_, type, SymbolType::Function, false);
     scope_manager_.declare(symbol);
 }
 
 void SymbolCollector::visit(StructNode *node) {
-    Symbol symbol(node->pos_, node->identifier_, nullptr, SymbolType::Struct, false);
+    std::shared_ptr<Type> type = std::make_shared<StructType>(
+        node->identifier_,
+        std::vector<StructMember>{}
+    );
+    Symbol symbol(node->pos_, node->identifier_, type, SymbolType::Struct, false);
     scope_manager_.declare(symbol);
 }
 

@@ -5,12 +5,14 @@ fn make_origin() -> Point {
 // 然后定义 `Point` 结构体
 struct Point {
     x: i32,
-    y: u32,
+    y: i32,
 }
 
 fn main() {
     let origin = make_origin();
-    println("Origin: ({}, {})", origin.x, origin.y);
+    println("Origin: ({}, {})");
+    printlnInt(origin.x);
+    printlnInt(origin.y);
 }
 
 // Check Set Relation of items in a scope.

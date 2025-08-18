@@ -63,7 +63,22 @@ void SemanticChecker::visit(VisItemNode *node) {
 void SemanticChecker::visit(FunctionNode *node) {
     if (node->function_parameters_) node->function_parameters_->accept(this);
     if (node->type_) node->type_->accept(this);
+    scope_manager_.pushBack();
+    if (node -> function_parameters_) {
+        for (auto& it: node->function_parameters_->function_params_) {
+            it->accept(this);
+            auto* pattern_node = dynamic_cast<IdentifierPatternNode*>(it -> pattern_no_top_alt_node_);
+            if (pattern_node) {
+                std::string identifier = pattern_node -> identifier_;
+                bool is_mut = pattern_node -> is_mut_;
+                std::shared_ptr<Type> type = it->type_->type;
+                Symbol symbol(node->pos_, identifier, type, SymbolType::Variable, is_mut);
+                scope_manager_.declare(symbol);
+            }
+        }
+    }
     if (node->block_expression_) node->block_expression_->accept(this);
+    scope_manager_.popBack();
 }
 
 void SemanticChecker::visit(StructNode *node) {
@@ -159,10 +174,24 @@ void SemanticChecker::visit(LetStatementNode *node) {
     std::shared_ptr<Type> type;
     std::string identifier;
     if (node->pattern_no_top_alt_) {
-        node->pattern_no_top_alt_->accept(this);
+        // node->pattern_no_top_alt_->accept(this);
         auto *tmp = dynamic_cast<IdentifierPatternNode *>(node->pattern_no_top_alt_);
-        identifier = tmp->identifier_;
-        is_mut = tmp->is_mut_;
+        if (tmp) {
+            identifier = tmp->identifier_;
+            is_mut = tmp->is_mut_;
+        }
+        auto* path_pattern = dynamic_cast<PathPatternNode*> (node -> pattern_no_top_alt_);
+        if (path_pattern) {
+            auto* expression = dynamic_cast<PathInExpressionNode*>(path_pattern->expression_);
+            if (expression) {
+                uint32_t len = expression -> path_indent_segments_.size();
+                if (len == 0) {
+                    throw SemanticError("Semantic Error: Path Pattern Error", node->pos_);
+                }
+                identifier = expression -> path_indent_segments_[len - 1] -> identifier_;
+                is_mut = false;
+            }
+        }
     }
     if (node->type_) {
         node->type_->accept(this);
@@ -243,9 +272,11 @@ void SemanticChecker::visit(ComparisonExpressionNode *node) {
 }
 
 void SemanticChecker::visit(TypeCastExpressionNode *node) {
-    if (node->type_) node->type_->accept(this);
+    if (node->type_) {
+        node->type_->accept(this);
+        node -> types.emplace_back(node -> type_ -> type);
+    }
     if (node->expression_) node->expression_->accept(this);
-    node -> types.emplace_back(node -> type_ -> type);
 }
 
 void SemanticChecker::visit(AssignmentExpressionNode *node) {
@@ -514,6 +545,9 @@ void SemanticChecker::visit(FunctionCallExpressionNode *node) {
         if (!type) {
             throw SemanticError("Semantic Error: Invalid Function Type", node -> pos_);
         }
+    }
+    if (node -> params_.size() != type -> params_.size()) {
+        throw SemanticError("Semantic Error: Incorrect Parameter Numbers", node -> pos_);
     }
     uint32_t index = 0;
     for (auto *param: node->params_) {

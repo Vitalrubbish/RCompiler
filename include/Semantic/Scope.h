@@ -7,19 +7,21 @@
 
 class Scope {
     std::unordered_map<std::string, Symbol> symbols_;
+    std::unordered_map<std::string, std::shared_ptr<Type>> types_;
 
 public:
     bool in_loop_ = false;
 
     Scope() = default;
 
-    Scope(bool in_loop) : in_loop_(in_loop) {}
+    explicit Scope(bool in_loop) : in_loop_(in_loop) {}
 
     void declare(const Symbol& symbol) {
         if (symbols_.find(symbol.name_) != symbols_.end()) {
             throw SemanticError("Semantic Error: Variable MultiDeclaration", symbol.pos_);
         }
         symbols_[symbol.name_] = symbol;
+        types_[symbol.name_] = symbol.type_;
     }
 
     Symbol lookup(const std::string &name) {
@@ -30,7 +32,7 @@ public:
     }
 
     void ModifyType(const std::string &name, const std::shared_ptr<Type> &type) {
-        symbols_[name].type_ = type;
+        *types_[name] = *type;
     }
 };
 #endif //SCOPE_H

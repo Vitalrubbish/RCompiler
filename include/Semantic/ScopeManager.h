@@ -117,7 +117,7 @@ public:
         scopes_[len - 1].ModifyType(name, type);
     }
 
-    bool in_loop() const {
+    [[nodiscard]] bool in_loop() const {
         uint32_t len = scopes_.size();
         if (len == 0) return false;
         return scopes_[len - 1].in_loop_;
