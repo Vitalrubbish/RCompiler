@@ -1206,18 +1206,30 @@ ExpressionNode *Parser::ParseLiteral() {
     try {
         if (tokens[parseIndex].type == TokenType::IntegerLiteral) {
             std::string token_ = tokens[parseIndex].token;
-            bool is_u32 = true, is_i32 = true;
+            bool is_u32 = true, is_i32 = true, is_isize = true, is_usize = true;
             uint32_t len = token_.size();
             if (len >= 3) {
                 if (token_.substr(len - 3, 3) == "i32") {
                     is_i32 = true;
+                    is_u32 = is_isize = is_usize = false;
                 }
                 if (token_.substr(len - 3, 3) == "u32") {
                     is_u32 = true;
+                    is_i32 = is_isize = is_usize = false;
+                }
+            }
+            if (len >= 5) {
+                if (token_.substr(len - 5, 5) == "isize") {
+                    is_isize = true;
+                    is_i32 = is_u32 = is_usize = false;
+                }
+                if (token_.substr(len - 5, 5) == "usize") {
+                    is_usize = true;
+                    is_i32 = is_u32 = is_isize = false;
                 }
             }
             return new IntLiteralNode(pos, StringToInt(tokens[parseIndex++].token),
-                is_u32, is_i32);
+                is_u32, is_i32, is_usize, is_isize);
         }
         if (tokens[parseIndex].type == TokenType::StringLiteral ||
             tokens[parseIndex].type == TokenType::RawStringLiteral) {

@@ -13,6 +13,8 @@ public:
 
     Scope() = default;
 
+    Scope(bool in_loop) : in_loop_(in_loop) {}
+
     void declare(const Symbol& symbol) {
         if (symbols_.find(symbol.name_) != symbols_.end()) {
             throw SemanticError("Semantic Error: Variable MultiDeclaration", symbol.pos_);

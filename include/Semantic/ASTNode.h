@@ -1104,12 +1104,16 @@ public:
     int64_t int_literal_;
     bool is_u32_ = false;
     bool is_i32_ = false;
+    bool is_isize_ = false;
+    bool is_usize_ = false;
 
     IntLiteralNode(Position pos, const int64_t &int_literal,
-        bool is_u32, bool is_i32): LiteralExpressionNode(pos) {
+        bool is_u32, bool is_i32, bool is_usize, bool is_isize): LiteralExpressionNode(pos) {
         int_literal_ = int_literal;
         is_u32_ = is_u32;
         is_i32_ = is_i32;
+        is_isize_ = is_isize;
+        is_usize_ = is_usize;
     }
 
     ~IntLiteralNode() override = default;

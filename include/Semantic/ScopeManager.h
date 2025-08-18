@@ -13,6 +13,8 @@ public:
         pushBack();
         std::shared_ptr<Type> i32_type = std::make_shared<PrimitiveType>("i32");
         std::shared_ptr<Type> u32_type = std::make_shared<PrimitiveType>("u32");
+        std::shared_ptr<Type> isize_type = std::make_shared<PrimitiveType>("isize");
+        std::shared_ptr<Type> usize_type = std::make_shared<PrimitiveType>("usize");
         std::shared_ptr<Type> bool_type = std::make_shared<PrimitiveType>("bool");
         std::shared_ptr<Type> char_type = std::make_shared<PrimitiveType>("char");
         std::shared_ptr<Type> string_type = std::make_shared<PrimitiveType>("string");
@@ -20,6 +22,8 @@ public:
         std::shared_ptr<Type> void_type = std::make_shared<PrimitiveType>("void");
         Symbol i32(pos, "i32", i32_type, SymbolType::Type);
         Symbol u32(pos, "u32", u32_type, SymbolType::Type);
+        Symbol isize(pos, "isize", isize_type, SymbolType::Type);
+        Symbol usize(pos, "usize", usize_type, SymbolType::Type);
         Symbol bool_(pos, "bool", bool_type, SymbolType::Type);
         Symbol char_(pos, "char", char_type, SymbolType::Type);
         Symbol string_(pos, "string", string_type, SymbolType::Type);
@@ -27,6 +31,8 @@ public:
         Symbol void_(pos, "void", void_type, SymbolType::Type);
         declare(i32);
         declare(u32);
+        declare(isize);
+        declare(usize);
         declare(bool_);
         declare(char_);
         declare(string_);
@@ -75,7 +81,7 @@ public:
                 std::vector<std::shared_ptr<Type>>{}, string_type)});
         string_type->methods_.emplace_back(
             Method{"len", std::make_shared<FunctionType>(
-                std::vector<std::shared_ptr<Type>>{}, u32_type)});
+                std::vector<std::shared_ptr<Type>>{}, usize_type)});
     }
 
     void pushBack() {
@@ -109,6 +115,12 @@ public:
     void ModifyType(const std::string &name, const std::shared_ptr<Type>& type) {
         uint32_t len = scopes_.size();
         scopes_[len - 1].ModifyType(name, type);
+    }
+
+    bool in_loop() const {
+        uint32_t len = scopes_.size();
+        if (len == 0) return false;
+        return scopes_[len - 1].in_loop_;
     }
 };
 #endif //SCOPEMANAGER_H

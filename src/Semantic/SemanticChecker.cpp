@@ -223,11 +223,29 @@ void SemanticChecker::visit(ExpressionWithBlockNode *node) {
 void SemanticChecker::visit(ComparisonExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+    if (node -> lhs_ && node -> rhs_) {
+        auto cap_types = cap(node -> lhs_ -> types, node -> rhs_ -> types);
+        bool valid = false;
+        for (auto& it: cap_types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp) {
+                if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
+                    tmp -> name_ == "isize" || tmp -> name_ == "usize") {
+                    valid = true;
+                }
+            }
+        }
+        if (!valid) {
+            throw SemanticError("Semantic Error: Invalid ComparisonExpressionNode", node -> pos_);
+        }
+    }
+    node -> types.emplace_back(std::make_shared<PrimitiveType>("bool"));
 }
 
 void SemanticChecker::visit(TypeCastExpressionNode *node) {
     if (node->type_) node->type_->accept(this);
     if (node->expression_) node->expression_->accept(this);
+    node -> types.emplace_back(node -> type_ -> type);
 }
 
 void SemanticChecker::visit(AssignmentExpressionNode *node) {
@@ -241,57 +259,251 @@ void SemanticChecker::visit(AssignmentExpressionNode *node) {
 }
 
 void SemanticChecker::visit(ContinueExpressionNode *node) {
+    if (!scope_manager_.in_loop()) {
+        throw SemanticError("Semantic Error: Continue outside of loop", node->pos_);
+    }
 }
 
 void SemanticChecker::visit(UnderscoreExpressionNode *node) {
 }
 
 void SemanticChecker::visit(JumpExpressionNode *node) {
-    if (node->expression_) node->expression_->accept(this);
+    if (node->expression_) {
+        if (node -> type_ == TokenType::Break && !scope_manager_.in_loop()) {
+            throw SemanticError("Semantic Error: Continue outside of loop", node->pos_);
+        }
+        node->expression_->accept(this);
+    }
 }
 
 void SemanticChecker::visit(LogicOrExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+    if (node -> lhs_ && node -> rhs_) {
+        auto cap_types = cap(node->lhs_->types, node->rhs_->types);
+        bool valid = false;
+        for (auto& it: cap_types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp) {
+                if (tmp->name_ == "bool") {
+                    valid = true;
+                    node->types.emplace_back(it);
+                }
+            }
+        }
+        if (!valid) {
+            throw SemanticError("Semantic Error: Invalid BitwiseAndExpressionNode", node->pos_);
+        }
+    }
 }
 
 void SemanticChecker::visit(LogicAndExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+    if (node -> lhs_ && node -> rhs_) {
+        auto cap_types = cap(node->lhs_->types, node->rhs_->types);
+        bool valid = false;
+        for (auto& it: cap_types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp) {
+                if (tmp->name_ == "bool") {
+                    valid = true;
+                    node->types.emplace_back(it);
+                }
+            }
+        }
+        if (!valid) {
+            throw SemanticError("Semantic Error: Invalid BitwiseAndExpressionNode", node->pos_);
+        }
+    }
 }
 
 void SemanticChecker::visit(BitwiseOrExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+    if (node -> lhs_ && node -> rhs_) {
+        auto cap_types = cap(node->lhs_->types, node->rhs_->types);
+        bool valid = false;
+        for (auto& it: cap_types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp) {
+                if (tmp->name_ == "i32" || tmp->name_ == "u32" ||
+                    tmp->name_ == "isize" || tmp->name_ == "usize" ||
+                    tmp->name_ == "bool") {
+                    valid = true;
+                    node->types.emplace_back(it);
+                }
+            }
+        }
+        if (!valid) {
+            throw SemanticError("Semantic Error: Invalid BitwiseAndExpressionNode", node->pos_);
+        }
+    }
 }
 
 void SemanticChecker::visit(BitwiseXorExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+    if (node -> lhs_ && node -> rhs_) {
+        auto cap_types = cap(node->lhs_->types, node->rhs_->types);
+        bool valid = false;
+        for (auto& it: cap_types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp) {
+                if (tmp->name_ == "i32" || tmp->name_ == "u32" ||
+                    tmp->name_ == "isize" || tmp->name_ == "usize" ||
+                    tmp->name_ == "bool") {
+                    valid = true;
+                    node->types.emplace_back(it);
+                }
+            }
+        }
+        if (!valid) {
+            throw SemanticError("Semantic Error: Invalid BitwiseAndExpressionNode", node->pos_);
+        }
+    }
 }
 
 void SemanticChecker::visit(BitwiseAndExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+    if (node -> lhs_ && node -> rhs_) {
+        auto cap_types = cap(node->lhs_->types, node->rhs_->types);
+        bool valid = false;
+        for (auto& it: cap_types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp) {
+                if (tmp->name_ == "i32" || tmp->name_ == "u32" ||
+                    tmp->name_ == "isize" || tmp->name_ == "usize" ||
+                    tmp->name_ == "bool") {
+                    valid = true;
+                    node->types.emplace_back(it);
+                }
+            }
+        }
+        if (!valid) {
+            throw SemanticError("Semantic Error: Invalid BitwiseAndExpressionNode", node->pos_);
+        }
+    }
 }
 
 void SemanticChecker::visit(ShiftExpressionNode *node) {
-    if (node->lhs_) node->lhs_->accept(this);
-    if (node->rhs_) node->rhs_->accept(this);
+    if (node->lhs_) {
+        node->lhs_->accept(this);
+        bool match = false;
+        for (auto& it: node -> lhs_ -> types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp) {
+                if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
+                    tmp -> name_ == "isize" || tmp -> name_ == "usize") {
+                    match = true;
+                    node -> types.emplace_back(it);
+                }
+            }
+        }
+        if (!match) {
+            throw SemanticError("Semantic Error: Invalid ShiftExpressionNode", node -> pos_);
+        }
+    }
+    if (node->rhs_) {
+        node->rhs_->accept(this);
+        bool match = false;
+        for (auto& it: node -> rhs_ -> types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp) {
+                if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
+                    tmp -> name_ == "isize" || tmp -> name_ == "usize") {
+                    match = true;
+                }
+            }
+        }
+        if (!match) {
+            throw SemanticError("Semantic Error: Invalid ShiftExpressionNode", node -> pos_);
+        }
+    }
 }
 
 void SemanticChecker::visit(AddMinusExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+    if (node -> lhs_ && node -> rhs_) {
+        auto cap_types = cap(node -> lhs_ -> types, node -> rhs_ -> types);
+        bool valid = false;
+        for (auto& it: cap_types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp) {
+                if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
+                    tmp -> name_ == "isize" || tmp -> name_ == "usize") {
+                    valid = true;
+                    node -> types.emplace_back(it);
+                }
+            }
+        }
+        if (!valid) {
+            throw SemanticError("Semantic Error: Invalid AddMinusExpressionNode", node -> pos_);
+        }
+    }
 }
 
 void SemanticChecker::visit(MulDivModExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+    if (node -> lhs_ && node -> rhs_) {
+        auto cap_types = cap(node -> lhs_ -> types, node -> rhs_ -> types);
+        bool valid = false;
+        for (auto& it: cap_types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp) {
+                if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
+                    tmp -> name_ == "isize" || tmp -> name_ == "usize") {
+                    valid = true;
+                    node -> types.emplace_back(it);
+                }
+            }
+        }
+        if (!valid) {
+            throw SemanticError("Semantic Error: Invalid MulDivModExpressionNode", node -> pos_);
+        }
+    }
 }
 
 void SemanticChecker::visit(UnaryExpressionNode *node) {
-    if (node->expression_) node->expression_->accept(this);
+    if (node->expression_) {
+        node->expression_->accept(this);
+        if (node -> type_ == TokenType::Minus) {
+            bool match = false;
+            for (auto& it: node -> expression_ -> types) {
+                auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+                if (tmp -> name_ == "i32" || tmp -> name_ == "isize") {
+                    match = true;
+                    node -> types.emplace_back(it);
+                }
+            }
+            if (!match) {
+                throw SemanticError("Semantic Error: Invalid UnaryExpressionNode",
+                    node -> pos_);
+            }
+            return;
+        }
+        if (node -> type_ == TokenType::Not) {
+            bool match = false;
+            for (auto& it: node -> expression_ -> types) {
+                auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+                if (tmp -> name_ == "i32" || tmp -> name_ == "isize" ||
+                    tmp -> name_ == "u32" || tmp -> name_ == "usize" ||
+                    tmp -> name_ == "bool") {
+                    match = true;
+                    node -> types.emplace_back(it);
+                }
+            }
+            if (!match) {
+                throw SemanticError("Semantic Error: Invalid UnaryExpressionNode",
+                    node -> pos_);
+            }
+            return;
+        }
+        // TODO Handle *, &, &mut, &&, &&mut
+    }
 }
 
 void SemanticChecker::visit(FunctionCallExpressionNode *node) {
@@ -342,7 +554,7 @@ void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
         bool valid = false;
         for (auto& it: node -> index_ -> types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
-            if (tmp && tmp -> name_ == "u32") {
+            if (tmp && tmp -> name_ == "usize") {
                 valid = true;
                 break;
             }
@@ -378,7 +590,6 @@ void SemanticChecker::visit(MemberAccessExpressionNode *node) {
 }
 
 void SemanticChecker::visit(BlockExpressionNode *node) {
-    scope_manager_.pushBack();
     if (node->statements_) {
         for (auto *item: node->statements_->statements_) {
             auto *structItem = dynamic_cast<StructNode *>(item);
@@ -423,7 +634,6 @@ void SemanticChecker::visit(BlockExpressionNode *node) {
         }
         node->statements_->accept(this);
     }
-    scope_manager_.popBack();
 }
 
 void SemanticChecker::visit(LoopExpressionNode *node) {
@@ -475,6 +685,14 @@ void SemanticChecker::visit(IntLiteralNode *node) {
     }
     if (node->is_u32_) {
         std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("u32");
+        node->types.emplace_back(type);
+    }
+    if (node->is_usize_) {
+        std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("usize");
+        node->types.emplace_back(type);
+    }
+    if (node->is_isize_) {
+        std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("isize");
         node->types.emplace_back(type);
     }
 }
@@ -718,11 +936,6 @@ void SemanticChecker::visit(TypeParamBoundsNode *node) {
 
 void SemanticChecker::visit(QualifiedPathInExpressionNode *node) {
 }
-
-
-
-
-
 
 /****************  Supportive Function  ****************/
 std::vector<std::shared_ptr<Type> > SemanticChecker::cap(const std::vector<std::shared_ptr<Type> > &a,
