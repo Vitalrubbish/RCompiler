@@ -60,9 +60,6 @@ void SemanticChecker::visit(CrateNode *node) {
 void SemanticChecker::visit(VisItemNode *node) {
 }
 
-void SemanticChecker::visit(ModuleNode *node) {
-}
-
 void SemanticChecker::visit(FunctionNode *node) {
     if (node->function_parameters_) node->function_parameters_->accept(this);
     if (node->type_) node->type_->accept(this);
@@ -142,14 +139,6 @@ void SemanticChecker::visit(EnumVariantDiscriminantNode *node) {
     if (node->expression_node_) node->expression_node_->accept(this);
 }
 
-void SemanticChecker::visit(TypeParamBoundsNode *node) {
-}
-
-void SemanticChecker::visit(TypeParamNode *node) {
-}
-
-void SemanticChecker::visit(ConstParamNode *node) {
-}
 
 void SemanticChecker::visit(StatementNode *node) {
 }
@@ -552,9 +541,6 @@ void SemanticChecker::visit(PathInExpressionNode *node) {
     node -> types.emplace_back(symbol.type_);
 }
 
-void SemanticChecker::visit(QualifiedPathInExpressionNode *node) {
-}
-
 void SemanticChecker::visit(PathIndentSegmentNode *node) {
 }
 
@@ -595,6 +581,10 @@ void SemanticChecker::visit(ConditionsNode *node) {
 
 void SemanticChecker::visit(LetChainNode *node) {
 }
+
+void SemanticChecker::visit(LetChainConditionNode *node) {
+}
+
 
 void SemanticChecker::visit(MatchArmsNode *node) {
     for (auto *arm: node->match_arm_nodes_) {
@@ -710,8 +700,28 @@ void SemanticChecker::visit(SliceTypeNode *node) {
     node -> type = std::make_shared<SliceType>(base_type);
 }
 
+void SemanticChecker::visit(ReferenceTypeNode *node) {
+}
+
+
 void SemanticChecker::visit(InferredTypeNode *node) {
 }
+
+void SemanticChecker::visit(ConstParamNode *node) {
+}
+
+void SemanticChecker::visit(TypeParamNode *node) {
+}
+
+void SemanticChecker::visit(TypeParamBoundsNode *node) {
+}
+
+void SemanticChecker::visit(QualifiedPathInExpressionNode *node) {
+}
+
+
+
+
 
 
 /****************  Supportive Function  ****************/

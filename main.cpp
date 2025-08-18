@@ -17,7 +17,7 @@ SemanticChecker *semantic_checker = new SemanticChecker{scope_manager};
 
 int main() {
     // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
-    // freopen("../testcases/Parser/in02.rx", "r", stdin);
+    // freopen("../testcases/Parser/in11.rx", "r", stdin);
     std::string text, line;
     while (std::getline(std::cin, line)) {
         text += line;
@@ -48,11 +48,11 @@ int main() {
         Parser parser(tokens);
         root = parser.ParseCrate(); // Parser
 
-        root->accept(semantic_checker);
-        // std::cout << -1;
+        // root->accept(semantic_checker);
+        std::cout << 0 << '\r';
     } catch (std::exception &error) {
         std::cout << error.what() << '\n';
-        // std::cout << 0;
+        std::cout << -1 << '\r';
     }
     delete root;
 }

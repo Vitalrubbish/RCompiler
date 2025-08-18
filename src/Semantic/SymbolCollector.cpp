@@ -14,9 +14,6 @@ void SymbolCollector::visit(CrateNode *node) {
 void SymbolCollector::visit(VisItemNode *node) {
 }
 
-void SymbolCollector::visit(ModuleNode *node) {
-}
-
 void SymbolCollector::visit(FunctionNode *node) {
     Symbol symbol(node->pos_, node->identifier_, nullptr, SymbolType::Function, false);
     scope_manager_.declare(symbol);
@@ -327,6 +324,10 @@ void SymbolCollector::visit(ConditionsNode *node) {
 void SymbolCollector::visit(LetChainNode *node) {
 }
 
+void SymbolCollector::visit(LetChainConditionNode *node) {
+}
+
+
 void SymbolCollector::visit(MatchArmsNode *node) {
     for (auto *arm: node->match_arm_nodes_) {
         if (arm) arm->accept(this);
@@ -416,6 +417,10 @@ void SymbolCollector::visit(ArrayTypeNode *node) {
 void SymbolCollector::visit(SliceTypeNode *node) {
     if (node->type_) node->type_->accept(this);
 }
+
+void SymbolCollector::visit(ReferenceTypeNode *node) {
+}
+
 
 void SymbolCollector::visit(InferredTypeNode *node) {
 }

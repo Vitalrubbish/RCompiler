@@ -2,7 +2,6 @@
 #define ASTVISITOR_H
 #include "ScopeManager.h"
 
-
 class ASTNode;
 class CrateNode;
 class VisItemNode;
@@ -61,6 +60,7 @@ class AssignmentExpressionNode;
 class StructExprFieldNode;
 class ConditionsNode;
 class LetChainNode;
+class LetChainConditionNode;
 class PatternNode;
 class PatternNoTopAltNode;
 class InfiniteLoopExpressionNode;
@@ -98,6 +98,7 @@ class TypePathSegmentNode;
 class TupleTypeNode;
 class ArrayTypeNode;
 class SliceTypeNode;
+class ReferenceTypeNode;
 class InferredTypeNode;
 
 class ASTVisitor {
@@ -107,7 +108,6 @@ public:
     virtual void visit(ASTNode *node) = 0;
     virtual void visit(CrateNode *node) = 0;
     virtual void visit(VisItemNode *node) = 0;
-    virtual void visit(ModuleNode *node) = 0;
     virtual void visit(FunctionNode *node) = 0;
     virtual void visit(StructNode *node) = 0;
     virtual void visit(EnumerationNode *node) = 0;
@@ -178,6 +178,7 @@ public:
     virtual void visit(TupleExpressionNode *node) = 0;
     virtual void visit(ConditionsNode *node) = 0;
     virtual void visit(LetChainNode *node) = 0;
+    virtual void visit(LetChainConditionNode* node) = 0;
     virtual void visit(MatchArmsNode *node) = 0;
     virtual void visit(MatchArmNode *node) = 0;
     virtual void visit(MatchArmGuardNode *node) = 0;
@@ -199,6 +200,7 @@ public:
     virtual void visit(TupleTypeNode *node) = 0;
     virtual void visit(ArrayTypeNode *node) = 0;
     virtual void visit(SliceTypeNode *node) = 0;
+    virtual void visit(ReferenceTypeNode *node) = 0;
     virtual void visit(InferredTypeNode *node) = 0;
 };
 

@@ -35,7 +35,8 @@ VisItemNode *Parser::ParseVisItem() {
     try {
         node = ParseFunction();
         return node;
-    } catch (std::exception &) {
+    } catch (std::exception &e) {
+        // std::cout << e.what() << '\n';
         delete node;
         node = nullptr;
         parseIndex = start;
@@ -985,9 +986,20 @@ ExpressionNode *Parser::ParseUnaryExpression() {
     Position pos = tokens[parseIndex].pos;
     ExpressionNode *rhs_ = nullptr;
     try {
-        while (tokens[parseIndex].type == TokenType::Minus || tokens[parseIndex].type == TokenType::Not) {
-            TokenType type = tokens[parseIndex].type;
-            parseIndex++;
+        while (tokens[parseIndex].type == TokenType::Minus ||
+            tokens[parseIndex].type == TokenType::Not ||
+            tokens[parseIndex].type == TokenType::And ||
+            tokens[parseIndex].type == TokenType::AndAnd ||
+            tokens[parseIndex].type == TokenType::Mul) {
+            TokenType type = tokens[parseIndex++].type;
+            if (type == TokenType::And && tokens[parseIndex].type == TokenType::Mut) {
+                ConsumeString("mut");
+                type = TokenType::AndMut;
+            }
+            if (type == TokenType::AndAnd && tokens[parseIndex].type == TokenType::Mut) {
+                ConsumeString("mut");
+                type = TokenType::AndAndMut;
+            }
             rhs_ = ParseUnaryExpression();
             return new UnaryExpressionNode(pos, type, rhs_);
         }
@@ -1530,6 +1542,13 @@ PatternWithoutRangeNode *Parser::ParsePatternWithoutRange() {
     }
 
     try {
+        tmp = ParsePathPattern();
+        return tmp;
+    } catch (std::exception &) {
+        parseIndex = start;
+    }
+
+    try {
         tmp = ParseIdentifierPattern();
         return tmp;
     } catch (std::exception &) {
@@ -1564,12 +1583,6 @@ PatternWithoutRangeNode *Parser::ParsePatternWithoutRange() {
         return tmp;
     } catch (std::exception &) {
         parseIndex = start;
-    }
-
-    try {
-        tmp = ParsePathPattern();
-        return tmp;
-    } catch (std::exception &) {
         throw ParseError("Parse Error: Failed to Parse PatternWithoutRange", pos);
     }
 }

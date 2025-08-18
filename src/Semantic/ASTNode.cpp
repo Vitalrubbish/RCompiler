@@ -350,3 +350,8 @@ ArrayTypeNode::~ArrayTypeNode() {
     delete type_;
     delete expression_node_;
 }
+
+ReferenceTypeNode::~ReferenceTypeNode() {
+    delete type_node_;
+}
+

@@ -1,0 +1,8 @@
+fn main() {
+    let a = 10;
+    let b = 10;
+    let c = 10;
+    let x = & mut a;
+    let y = & && & && & mut b;
+    let z = && c;
+}

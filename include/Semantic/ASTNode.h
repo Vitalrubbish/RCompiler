@@ -867,6 +867,7 @@ public:
     }
 };
 
+
 class UnaryExpressionNode : public ExpressionWithoutBlockNode {
 public:
     TokenType type_;
@@ -1657,6 +1658,24 @@ public:
     [[nodiscard]] std::string toString() override {
         return "[" + type_->toString() + "]";
     }
+
+    void accept(ASTVisitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class ReferenceTypeNode: public TypeNoBoundsNode {
+public:
+    bool is_mut_;
+    TypeNode* type_node_;
+
+    ReferenceTypeNode(Position pos, bool is_mut, TypeNode* type_node):
+        TypeNoBoundsNode(pos) {
+        is_mut_ = is_mut;
+        type_node_ = type_node;
+    }
+
+    ~ReferenceTypeNode() override;
 
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);

@@ -13,7 +13,6 @@ public:
     void visit(ASTNode *node) override;
     void visit(CrateNode *node) override;
     void visit(VisItemNode *node) override;
-    void visit(ModuleNode *node) override;
     void visit(FunctionNode *node) override;
     void visit(StructNode *node) override;
     void visit(EnumerationNode *node) override;
@@ -84,6 +83,7 @@ public:
     void visit(TupleExpressionNode *node) override;
     void visit(ConditionsNode *node) override;
     void visit(LetChainNode *node) override;
+    void visit(LetChainConditionNode *node) override;
     void visit(MatchArmsNode *node) override;
     void visit(MatchArmNode *node) override;
     void visit(MatchArmGuardNode *node) override;
@@ -105,6 +105,7 @@ public:
     void visit(TupleTypeNode *node) override;
     void visit(ArrayTypeNode *node) override;
     void visit(SliceTypeNode *node) override;
+    void visit(ReferenceTypeNode *node) override;
     void visit(InferredTypeNode *node) override;
 
     static std::vector<std::shared_ptr<Type>> cap(const std::vector<std::shared_ptr<Type>>& a,

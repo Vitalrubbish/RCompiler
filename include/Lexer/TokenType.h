@@ -30,6 +30,7 @@ enum class TokenType {
     Lt, Gt, Not, Tilde, Plus, Minus, Mul, Div, MOD, Xor, And, Or,
     At, Dot, Comma, Semicolon, Colon, Pound, Dollar, Question,
     Underscore, LBrace, RBrace, LBracket, RBracket, LParen, RParen,
+    AndMut, AndAndMut,
     None
 };
 #endif //TOKENTYPE_H
