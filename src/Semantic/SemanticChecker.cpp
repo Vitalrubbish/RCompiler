@@ -2,52 +2,52 @@
 #include "Semantic/ASTNode.h"
 #include "Semantic/SymbolCollector.h"
 
-extern SymbolCollector* symbol_collector;
+extern SymbolCollector *symbol_collector;
 
 void SemanticChecker::visit(ASTNode *node) {
 }
 
 void SemanticChecker::visit(CrateNode *node) {
-    for (auto* item: node -> items_) {
-        auto* structItem = dynamic_cast<StructNode*> (item);
+    for (auto *item: node->items_) {
+        auto *structItem = dynamic_cast<StructNode *>(item);
         if (structItem) {
-            structItem -> accept(symbol_collector);
+            structItem->accept(symbol_collector);
         }
-        auto* functionItem = dynamic_cast<FunctionNode*> (item);
+        auto *functionItem = dynamic_cast<FunctionNode *>(item);
         if (functionItem) {
-            functionItem -> accept(symbol_collector);
+            functionItem->accept(symbol_collector);
         }
     }
 
-    for (auto* item: node -> items_) {
-        auto* structItem = dynamic_cast<StructNode*> (item);
+    for (auto *item: node->items_) {
+        auto *structItem = dynamic_cast<StructNode *>(item);
         if (structItem) {
             std::vector<StructMember> members;
-            for (auto* field: structItem -> struct_field_nodes_) {
-                Symbol symbol = scope_manager_.lookup(field -> type_node_ -> toString());
-                StructMember member{field -> identifier_, symbol.type_};
+            for (auto *field: structItem->struct_field_nodes_) {
+                Symbol symbol = scope_manager_.lookup(field->type_node_->toString());
+                StructMember member{field->identifier_, symbol.type_};
                 members.emplace_back(member);
             }
-            auto struct_ = std::make_shared<StructType>(structItem -> identifier_, members);
-            scope_manager_.ModifyType(structItem -> identifier_, struct_);
+            auto struct_ = std::make_shared<StructType>(structItem->identifier_, members);
+            scope_manager_.ModifyType(structItem->identifier_, struct_);
             continue;
         }
-        auto* funcItem = dynamic_cast<FunctionNode*> (item);
+        auto *funcItem = dynamic_cast<FunctionNode *>(item);
         if (funcItem) {
-            std::vector<std::shared_ptr<Type>> params;
+            std::vector<std::shared_ptr<Type> > params;
             std::shared_ptr<Type> ret = std::make_shared<PrimitiveType>("void");
-            if (funcItem -> function_parameters_) {
-                for (auto* param: funcItem -> function_parameters_ -> function_params_) {
-                    Symbol symbol = scope_manager_.lookup(param -> type_ -> toString());
+            if (funcItem->function_parameters_) {
+                for (auto *param: funcItem->function_parameters_->function_params_) {
+                    Symbol symbol = scope_manager_.lookup(param->type_->toString());
                     params.emplace_back(symbol.type_);
                 }
             }
-            if (funcItem -> type_) {
-                Symbol symbol = scope_manager_.lookup(funcItem -> type_ -> toString());
+            if (funcItem->type_) {
+                Symbol symbol = scope_manager_.lookup(funcItem->type_->toString());
                 ret = symbol.type_;
             }
             auto func_ = std::make_shared<FunctionType>(params, ret);
-            scope_manager_.ModifyType(funcItem -> identifier_, func_);
+            scope_manager_.ModifyType(funcItem->identifier_, func_);
         }
     }
 
@@ -165,10 +165,57 @@ void SemanticChecker::visit(EmptyStatementNode *node) {
 }
 
 void SemanticChecker::visit(LetStatementNode *node) {
-    if (node->pattern_no_top_alt_) node->pattern_no_top_alt_->accept(this);
-    if (node->type_) node->type_->accept(this);
-    if (node->expression_) node->expression_->accept(this);
-    if (node->block_expression_) node->block_expression_->accept(this);
+    // We now only consider variable declaration
+    bool is_mut = false;
+    std::shared_ptr<Type> type;
+    std::string identifier;
+    if (node->pattern_no_top_alt_) {
+        node->pattern_no_top_alt_->accept(this);
+        auto *tmp = dynamic_cast<IdentifierPatternNode *>(node->pattern_no_top_alt_);
+        identifier = tmp->identifier_;
+        is_mut = tmp->is_mut_;
+    }
+    if (node->type_) {
+        node->type_->accept(this);
+        type = node -> type_ -> type;
+    }
+    if (node->expression_) {
+        node->expression_->accept(this);
+        if (type) {
+            bool match = false;
+            for (auto& it: node -> expression_ -> types) {
+                if (type -> equal(it)) {
+                    match = true;
+                    break;
+                }
+            }
+            if (!match) {
+                throw SemanticError("Semantic Error: Type not match", node -> pos_);
+            }
+        } else {
+            type = node -> expression_ -> types[0];
+        }
+    }
+    if (node->block_expression_) {
+        node->block_expression_->accept(this);
+        if (type) {
+            bool match = false;
+            for (auto& it: node -> block_expression_ -> types) {
+                if (type -> equal(it)) {
+                    match = true;
+                    break;
+                }
+            }
+            if (!match) {
+                throw SemanticError("Semantic Error: Type not match", node -> pos_);
+            }
+        } else {
+            type = node -> block_expression_ -> types[0];
+        }
+    }
+
+    Symbol symbol(node -> pos_, identifier, type, SymbolType::Variable, is_mut);
+    scope_manager_.declare(symbol);
 }
 
 void SemanticChecker::visit(ExpressionStatementNode *node) {
@@ -197,8 +244,8 @@ void SemanticChecker::visit(TypeCastExpressionNode *node) {
 void SemanticChecker::visit(AssignmentExpressionNode *node) {
     if (node->lhs_) {
         node->lhs_->accept(this);
-        if (!node -> lhs_ -> is_assignable_) {
-            throw SemanticError("Semantic Error: Left Value Error: ", node -> pos_);
+        if (!node->lhs_->is_assignable_) {
+            throw SemanticError("Semantic Error: Left Value Error: ", node->pos_);
         }
     }
     if (node->rhs_) node->rhs_->accept(this);
@@ -259,63 +306,130 @@ void SemanticChecker::visit(UnaryExpressionNode *node) {
 }
 
 void SemanticChecker::visit(FunctionCallExpressionNode *node) {
-    if (node->callee_) node->callee_->accept(this);
-    for (auto *param: node->params_) {
-        if (param) param->accept(this);
+    std::shared_ptr<FunctionType> type;
+    if (node->callee_) {
+        node->callee_->accept(this);
+        type = std::dynamic_pointer_cast<FunctionType>(node -> callee_ -> types[0]);
+        if (!type) {
+            throw SemanticError("Semantic Error: Invalid Function Type", node -> pos_);
+        }
     }
+    uint32_t index = 0;
+    for (auto *param: node->params_) {
+        if (param) {
+            param->accept(this);
+            bool match = false;
+            for (auto& it: param -> types) {
+                if (type -> params_[index] -> equal(it)) {
+                    match = true;
+                    ++index;
+                    break;
+                }
+            }
+            if (!match) {
+                throw SemanticError("Semantic Error: Function Param Type Not Match", node -> pos_);
+            }
+        }
+    }
+    if (index != type -> params_.size()) {
+        throw SemanticError("Semantic Error: Incorrect Parameter Numbers", node -> pos_);
+    }
+    node -> types.emplace_back(type -> ret_);
 }
 
 void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
-    if (node->base_) node->base_->accept(this);
-    if (node->index_) node->index_->accept(this);
+    std::shared_ptr<ArrayType> type;
+    if (node->base_) {
+        node->base_->accept(this);
+        auto tmp = node -> base_ -> types[0];
+        type = std::dynamic_pointer_cast<ArrayType>(tmp);
+        if (!type) {
+            throw SemanticError("Semantic Error: Not an array type before the arrayIndexExpression",
+                node -> pos_);
+        }
+    }
+    if (node->index_) {
+        node->index_->accept(this);
+        bool valid = false;
+        for (auto& it: node -> index_ -> types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp && tmp -> name_ == "u32") {
+                valid = true;
+                break;
+            }
+        }
+        if (!valid) {
+            throw SemanticError("Semantic Error: Invalid Index Type", node -> pos_);
+        }
+    }
+    node -> types.emplace_back(type -> base_);
 }
 
 void SemanticChecker::visit(MemberAccessExpressionNode *node) {
-    if (node->base_) node->base_->accept(this);
+    if (node->base_) {
+        node->base_->accept(this);
+        std::shared_ptr<Type> type = node -> base_ -> types[0];
+        auto tmp = std::dynamic_pointer_cast<StructType>(type);
+        if (tmp) {
+            for (auto& it: tmp -> members_) {
+                if (it.name_ == node -> member_.token) {
+                    node -> types.emplace_back(it.type_);
+                    return;
+                }
+            }
+        }
+        for (auto& it: type -> methods_) {
+            if (it.name_ == node -> member_.token) {
+                node -> types.emplace_back(it.type_);
+                return;
+            }
+        }
+        throw SemanticError("Semantic Error: Invalid Member Access Expression", node -> pos_);
+    }
 }
 
 void SemanticChecker::visit(BlockExpressionNode *node) {
     scope_manager_.pushBack();
-    if (node -> statements_) {
-        for (auto* item: node -> statements_ -> statements_) {
-            auto* structItem = dynamic_cast<StructNode*> (item);
+    if (node->statements_) {
+        for (auto *item: node->statements_->statements_) {
+            auto *structItem = dynamic_cast<StructNode *>(item);
             if (structItem) {
-                structItem -> accept(symbol_collector);
+                structItem->accept(symbol_collector);
             }
-            auto* functionItem = dynamic_cast<StructNode*> (item);
+            auto *functionItem = dynamic_cast<StructNode *>(item);
             if (functionItem) {
-                functionItem -> accept(symbol_collector);
+                functionItem->accept(symbol_collector);
             }
         }
-        for (auto* item: node -> statements_ -> statements_) {
-            auto* structItem = dynamic_cast<StructNode*> (item);
+        for (auto *item: node->statements_->statements_) {
+            auto *structItem = dynamic_cast<StructNode *>(item);
             if (structItem) {
                 std::vector<StructMember> members;
-                for (auto* field: structItem -> struct_field_nodes_) {
-                    Symbol symbol = scope_manager_.lookup(field -> type_node_ -> toString());
-                    StructMember member{field -> identifier_, symbol.type_};
+                for (auto *field: structItem->struct_field_nodes_) {
+                    Symbol symbol = scope_manager_.lookup(field->type_node_->toString());
+                    StructMember member{field->identifier_, symbol.type_};
                     members.emplace_back(member);
                 }
-                auto struct_ = std::make_shared<StructType>(structItem -> identifier_, members);
-                scope_manager_.ModifyType(structItem -> identifier_, struct_);
+                auto struct_ = std::make_shared<StructType>(structItem->identifier_, members);
+                scope_manager_.ModifyType(structItem->identifier_, struct_);
                 continue;
             }
-            auto* funcItem = dynamic_cast<FunctionNode*> (item);
+            auto *funcItem = dynamic_cast<FunctionNode *>(item);
             if (funcItem) {
-                std::vector<std::shared_ptr<Type>> params;
+                std::vector<std::shared_ptr<Type> > params;
                 std::shared_ptr<Type> ret = std::make_shared<PrimitiveType>("void");
-                if (funcItem -> function_parameters_) {
-                    for (auto* param: funcItem -> function_parameters_ -> function_params_) {
-                        Symbol symbol = scope_manager_.lookup(param -> type_ -> toString());
+                if (funcItem->function_parameters_) {
+                    for (auto *param: funcItem->function_parameters_->function_params_) {
+                        Symbol symbol = scope_manager_.lookup(param->type_->toString());
                         params.emplace_back(symbol.type_);
                     }
                 }
-                if (funcItem -> type_) {
-                    Symbol symbol = scope_manager_.lookup(funcItem -> type_ -> toString());
+                if (funcItem->type_) {
+                    Symbol symbol = scope_manager_.lookup(funcItem->type_->toString());
                     ret = symbol.type_;
                 }
                 auto func_ = std::make_shared<FunctionType>(params, ret);
-                scope_manager_.ModifyType(funcItem -> identifier_, func_);
+                scope_manager_.ModifyType(funcItem->identifier_, func_);
             }
         }
         node->statements_->accept(this);
@@ -351,26 +465,79 @@ void SemanticChecker::visit(LiteralExpressionNode *node) {
 }
 
 void SemanticChecker::visit(CharLiteralNode *node) {
+    std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("char");
+    node->types.emplace_back(type);
 }
 
 void SemanticChecker::visit(StringLiteralNode *node) {
+    std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("string");
+    node->types.emplace_back(type);
 }
 
 void SemanticChecker::visit(CStringLiteralNode *node) {
+    std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("cstring");
+    node->types.emplace_back(type);
 }
 
 void SemanticChecker::visit(IntLiteralNode *node) {
+    if (node->is_i32_) {
+        std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("i32");
+        node->types.emplace_back(type);
+    }
+    if (node->is_u32_) {
+        std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("u32");
+        node->types.emplace_back(type);
+    }
 }
 
 void SemanticChecker::visit(BoolLiteralNode *node) {
+    std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("bool");
+    node->types.emplace_back(type);
 }
 
 void SemanticChecker::visit(ArrayLiteralNode *node) {
+    bool init = true;
+    std::vector<std::shared_ptr<Type> > element_types;
     for (auto *expr: node->expressions_) {
-        if (expr) expr->accept(this);
+        if (expr) {
+            expr->accept(this);
+            std::vector<std::shared_ptr<Type> > tmp;
+            if (init) {
+                element_types = expr->types;
+                init = false;
+            } else {
+                element_types = cap(node->types, expr->types);
+            }
+        }
     }
-    if (node->lhs_) node->lhs_->accept(this);
-    if (node->rhs_) node->rhs_->accept(this);
+    if (!init) {
+        if (element_types.empty()) {
+            throw SemanticError("Semantic Error: Elements in array literal is not consistent",
+                                node->pos_);
+        }
+        for (const auto &it: element_types) {
+            node->types.emplace_back(std::make_shared<ArrayType>(it,
+                                                                 node->expressions_.size()));
+        }
+        return;
+    }
+    if (node->lhs_) {
+        node->lhs_->accept(this);
+        element_types = node->lhs_->types;
+    }
+    uint32_t size = 0;
+    if (node->rhs_) {
+        node->rhs_->accept(this);
+        auto *tmp = dynamic_cast<IntLiteralNode *>(node->rhs_);
+        if (!tmp) {
+            throw SemanticError(
+                "Semantic Error: The size of an array must be an integer literal", node->pos_);
+        }
+        size = tmp->int_literal_;
+    }
+    for (const auto &it: element_types) {
+        node->types.emplace_back(std::make_shared<ArrayType>(it, size));
+    }
 }
 
 void SemanticChecker::visit(PathExpressionNode *node) {
@@ -380,6 +547,9 @@ void SemanticChecker::visit(PathInExpressionNode *node) {
     for (auto *seg: node->path_indent_segments_) {
         if (seg) seg->accept(this);
     }
+    uint32_t len = node -> path_indent_segments_.size();
+    Symbol symbol = scope_manager_.lookup(node -> path_indent_segments_[len - 1]->identifier_);
+    node -> types.emplace_back(symbol.type_);
 }
 
 void SemanticChecker::visit(QualifiedPathInExpressionNode *node) {
@@ -494,8 +664,11 @@ void SemanticChecker::visit(ParenthesizedTypeNode *node) {
 }
 
 void SemanticChecker::visit(TypePathNode *node) {
-    for (auto *seg: node->type_path_segment_nodes_) {
-        if (seg) seg->accept(this);
+    if (node->type_path_segment_node_) {
+        node->type_path_segment_node_->accept(this);
+        Symbol sym = scope_manager_.lookup(node->type_path_segment_node_->
+            path_indent_segment_node_->identifier_);
+        node -> type = sym.type_;
     }
 }
 
@@ -510,13 +683,48 @@ void SemanticChecker::visit(TupleTypeNode *node) {
 }
 
 void SemanticChecker::visit(ArrayTypeNode *node) {
-    if (node->type_) node->type_->accept(this);
-    if (node->expression_node_) node->expression_node_->accept(this);
+    std::shared_ptr<Type> base_type;
+    uint32_t size = 0;
+    if (node->type_) {
+        node->type_->accept(this);
+        base_type = node -> type;
+    }
+    if (node->expression_node_) {
+        node->expression_node_->accept(this);
+        auto* tmp = dynamic_cast<IntLiteralNode*> (node -> expression_node_);
+        if (!tmp) {
+            throw SemanticError(
+                "Semantic Error: The size of an array must be an integer literal", node->pos_);
+        }
+        size = tmp -> int_literal_;
+    }
+    node -> type = std::make_shared<ArrayType>(base_type, size);
 }
 
 void SemanticChecker::visit(SliceTypeNode *node) {
-    if (node->type_) node->type_->accept(this);
+    std::shared_ptr<Type> base_type;
+    if (node->type_) {
+        node->type_->accept(this);
+        base_type = node -> type_ -> type;
+    }
+    node -> type = std::make_shared<SliceType>(base_type);
 }
 
 void SemanticChecker::visit(InferredTypeNode *node) {
+}
+
+
+/****************  Supportive Function  ****************/
+std::vector<std::shared_ptr<Type> > SemanticChecker::cap(const std::vector<std::shared_ptr<Type> > &a,
+                                                         const std::vector<std::shared_ptr<Type> > &b) {
+    std::vector<std::shared_ptr<Type> > ret;
+    for (const auto &it: a) {
+        for (auto &itp: b) {
+            if (it == itp) {
+                ret.emplace_back(it);
+                break;
+            }
+        }
+    }
+    return ret;
 }

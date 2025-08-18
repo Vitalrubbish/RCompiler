@@ -3,4 +3,4 @@ fn main() {
     let mut b = 2;
     a = 3;
     100 = 5;
-} // Check left-value
+} // Check left-value 1

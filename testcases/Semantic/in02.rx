@@ -12,3 +12,5 @@ fn main() {
     let origin = make_origin();
     println("Origin: ({}, {})", origin.x, origin.y);
 }
+
+// Check Set Relation of items in a scope.

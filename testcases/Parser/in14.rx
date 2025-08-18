@@ -1,0 +1,11 @@
+trait A {
+    fn add(a: i32, b: i32) -> i32 {
+        return a + b;
+    }
+}
+
+impl A for Calculator {
+    // 可以选择重写默认实现，也可以不写而使用默认实现
+}
+
+fn main() {}

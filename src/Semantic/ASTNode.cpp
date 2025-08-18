@@ -329,9 +329,7 @@ ParenthesizedTypeNode::~ParenthesizedTypeNode() {
 }
 
 TypePathNode::~TypePathNode() {
-    for (auto &it: type_path_segment_nodes_) {
-        delete it;
-    }
+    delete type_path_segment_node_;
 }
 
 TypePathSegmentNode::~TypePathSegmentNode() {

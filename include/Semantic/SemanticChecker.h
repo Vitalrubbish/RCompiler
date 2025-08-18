@@ -106,5 +106,8 @@ public:
     void visit(ArrayTypeNode *node) override;
     void visit(SliceTypeNode *node) override;
     void visit(InferredTypeNode *node) override;
+
+    static std::vector<std::shared_ptr<Type>> cap(const std::vector<std::shared_ptr<Type>>& a,
+    const std::vector<std::shared_ptr<Type>>& b);
 };
 #endif //SEMANTICCHECKER_H

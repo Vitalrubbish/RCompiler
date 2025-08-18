@@ -459,6 +459,7 @@ public:
 /****************  Expression With Block  ****************/
 class ExpressionNode : public ASTNode {
 public:
+    std::vector<std::shared_ptr<Type>> types; // We cannot know this when building the AST
     bool is_assignable_ = false;
 
     ExpressionNode(Position pos, bool is_assignable): ASTNode(pos) {
@@ -1100,9 +1101,14 @@ public:
 class IntLiteralNode : public LiteralExpressionNode {
 public:
     int64_t int_literal_;
+    bool is_u32_ = false;
+    bool is_i32_ = false;
 
-    IntLiteralNode(Position pos, const int64_t &int_literal): LiteralExpressionNode(pos) {
+    IntLiteralNode(Position pos, const int64_t &int_literal,
+        bool is_u32, bool is_i32): LiteralExpressionNode(pos) {
         int_literal_ = int_literal;
+        is_u32_ = is_u32;
+        is_i32_ = is_i32;
     }
 
     ~IntLiteralNode() override = default;
@@ -1494,6 +1500,8 @@ public:
 /****************  Types  ****************/
 class TypeNode : public ASTNode {
 public:
+    std::shared_ptr<Type> type;
+
     explicit TypeNode(Position pos): ASTNode(pos) {
     }
 
@@ -1560,21 +1568,17 @@ public:
 
 class TypePathNode : public TypeNoBoundsNode {
 public:
-    std::vector<TypePathSegmentNode *> type_path_segment_nodes_;
+    TypePathSegmentNode * type_path_segment_node_;
 
-    TypePathNode(Position pos,
-                 const std::vector<TypePathSegmentNode *> &type_path_segment_nodes): TypeNoBoundsNode(pos) {
-        type_path_segment_nodes_ = type_path_segment_nodes;
+    TypePathNode(Position pos, TypePathSegmentNode * type_path_segment_node):
+    TypeNoBoundsNode(pos) {
+        type_path_segment_node_ = type_path_segment_node;
     }
 
     ~TypePathNode() override;
 
     std::string toString() override {
-        std::string str;
-        for (auto &it: type_path_segment_nodes_) {
-            str += it->toString();
-        }
-        return str;
+        return type_path_segment_node_->toString();
     }
 
     void accept(ASTVisitor *visitor) override {

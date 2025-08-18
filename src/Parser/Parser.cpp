@@ -35,7 +35,7 @@ VisItemNode *Parser::ParseVisItem() {
     try {
         node = ParseFunction();
         return node;
-    } catch (std::exception &e) {
+    } catch (std::exception &) {
         delete node;
         node = nullptr;
         parseIndex = start;
@@ -1193,7 +1193,19 @@ ExpressionNode *Parser::ParseLiteral() {
     ExpressionNode *rhs = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::IntegerLiteral) {
-            return new IntLiteralNode(pos, StringToInt(tokens[parseIndex++].token));
+            std::string token_ = tokens[parseIndex].token;
+            bool is_u32 = true, is_i32 = true;
+            uint32_t len = token_.size();
+            if (len >= 3) {
+                if (token_.substr(len - 3, 3) == "i32") {
+                    is_i32 = true;
+                }
+                if (token_.substr(len - 3, 3) == "u32") {
+                    is_u32 = true;
+                }
+            }
+            return new IntLiteralNode(pos, StringToInt(tokens[parseIndex++].token),
+                is_u32, is_i32);
         }
         if (tokens[parseIndex].type == TokenType::StringLiteral ||
             tokens[parseIndex].type == TokenType::RawStringLiteral) {
@@ -1720,24 +1732,15 @@ ParenthesizedTypeNode *Parser::ParseParenthesizedType() {
 
 TypePathNode *Parser::ParseTypePath() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<TypePathSegmentNode *> type_path_segment_nodes;
     TypePathSegmentNode *tmp = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::ColonColon) {
             ConsumeString("::");
         }
         tmp = ParseTypePathSegment();
-        type_path_segment_nodes.emplace_back(tmp);
-        while (tokens[parseIndex].type == TokenType::ColonColon) {
-            tmp = ParseTypePathSegment();
-            type_path_segment_nodes.emplace_back(tmp);
-        }
-        return new TypePathNode(pos, type_path_segment_nodes);
+        return new TypePathNode(pos, tmp);
     } catch (std::exception &) {
         delete tmp;
-        for (auto &it: type_path_segment_nodes) {
-            delete it;
-        }
         throw;
     }
 }

@@ -35,9 +35,9 @@ public:
 };
 
 class PrimitiveType : public Type {
+public:
     std::string name_;
 
-public:
     explicit PrimitiveType(std::string name) : name_(std::move(name)) {
     }
 
@@ -62,10 +62,10 @@ struct StructMember {
 };
 
 class StructType : public Type {
+public:
     std::string name_;
     std::vector<StructMember> members_;
 
-public:
     StructType(std::string name, std::vector<StructMember> members)
         : name_(std::move(name)), members_(std::move(members)) {
     }
@@ -93,10 +93,10 @@ public:
 };
 
 class EnumerationType : public Type {
+public:
     std::string name_;
     std::vector<std::string> variants_;
 
-public:
     EnumerationType(std::string name, std::vector<std::string> variants)
         : name_(std::move(name)), variants_(std::move(variants)) {
     }
@@ -117,10 +117,10 @@ public:
 };
 
 class FunctionType : public Type {
+public:
     std::vector<std::shared_ptr<Type> > params_;
     std::shared_ptr<Type> ret_;
 
-public:
     FunctionType(std::vector<std::shared_ptr<Type>> params, std::shared_ptr<Type> ret)
         : params_(std::move(params)), ret_(std::move(ret)) {
     }
@@ -152,9 +152,9 @@ public:
 };
 
 class TupleType : public Type {
+public:
     std::vector<std::shared_ptr<Type> > types_;
 
-public:
     explicit TupleType(std::vector<std::shared_ptr<Type> > types)
         : types_(std::move(types)) {
     }
@@ -166,10 +166,6 @@ public:
         for (const auto &type: types_) {
             str += type->toString();
             str += ", ";
-        }
-        if (!types_.empty()) {
-            str.pop_back(); // Remove space
-            str.pop_back(); // Remove comma
         }
         str += ")";
         return str;
@@ -209,10 +205,10 @@ public:
 };
 
 class ArrayType : public Type {
+public:
     std::shared_ptr<Type> base_;
     uint32_t length_;
 
-public:
     ArrayType(std::shared_ptr<Type> base, uint32_t length)
         : base_(std::move(base)), length_(length) {
     }

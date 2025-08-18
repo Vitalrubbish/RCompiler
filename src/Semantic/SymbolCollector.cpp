@@ -11,17 +11,19 @@ void SymbolCollector::visit(CrateNode *node) {
     }
 }
 
-void SymbolCollector::visit(VisItemNode *node) {}
+void SymbolCollector::visit(VisItemNode *node) {
+}
 
-void SymbolCollector::visit(ModuleNode *node) {}
+void SymbolCollector::visit(ModuleNode *node) {
+}
 
 void SymbolCollector::visit(FunctionNode *node) {
-    Symbol symbol(node -> pos_, node -> identifier_, nullptr, SymbolType::Function, false);
+    Symbol symbol(node->pos_, node->identifier_, nullptr, SymbolType::Function, false);
     scope_manager_.declare(symbol);
 }
 
 void SymbolCollector::visit(StructNode *node) {
-    Symbol symbol(node -> pos_, node -> identifier_, nullptr, SymbolType::Struct, false);
+    Symbol symbol(node->pos_, node->identifier_, nullptr, SymbolType::Struct, false);
     scope_manager_.declare(symbol);
 }
 
@@ -36,9 +38,11 @@ void SymbolCollector::visit(ConstantItemNode *node) {
     if (node->expression_node_) node->expression_node_->accept(this);
 }
 
-void SymbolCollector::visit(TraitNode *node) {}
+void SymbolCollector::visit(TraitNode *node) {
+}
 
-void SymbolCollector::visit(ImplementationNode *node) {}
+void SymbolCollector::visit(ImplementationNode *node) {
+}
 
 void SymbolCollector::visit(AssociatedItemNode *node) {
     if (node->constant_item_node_) node->constant_item_node_->accept(this);
@@ -71,7 +75,8 @@ void SymbolCollector::visit(FunctionParamPatternNode *node) {
     if (node->type_) node->type_->accept(this);
 }
 
-void SymbolCollector::visit(StructFieldNode *node) {}
+void SymbolCollector::visit(StructFieldNode *node) {
+}
 
 void SymbolCollector::visit(EnumVariantNode *node) {
     if (node->enum_variant_struct_node_) node->enum_variant_struct_node_->accept(this);
@@ -390,9 +395,7 @@ void SymbolCollector::visit(ParenthesizedTypeNode *node) {
 }
 
 void SymbolCollector::visit(TypePathNode *node) {
-    for (auto *seg: node->type_path_segment_nodes_) {
-        if (seg) seg->accept(this);
-    }
+    if (node->type_path_segment_node_) node->type_path_segment_node_->accept(this);
 }
 
 void SymbolCollector::visit(TypePathSegmentNode *node) {
