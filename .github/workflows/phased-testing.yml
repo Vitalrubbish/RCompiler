@@ -14,17 +14,15 @@ jobs:
       - name: Check code
         uses: actions/checkout@v4
 
-      - name: Create Directory
+      - name: Build
         run: mkdir -p cmake-build-debug
-
-      - name: CMake-test
-        run: cmake -S . -B cmake-build-debug
-
-      - name: Build project
-        run: cmake --build cmake-build-debug --config Release
-
-      - name: Permission
-        run: chmod +x ./.ci/run_parser_tests.sh
+             cmake -S . -B cmake-build-debug
+             cmake --build cmake-build-debug --config Release
+             chmod +x ./.ci/run_parser_tests.sh
+             chmod +x ./.ci/run_semantic_tests.sh
 
       - name: Run Parser Test
         run: ./.ci/run_parser_tests.sh
+
+      - name: Run Semantic Test
+        run: ./.ci/run_semantic_tests.sh

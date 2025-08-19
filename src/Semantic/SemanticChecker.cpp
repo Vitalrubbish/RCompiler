@@ -62,15 +62,34 @@ void SemanticChecker::visit(VisItemNode *node) {
 
 void SemanticChecker::visit(FunctionNode *node) {
     if (node->function_parameters_) node->function_parameters_->accept(this);
-    if (node->type_) node->type_->accept(this);
+    // if (node->type_) node->type_->accept(this);
     scope_manager_.pushBack();
     if (node -> function_parameters_) {
         for (auto& it: node->function_parameters_->function_params_) {
-            it->accept(this);
+            // it->accept(this);
+            // TODO Fix FunctionParameterNode
             auto* pattern_node = dynamic_cast<IdentifierPatternNode*>(it -> pattern_no_top_alt_node_);
             if (pattern_node) {
                 std::string identifier = pattern_node -> identifier_;
                 bool is_mut = pattern_node -> is_mut_;
+                std::shared_ptr<Type> type = it->type_->type;
+                Symbol symbol(node->pos_, identifier, type, SymbolType::Variable, is_mut);
+                scope_manager_.declare(symbol);
+                continue;
+            }
+            auto* path_pattern = dynamic_cast<PathPatternNode*> (it -> pattern_no_top_alt_node_);
+            if (path_pattern) {
+                bool is_mut;
+                std::string identifier;
+                auto* expression = dynamic_cast<PathInExpressionNode*>(path_pattern->expression_);
+                if (expression) {
+                    uint32_t len = expression -> path_indent_segments_.size();
+                    if (len == 0) {
+                        throw SemanticError("Semantic Error: Path Pattern Error", node->pos_);
+                    }
+                    identifier = expression -> path_indent_segments_[len - 1] -> identifier_;
+                    is_mut = false;
+                }
                 std::shared_ptr<Type> type = it->type_->type;
                 Symbol symbol(node->pos_, identifier, type, SymbolType::Variable, is_mut);
                 scope_manager_.declare(symbol);
@@ -126,7 +145,7 @@ void SemanticChecker::visit(FunctionParametersNode *node) {
 }
 
 void SemanticChecker::visit(FunctionParamNode *node) {
-    if (node->pattern_no_top_alt_node_) node->pattern_no_top_alt_node_->accept(this);
+    // if (node->pattern_no_top_alt_node_) node->pattern_no_top_alt_node_->accept(this);
     if (node->type_) node->type_->accept(this);
 }
 
@@ -797,7 +816,10 @@ void SemanticChecker::visit(PathIndentSegmentNode *node) {
 }
 
 void SemanticChecker::visit(StructExpressionNode *node) {
-    if (node->path_in_expression_node_) node->path_in_expression_node_->accept(this);
+    if (node->path_in_expression_node_) {
+        node->path_in_expression_node_->accept(this);
+        node -> types.emplace_back(node -> path_in_expression_node_ -> types[0]);
+    }
     if (node->struct_expr_fields_node_) node->struct_expr_fields_node_->accept(this);
     if (node->struct_base_node_) node->struct_base_node_->accept(this);
 }
@@ -818,7 +840,10 @@ void SemanticChecker::visit(StructBaseNode *node) {
 }
 
 void SemanticChecker::visit(GroupedExpressionNode *node) {
-    if (node->expression_) node->expression_->accept(this);
+    if (node->expression_) {
+        node->expression_->accept(this);
+        node -> types = node -> expression_ -> types;
+    }
 }
 
 void SemanticChecker::visit(TupleExpressionNode *node) {
