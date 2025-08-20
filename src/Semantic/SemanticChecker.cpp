@@ -244,7 +244,9 @@ void SemanticChecker::visit(ComparisonExpressionNode *node) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
-                    tmp -> name_ == "isize" || tmp -> name_ == "usize") {
+                    tmp -> name_ == "isize" || tmp -> name_ == "usize" ||
+                    tmp -> name_ == "char" || tmp -> name_ == "string" ||
+                    tmp -> name_ == "cstring") {
                     valid = true;
                 }
             }
@@ -275,6 +277,7 @@ void SemanticChecker::visit(AssignmentExpressionNode *node) {
         }
     }
     if (node->rhs_) node->rhs_->accept(this);
+    node -> types.emplace_back(scope_manager_.lookup("void").type_);
 }
 
 void SemanticChecker::visit(ContinueExpressionNode *node) {
@@ -619,6 +622,11 @@ void SemanticChecker::visit(BlockExpressionNode *node) {
     scope_manager_.current_scope -> index = 0;
     if (node->statements_) {
         node->statements_->accept(this);
+        if (node -> statements_ -> expression_) {
+            node -> types = node -> statements_ -> expression_ -> types;
+        } else {
+            node -> types.emplace_back(scope_manager_.lookup("void").type_);
+        }
     }
     scope_manager_.PopScope();
 }
@@ -640,6 +648,26 @@ void SemanticChecker::visit(IfExpressionNode *node) {
     if (node->true_block_expression_) node->true_block_expression_->accept(this);
     if (node->false_block_expression_) node->false_block_expression_->accept(this);
     if (node->if_expression_) node->if_expression_->accept(this);
+    if (node -> true_block_expression_ && node -> false_block_expression_) {
+        std::vector<std::shared_ptr<Type>> types = cap(node -> true_block_expression_ -> types,
+            node -> false_block_expression_ -> types);
+        if (types.empty()) {
+            throw SemanticError("Semantic Error: Type not match in if Expression", node -> pos_);
+        }
+        node -> types = types;
+        return;
+    }
+    if (node -> true_block_expression_ && node -> if_expression_) {
+        std::vector<std::shared_ptr<Type>> types = cap(node -> true_block_expression_ -> types,
+            node -> if_expression_ -> types);
+        if (types.empty()) {
+            throw SemanticError("Semantic Error: Type not match in if Expression", node -> pos_);
+        }
+        node -> types = types;
+        return;
+    }
+    node -> types.emplace_back(scope_manager_.lookup("void").type_);
+    // TODO: To be Tested
 }
 
 void SemanticChecker::visit(MatchExpressionNode *node) {
