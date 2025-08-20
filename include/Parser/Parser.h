@@ -172,8 +172,6 @@ public:
 
     SliceTypeNode *ParseSliceType();
 
-    InferredTypeNode *ParseInferredType();
-
     /****************  Paths  ****************/
     PathIndentSegmentNode *ParsePathIndentSegment();
 };

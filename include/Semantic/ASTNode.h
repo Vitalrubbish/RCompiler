@@ -99,7 +99,6 @@ class TypePathSegmentNode;
 class TupleTypeNode;
 class ArrayTypeNode;
 class SliceTypeNode;
-class InferredTypeNode;
 
 class ASTNode {
 public:
@@ -1680,22 +1679,6 @@ public:
     }
 
     ~ReferenceTypeNode() override;
-
-    void accept(ASTVisitor *visitor) override {
-        visitor->visit(this);
-    }
-};
-
-class InferredTypeNode : public TypeNoBoundsNode {
-public:
-    explicit InferredTypeNode(Position pos): TypeNoBoundsNode(pos) {
-    }
-
-    ~InferredTypeNode() override = default;
-
-    [[nodiscard]] std::string toString() override {
-        return "_";
-    }
 
     void accept(ASTVisitor *visitor) override {
         visitor->visit(this);

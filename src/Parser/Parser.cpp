@@ -1733,13 +1733,7 @@ TypeNoBoundsNode *Parser::ParseTypeNoBounds() {
         return ret;
     } catch (std::exception &) {
         parseIndex = start;
-    }
-
-    try {
-        ret = ParseInferredType();
-        return ret;
-    } catch (std::exception &) {
-        throw ParseError("Parse Error: Failed to Parse Type", pos);
+        throw ParseError("Parse Error: Failed to Parse TypeNoBounds", pos);
     }
 }
 
@@ -1831,16 +1825,6 @@ SliceTypeNode *Parser::ParseSliceType() {
         return new SliceTypeNode(pos, type_node);
     } catch (std::exception &) {
         delete type_node;
-        throw;
-    }
-}
-
-InferredTypeNode *Parser::ParseInferredType() {
-    Position pos = tokens[parseIndex].pos;
-    try {
-        ConsumeString("_");
-        return new InferredTypeNode(pos);
-    } catch (std::exception &) {
         throw;
     }
 }

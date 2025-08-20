@@ -1,0 +1,8 @@
+// main.rs
+fn main() {
+    // 正确：比较结果（bool）和 bool 字面量进行逻辑与
+    let a: bool = (10 > 5) && true;
+
+    // 错误：逻辑与的操作数不能是整数
+    let b: bool = 10 && 5;
+}

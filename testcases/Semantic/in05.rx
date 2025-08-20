@@ -1,0 +1,7 @@
+fn main() {
+    // 正确：两个 i32 相加
+    let x: i32 = 5 + 10;
+
+    // 错误：i32 和 bool 不能相加
+    let y = 5 + false;
+} // Test Type Check of Basic Expression

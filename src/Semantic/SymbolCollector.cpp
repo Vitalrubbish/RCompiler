@@ -19,6 +19,9 @@ void SymbolCollector::visit(FunctionNode *node) {
         std::vector<std::shared_ptr<Type>>{}, std::make_shared<PrimitiveType>("void"));
     Symbol symbol(node->pos_, node->identifier_, type, SymbolType::Function, false);
     scope_manager_.declare(symbol);
+    if (node -> block_expression_) {
+        node -> block_expression_ -> accept(this);
+    }
 }
 
 void SymbolCollector::visit(StructNode *node) {
@@ -31,6 +34,8 @@ void SymbolCollector::visit(StructNode *node) {
 }
 
 void SymbolCollector::visit(EnumerationNode *node) {
+    std::shared_ptr<Type> type = std::make_shared<EnumerationType>(
+        node -> identifier_, std::vector<std::string>{});
     for (auto *variant: node->enum_variant_nodes_) {
         if (variant) variant->accept(this);
     }
@@ -224,7 +229,9 @@ void SymbolCollector::visit(MemberAccessExpressionNode *node) {
 }
 
 void SymbolCollector::visit(BlockExpressionNode *node) {
+    scope_manager_.AddScope();
     if (node->statements_) node->statements_->accept(this);
+    scope_manager_.PopScope();
 }
 
 void SymbolCollector::visit(LoopExpressionNode *node) {
@@ -427,6 +434,3 @@ void SymbolCollector::visit(SliceTypeNode *node) {
 void SymbolCollector::visit(ReferenceTypeNode *node) {
 }
 
-
-void SymbolCollector::visit(InferredTypeNode *node) {
-}

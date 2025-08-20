@@ -5,12 +5,14 @@
 
 
 class ScopeManager {
-    std::vector<Scope> scopes_;
-
 public:
+    std::shared_ptr<Scope> root;
+    std::shared_ptr<Scope> current_scope;
+
     ScopeManager() {
         Position pos(0);
-        pushBack();
+        root = std::make_shared<Scope>();
+        current_scope = root;
         std::shared_ptr<Type> i32_type = std::make_shared<PrimitiveType>("i32");
         std::shared_ptr<Type> u32_type = std::make_shared<PrimitiveType>("u32");
         std::shared_ptr<Type> isize_type = std::make_shared<PrimitiveType>("isize");
@@ -84,43 +86,51 @@ public:
                 std::vector<std::shared_ptr<Type>>{}, usize_type)});
     }
 
-    void pushBack() {
-        scopes_.emplace_back();
+    ~ScopeManager() = default;
+
+    void AddScope(){
+        std::shared_ptr<Scope> new_scope = std::make_shared<Scope>();
+        if (current_scope) {
+            current_scope->AddNextLevelScope(new_scope);
+            new_scope->parent_scope_ = current_scope;
+            current_scope = new_scope;
+        }
     }
 
-    void popBack() {
-        scopes_.pop_back();
+    void PopScope() {
+        if (current_scope->parent_scope_) {
+            current_scope = current_scope->parent_scope_;
+        } else {
+            throw SemanticError("Semantic Error: Cannot pop root scope");
+        }
     }
 
-    void declare(const Symbol& symbol) {
+    void declare(const Symbol& symbol) const {
         try {
-            uint32_t len = scopes_.size();
-            scopes_[len - 1].declare(symbol);
+            current_scope -> declare(symbol);
         } catch (std::exception &) {
             throw;
         }
     }
 
-    Symbol lookup(const std::string &name) {
-        auto len = static_cast<int32_t>(scopes_.size());
-        for (int32_t i = len - 1; i >= 0; --i) {
-            Symbol ret = scopes_[i].lookup(name);
-            if (ret.symbol_type_ != SymbolType::None) {
-                return ret;
+    [[nodiscard]] Symbol lookup(const std::string& name) const {
+        std::shared_ptr<Scope> cursor = current_scope;
+        while (cursor != nullptr) {
+            Symbol symbol = cursor -> lookup(name);
+            if (symbol.symbol_type_ != SymbolType::None) {
+                return symbol;
             }
+            cursor = cursor -> parent_scope_;
         }
-        throw SemanticError("Semantic Error: Symbol not declared: " + name);
+        throw SemanticError("Semantic Error: Symbol not found");
     }
 
-    void ModifyType(const std::string &name, const std::shared_ptr<Type>& type) {
-        uint32_t len = scopes_.size();
-        scopes_[len - 1].ModifyType(name, type);
+    void ModifyType(const std::string &name, const std::shared_ptr<Type>& type) const {
+        current_scope -> ModifyType(name, type);
     }
 
     [[nodiscard]] bool in_loop() const {
-        uint32_t len = scopes_.size();
-        if (len == 0) return false;
-        return scopes_[len - 1].in_loop_;
+        return current_scope -> in_loop_;
     }
 };
 #endif //SCOPEMANAGER_H

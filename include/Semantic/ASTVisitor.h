@@ -99,7 +99,6 @@ class TupleTypeNode;
 class ArrayTypeNode;
 class SliceTypeNode;
 class ReferenceTypeNode;
-class InferredTypeNode;
 
 class ASTVisitor {
 public:
@@ -201,7 +200,6 @@ public:
     virtual void visit(ArrayTypeNode *node) = 0;
     virtual void visit(SliceTypeNode *node) = 0;
     virtual void visit(ReferenceTypeNode *node) = 0;
-    virtual void visit(InferredTypeNode *node) = 0;
 };
 
 

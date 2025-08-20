@@ -1,0 +1,12 @@
+
+fn add(a: i32, b: i32) -> i32 {
+    return a + b;
+}
+
+fn main() {
+    // 正确：传递了两个 i32
+    let result = add(3, 4);
+
+    // 错误：第二个参数类型不匹配
+    let type_error = add(3, true);
+} // Type Check: Parameter Type

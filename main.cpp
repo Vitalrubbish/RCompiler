@@ -7,6 +7,8 @@
 #include "Semantic/ASTVisitor.h"
 #include "Semantic/SemanticChecker.h"
 #include "Semantic/SymbolCollector.h"
+#include "Semantic/SymbolManager.h"
+
 
 Lexer lexer;
 std::vector<Token> tokens;
@@ -14,9 +16,10 @@ ASTNode *root = nullptr;
 ScopeManager scope_manager;
 SymbolCollector *symbol_collector = new SymbolCollector{scope_manager};
 SemanticChecker *semantic_checker = new SemanticChecker{scope_manager};
+SymbolManager *symbol_manager = new SymbolManager{scope_manager};
 
 int main() {
-    // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
+    // freopen("../testcases_official/Semantic/array02.rx", "r", stdin);
     // freopen("../testcases/Semantic/in03.rx", "r", stdin);
     std::string text, line;
     while (std::getline(std::cin, line)) {
@@ -48,10 +51,12 @@ int main() {
         Parser parser(tokens);
         root = parser.ParseCrate(); // Parser
 
+        root->accept(symbol_collector);
+        root->accept(symbol_manager);
         root->accept(semantic_checker);
         std::cout << 0 << '\r';
     } catch (std::exception &error) {
-        std::cout << error.what() << '\n';
+        // std::cout << error.what() << '\n';
         std::cout << -1 << '\r';
     }
     delete root;

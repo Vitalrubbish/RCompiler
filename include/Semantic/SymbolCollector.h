@@ -106,6 +106,5 @@ public:
     void visit(ArrayTypeNode *node) override;
     void visit(SliceTypeNode *node) override;
     void visit(ReferenceTypeNode *node) override;
-    void visit(InferredTypeNode *node) override;
 };
 #endif //SYMBOLCOLLECTOR_H

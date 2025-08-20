@@ -62,7 +62,7 @@ public:
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Primitive) return false;
-        auto ptr = std::static_pointer_cast<PrimitiveType>(other);
+        auto ptr = std::dynamic_pointer_cast<PrimitiveType>(other);
         return name_ == ptr->name_;
     }
 };
@@ -97,7 +97,7 @@ public:
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Struct) return false;
-        auto ptr = std::static_pointer_cast<StructType>(other);
+        auto ptr = std::dynamic_pointer_cast<StructType>(other);
         if (name_ != ptr->name_ || members_.size() != ptr->members_.size()) return false;
         for (size_t i = 0; i < members_.size(); i++) {
             if (members_[i].name_ != ptr->members_[i].name_ ||
@@ -134,7 +134,7 @@ public:
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Enumeration) return false;
-        auto ptr = std::static_pointer_cast<EnumerationType>(other);
+        auto ptr = std::dynamic_pointer_cast<EnumerationType>(other);
         return name_ == ptr->name_ && variants_ == ptr->variants_;
     }
 };
@@ -174,7 +174,7 @@ public:
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Function) return false;
-        auto ptr = std::static_pointer_cast<FunctionType>(other);
+        auto ptr = std::dynamic_pointer_cast<FunctionType>(other);
         if (!ret_->equal(ptr->ret_) || params_.size() != ptr->params_.size()) return false;
         for (size_t i = 0; i < params_.size(); i++) {
             if (!params_[i]->equal(ptr->params_[i])) return false;
@@ -215,7 +215,7 @@ public:
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Tuple) return false;
-        auto ptr = std::static_pointer_cast<TupleType>(other);
+        auto ptr = std::dynamic_pointer_cast<TupleType>(other);
         if (types_.size() != ptr->types_.size()) return false;
         for (size_t i = 0; i < types_.size(); i++) {
             if (!types_[i]->equal(ptr->types_[i])) return false;
@@ -249,7 +249,7 @@ public:
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Slice) return false;
-        auto ptr = std::static_pointer_cast<SliceType>(other);
+        auto ptr = std::dynamic_pointer_cast<SliceType>(other);
         return type_->equal(ptr->type_);
     }
 };
@@ -282,13 +282,9 @@ public:
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Array) return false;
-        auto ptr = std::static_pointer_cast<ArrayType>(other);
+        auto ptr = std::dynamic_pointer_cast<ArrayType>(other);
         return length_ == ptr->length_ && base_->equal(ptr->base_);
     }
-};
-
-class InferredType : public Type {
-    // TODO: Implementation
 };
 
 #endif //TYPE_H

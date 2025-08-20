@@ -8,50 +8,8 @@ void SemanticChecker::visit(ASTNode *node) {
 }
 
 void SemanticChecker::visit(CrateNode *node) {
-    for (auto *item: node->items_) {
-        auto *structItem = dynamic_cast<StructNode *>(item);
-        if (structItem) {
-            structItem->accept(symbol_collector);
-        }
-        auto *functionItem = dynamic_cast<FunctionNode *>(item);
-        if (functionItem) {
-            functionItem->accept(symbol_collector);
-        }
-    }
-
-    for (auto *item: node->items_) {
-        auto *structItem = dynamic_cast<StructNode *>(item);
-        if (structItem) {
-            std::vector<StructMember> members;
-            for (auto *field: structItem->struct_field_nodes_) {
-                Symbol symbol = scope_manager_.lookup(field->type_node_->toString());
-                StructMember member{field->identifier_, symbol.type_};
-                members.emplace_back(member);
-            }
-            auto struct_ = std::make_shared<StructType>(structItem->identifier_, members);
-            scope_manager_.ModifyType(structItem->identifier_, struct_);
-            continue;
-        }
-        auto *funcItem = dynamic_cast<FunctionNode *>(item);
-        if (funcItem) {
-            std::vector<std::shared_ptr<Type> > params;
-            std::shared_ptr<Type> ret = std::make_shared<PrimitiveType>("void");
-            if (funcItem->function_parameters_) {
-                for (auto *param: funcItem->function_parameters_->function_params_) {
-                    Symbol symbol = scope_manager_.lookup(param->type_->toString());
-                    params.emplace_back(symbol.type_);
-                }
-            }
-            if (funcItem->type_) {
-                Symbol symbol = scope_manager_.lookup(funcItem->type_->toString());
-                ret = symbol.type_;
-            }
-            auto func_ = std::make_shared<FunctionType>(params, ret);
-            scope_manager_.ModifyType(funcItem->identifier_, func_);
-        }
-    }
-
-
+    scope_manager_.current_scope = scope_manager_.root;
+    scope_manager_.current_scope -> index = 0;
     for (auto *item: node->items_) {
         if (item) item->accept(this);
     }
@@ -62,11 +20,10 @@ void SemanticChecker::visit(VisItemNode *node) {
 
 void SemanticChecker::visit(FunctionNode *node) {
     if (node->function_parameters_) node->function_parameters_->accept(this);
-    // if (node->type_) node->type_->accept(this);
-    scope_manager_.pushBack();
+    if (node->type_) node->type_->accept(this);
     if (node -> function_parameters_) {
         for (auto& it: node->function_parameters_->function_params_) {
-            // it->accept(this);
+            it->accept(this);
             // TODO Fix FunctionParameterNode
             auto* pattern_node = dynamic_cast<IdentifierPatternNode*>(it -> pattern_no_top_alt_node_);
             if (pattern_node) {
@@ -97,7 +54,6 @@ void SemanticChecker::visit(FunctionNode *node) {
         }
     }
     if (node->block_expression_) node->block_expression_->accept(this);
-    scope_manager_.popBack();
 }
 
 void SemanticChecker::visit(StructNode *node) {
@@ -302,7 +258,7 @@ void SemanticChecker::visit(AssignmentExpressionNode *node) {
     if (node->lhs_) {
         node->lhs_->accept(this);
         if (!node->lhs_->is_assignable_) {
-            throw SemanticError("Semantic Error: Left Value Error: ", node->pos_);
+            throw SemanticError("Semantic Error: Left Value Error", node->pos_);
         }
     }
     if (node->rhs_) node->rhs_->accept(this);
@@ -643,50 +599,13 @@ void SemanticChecker::visit(MemberAccessExpressionNode *node) {
 }
 
 void SemanticChecker::visit(BlockExpressionNode *node) {
+    scope_manager_.current_scope = scope_manager_.current_scope
+        ->next_level_scopes_[scope_manager_.current_scope->index++];
+    scope_manager_.current_scope -> index = 0;
     if (node->statements_) {
-        for (auto *item: node->statements_->statements_) {
-            auto *structItem = dynamic_cast<StructNode *>(item);
-            if (structItem) {
-                structItem->accept(symbol_collector);
-            }
-            auto *functionItem = dynamic_cast<StructNode *>(item);
-            if (functionItem) {
-                functionItem->accept(symbol_collector);
-            }
-        }
-        for (auto *item: node->statements_->statements_) {
-            auto *structItem = dynamic_cast<StructNode *>(item);
-            if (structItem) {
-                std::vector<StructMember> members;
-                for (auto *field: structItem->struct_field_nodes_) {
-                    Symbol symbol = scope_manager_.lookup(field->type_node_->toString());
-                    StructMember member{field->identifier_, symbol.type_};
-                    members.emplace_back(member);
-                }
-                auto struct_ = std::make_shared<StructType>(structItem->identifier_, members);
-                scope_manager_.ModifyType(structItem->identifier_, struct_);
-                continue;
-            }
-            auto *funcItem = dynamic_cast<FunctionNode *>(item);
-            if (funcItem) {
-                std::vector<std::shared_ptr<Type> > params;
-                std::shared_ptr<Type> ret = std::make_shared<PrimitiveType>("void");
-                if (funcItem->function_parameters_) {
-                    for (auto *param: funcItem->function_parameters_->function_params_) {
-                        Symbol symbol = scope_manager_.lookup(param->type_->toString());
-                        params.emplace_back(symbol.type_);
-                    }
-                }
-                if (funcItem->type_) {
-                    Symbol symbol = scope_manager_.lookup(funcItem->type_->toString());
-                    ret = symbol.type_;
-                }
-                auto func_ = std::make_shared<FunctionType>(params, ret);
-                scope_manager_.ModifyType(funcItem->identifier_, func_);
-            }
-        }
         node->statements_->accept(this);
     }
+    scope_manager_.PopScope();
 }
 
 void SemanticChecker::visit(LoopExpressionNode *node) {
@@ -717,41 +636,41 @@ void SemanticChecker::visit(LiteralExpressionNode *node) {
 }
 
 void SemanticChecker::visit(CharLiteralNode *node) {
-    std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("char");
+    std::shared_ptr<Type> type = scope_manager_.lookup("char").type_;
     node->types.emplace_back(type);
 }
 
 void SemanticChecker::visit(StringLiteralNode *node) {
-    std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("string");
+    std::shared_ptr<Type> type = scope_manager_.lookup("string").type_;
     node->types.emplace_back(type);
 }
 
 void SemanticChecker::visit(CStringLiteralNode *node) {
-    std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("cstring");
+    std::shared_ptr<Type> type = scope_manager_.lookup("cstring").type_;
     node->types.emplace_back(type);
 }
 
 void SemanticChecker::visit(IntLiteralNode *node) {
     if (node->is_i32_) {
-        std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("i32");
+        std::shared_ptr<Type> type = scope_manager_.lookup("i32").type_;
         node->types.emplace_back(type);
     }
     if (node->is_u32_) {
-        std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("u32");
+        std::shared_ptr<Type> type = scope_manager_.lookup("u32").type_;
         node->types.emplace_back(type);
     }
     if (node->is_usize_) {
-        std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("usize");
+        std::shared_ptr<Type> type = scope_manager_.lookup("usize").type_;
         node->types.emplace_back(type);
     }
     if (node->is_isize_) {
-        std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("isize");
+        std::shared_ptr<Type> type = scope_manager_.lookup("isize").type_;
         node->types.emplace_back(type);
     }
 }
 
 void SemanticChecker::visit(BoolLiteralNode *node) {
-    std::shared_ptr<Type> type = std::make_shared<PrimitiveType>("bool");
+    std::shared_ptr<Type> type = scope_manager_.lookup("bool").type_;
     node->types.emplace_back(type);
 }
 
@@ -766,7 +685,7 @@ void SemanticChecker::visit(ArrayLiteralNode *node) {
                 element_types = expr->types;
                 init = false;
             } else {
-                element_types = cap(node->types, expr->types);
+                element_types = cap(element_types, expr->types);
             }
         }
     }
@@ -954,7 +873,7 @@ void SemanticChecker::visit(ArrayTypeNode *node) {
     uint32_t size = 0;
     if (node->type_) {
         node->type_->accept(this);
-        base_type = node -> type;
+        base_type = node -> type_ -> type;
     }
     if (node->expression_node_) {
         node->expression_node_->accept(this);
@@ -981,9 +900,6 @@ void SemanticChecker::visit(ReferenceTypeNode *node) {
 }
 
 
-void SemanticChecker::visit(InferredTypeNode *node) {
-}
-
 void SemanticChecker::visit(ConstParamNode *node) {
 }
 
@@ -1002,7 +918,7 @@ std::vector<std::shared_ptr<Type> > SemanticChecker::cap(const std::vector<std::
     std::vector<std::shared_ptr<Type> > ret;
     for (const auto &it: a) {
         for (auto &itp: b) {
-            if (it == itp) {
+            if (it -> equal(itp)) {
                 ret.emplace_back(it);
                 break;
             }
