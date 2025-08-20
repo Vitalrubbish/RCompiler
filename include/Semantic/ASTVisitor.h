@@ -2,6 +2,7 @@
 #define ASTVISITOR_H
 #include "ScopeManager.h"
 
+class VisItemStatementNode;
 class ASTNode;
 class CrateNode;
 class VisItemNode;
@@ -130,6 +131,7 @@ public:
     virtual void visit(StatementsNode *node) = 0;
     virtual void visit(EmptyStatementNode *node) = 0;
     virtual void visit(LetStatementNode *node) = 0;
+    virtual void visit(VisItemStatementNode *node) = 0;
     virtual void visit(ExpressionStatementNode *node) = 0;
     virtual void visit(ExpressionNode *node) = 0;
     virtual void visit(ExpressionWithoutBlockNode *node) = 0;

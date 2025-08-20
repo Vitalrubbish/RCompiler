@@ -1,0 +1,14 @@
+fn calculate(param: i32) -> i32 {
+    if param > 10 {
+        let param: i32 = 99;
+        return param;
+    }
+    return param * 2;
+}
+
+fn main() {
+    let caller_var: i32 = 5;
+    let result1 = calculate(20);
+    let result2 = calculate(4);
+    let should_fail = param;
+} // Scope Tree Test - 2

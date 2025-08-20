@@ -36,6 +36,7 @@ public:
     void visit(StatementsNode *node) override;
     void visit(EmptyStatementNode *node) override;
     void visit(LetStatementNode *node) override;
+    void visit(VisItemStatementNode *node) override;
     void visit(ExpressionStatementNode *node) override;
     void visit(ExpressionNode *node) override;
     void visit(ExpressionWithoutBlockNode *node) override;

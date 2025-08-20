@@ -12,15 +12,15 @@
 
 Lexer lexer;
 std::vector<Token> tokens;
-ASTNode *root = nullptr;
+std::shared_ptr<ASTNode> root = nullptr;
 ScopeManager scope_manager;
 SymbolCollector *symbol_collector = new SymbolCollector{scope_manager};
 SemanticChecker *semantic_checker = new SemanticChecker{scope_manager};
 SymbolManager *symbol_manager = new SymbolManager{scope_manager};
 
 int main() {
-    // freopen("../testcases_official/Semantic/array02.rx", "r", stdin);
-    // freopen("../testcases/Semantic/in03.rx", "r", stdin);
+    // freopen("../testcases_official/Semantic/array05.rx", "r", stdin);
+    // freopen("../testcases/Semantic/in00.rx", "r", stdin);
     std::string text, line;
     while (std::getline(std::cin, line)) {
         text += line;
@@ -59,5 +59,4 @@ int main() {
         // std::cout << error.what() << '\n';
         std::cout << -1 << '\r';
     }
-    delete root;
 }

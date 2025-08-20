@@ -1,0 +1,14 @@
+fn main() {
+    let mut counter: i32 = 0;
+    let mut condition: bool = true;
+    fn add(a : i32, b : i32, ) -> i32 {
+        return a + b;
+    }
+    while condition {
+        let inner_val: i32 = 5;
+        counter = add(inner_val, counter);
+        if counter > 10 {
+            condition = false;
+        }
+    }
+}

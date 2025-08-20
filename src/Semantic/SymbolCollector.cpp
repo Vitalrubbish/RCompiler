@@ -1,12 +1,14 @@
 #include "Semantic/SymbolCollector.h"
 #include "Semantic/ASTNode.h"
+#include "Semantic/Type.h"
+#include "Semantic/Symbol.h"
 
 
 void SymbolCollector::visit(ASTNode *node) {
 }
 
 void SymbolCollector::visit(CrateNode *node) {
-    for (auto *item: node->items_) {
+    for (const auto &item: node->items_) {
         if (item) item->accept(this);
     }
 }
@@ -16,11 +18,11 @@ void SymbolCollector::visit(VisItemNode *node) {
 
 void SymbolCollector::visit(FunctionNode *node) {
     std::shared_ptr<Type> type = std::make_shared<FunctionType>(
-        std::vector<std::shared_ptr<Type>>{}, std::make_shared<PrimitiveType>("void"));
+        std::vector<std::shared_ptr<Type> >{}, std::make_shared<PrimitiveType>("void"));
     Symbol symbol(node->pos_, node->identifier_, type, SymbolType::Function, false);
     scope_manager_.declare(symbol);
-    if (node -> block_expression_) {
-        node -> block_expression_ -> accept(this);
+    if (node->block_expression_) {
+        node->block_expression_->accept(this);
     }
 }
 
@@ -35,8 +37,8 @@ void SymbolCollector::visit(StructNode *node) {
 
 void SymbolCollector::visit(EnumerationNode *node) {
     std::shared_ptr<Type> type = std::make_shared<EnumerationType>(
-        node -> identifier_, std::vector<std::string>{});
-    for (auto *variant: node->enum_variant_nodes_) {
+        node->identifier_, std::vector<std::string>{});
+    for (const auto &variant: node->enum_variant_nodes_) {
         if (variant) variant->accept(this);
     }
 }
@@ -59,7 +61,7 @@ void SymbolCollector::visit(AssociatedItemNode *node) {
 
 void SymbolCollector::visit(InherentImplNode *node) {
     if (node->type_node_) node->type_node_->accept(this);
-    for (auto *item: node->associated_item_nodes_) {
+    for (const auto &item: node->associated_item_nodes_) {
         if (item) item->accept(this);
     }
 }
@@ -68,7 +70,7 @@ void SymbolCollector::visit(TraitImplNode *node) {
 }
 
 void SymbolCollector::visit(FunctionParametersNode *node) {
-    for (auto *param: node->function_params_) {
+    for (const auto &param: node->function_params_) {
         if (param) param->accept(this);
     }
 }
@@ -92,7 +94,7 @@ void SymbolCollector::visit(EnumVariantNode *node) {
 }
 
 void SymbolCollector::visit(EnumVariantStructNode *node) {
-    for (auto *field: node->struct_field_nodes_) {
+    for (const auto &field: node->struct_field_nodes_) {
         if (field) field->accept(this);
     }
 }
@@ -114,7 +116,7 @@ void SymbolCollector::visit(StatementNode *node) {
 }
 
 void SymbolCollector::visit(StatementsNode *node) {
-    for (auto *stmt: node->statements_) {
+    for (const auto &stmt: node->statements_) {
         if (stmt) stmt->accept(this);
     }
     if (node->expression_) node->expression_->accept(this);
@@ -128,6 +130,12 @@ void SymbolCollector::visit(LetStatementNode *node) {
     if (node->type_) node->type_->accept(this);
     if (node->expression_) node->expression_->accept(this);
     if (node->block_expression_) node->block_expression_->accept(this);
+}
+
+void SymbolCollector::visit(VisItemStatementNode *node) {
+    if (node->vis_item_node_) {
+        node->vis_item_node_->accept(this);
+    }
 }
 
 void SymbolCollector::visit(ExpressionStatementNode *node) {
@@ -214,7 +222,7 @@ void SymbolCollector::visit(UnaryExpressionNode *node) {
 
 void SymbolCollector::visit(FunctionCallExpressionNode *node) {
     if (node->callee_) node->callee_->accept(this);
-    for (auto *param: node->params_) {
+    for (const auto &param: node->params_) {
         if (param) param->accept(this);
     }
 }
@@ -277,7 +285,7 @@ void SymbolCollector::visit(BoolLiteralNode *node) {
 }
 
 void SymbolCollector::visit(ArrayLiteralNode *node) {
-    for (auto *expr: node->expressions_) {
+    for (const auto &expr: node->expressions_) {
         if (expr) expr->accept(this);
     }
     if (node->lhs_) node->lhs_->accept(this);
@@ -288,7 +296,7 @@ void SymbolCollector::visit(PathExpressionNode *node) {
 }
 
 void SymbolCollector::visit(PathInExpressionNode *node) {
-    for (auto *seg: node->path_indent_segments_) {
+    for (const auto &seg: node->path_indent_segments_) {
         if (seg) seg->accept(this);
     }
 }
@@ -306,7 +314,7 @@ void SymbolCollector::visit(StructExpressionNode *node) {
 }
 
 void SymbolCollector::visit(StructExprFieldsNode *node) {
-    for (auto *field: node->struct_expr_field_nodes_) {
+    for (const auto &field: node->struct_expr_field_nodes_) {
         if (field) field->accept(this);
     }
     if (node->struct_base_node_) node->struct_base_node_->accept(this);
@@ -325,7 +333,7 @@ void SymbolCollector::visit(GroupedExpressionNode *node) {
 }
 
 void SymbolCollector::visit(TupleExpressionNode *node) {
-    for (auto *expr: node->expressions_) {
+    for (const auto &expr: node->expressions_) {
         if (expr) expr->accept(this);
     }
 }
@@ -342,10 +350,10 @@ void SymbolCollector::visit(LetChainConditionNode *node) {
 
 
 void SymbolCollector::visit(MatchArmsNode *node) {
-    for (auto *arm: node->match_arm_nodes_) {
+    for (const auto &arm: node->match_arm_nodes_) {
         if (arm) arm->accept(this);
     }
-    for (auto *expr: node->expression_nodes_) {
+    for (const auto &expr: node->expression_nodes_) {
         if (expr) expr->accept(this);
     }
 }
@@ -359,7 +367,7 @@ void SymbolCollector::visit(MatchArmGuardNode *node) {
 }
 
 void SymbolCollector::visit(PatternNode *node) {
-    for (auto *pat: node->pattern_no_top_alts_) {
+    for (const auto &pat: node->pattern_no_top_alts_) {
         if (pat) pat->accept(this);
     }
 }
@@ -389,7 +397,7 @@ void SymbolCollector::visit(GroupedPatternNode *node) {
 }
 
 void SymbolCollector::visit(SlicePatternNode *node) {
-    for (auto *pat: node->patterns_) {
+    for (const auto &pat: node->patterns_) {
         if (pat) pat->accept(this);
     }
 }
@@ -417,7 +425,7 @@ void SymbolCollector::visit(TypePathSegmentNode *node) {
 }
 
 void SymbolCollector::visit(TupleTypeNode *node) {
-    for (auto *type: node->type_nodes_) {
+    for (const auto &type: node->type_nodes_) {
         if (type) type->accept(this);
     }
 }
@@ -433,4 +441,3 @@ void SymbolCollector::visit(SliceTypeNode *node) {
 
 void SymbolCollector::visit(ReferenceTypeNode *node) {
 }
-

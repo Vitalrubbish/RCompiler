@@ -1,0 +1,4 @@
+fn main() {
+    let mut a : [[i32; 3]; 4] = [[114_514_i32; 3]; 4];
+    a[2][3] = 1919_810_i32;
+} // Mutable Check: Array Check

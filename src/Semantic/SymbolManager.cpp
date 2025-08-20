@@ -1,5 +1,7 @@
 #include "Semantic/SymbolManager.h"
 #include "Semantic/ASTNode.h"
+#include "Semantic/Type.h"
+#include "Semantic/Symbol.h"
 
 
 void SymbolManager::visit(ASTNode *node) {
@@ -8,11 +10,11 @@ void SymbolManager::visit(ASTNode *node) {
 void SymbolManager::visit(CrateNode *node) {
     scope_manager_.current_scope = scope_manager_.root;
     scope_manager_.current_scope -> index = 0;
-    for (auto *item: node->items_) {
-        auto *structItem = dynamic_cast<StructNode *>(item);
+    for (const auto &item: node->items_) {
+        auto structItem = std::dynamic_pointer_cast<StructNode>(item);
         if (structItem) {
             std::vector<StructMember> members;
-            for (auto *field: structItem->struct_field_nodes_) {
+            for (const auto &field: structItem->struct_field_nodes_) {
                 Symbol symbol = scope_manager_.lookup(field->type_node_->toString());
                 StructMember member{field->identifier_, symbol.type_};
                 members.emplace_back(member);
@@ -21,12 +23,12 @@ void SymbolManager::visit(CrateNode *node) {
             scope_manager_.ModifyType(structItem->identifier_, struct_);
             continue;
         }
-        auto *funcItem = dynamic_cast<FunctionNode *>(item);
+        auto funcItem = std::dynamic_pointer_cast<FunctionNode>(item);
         if (funcItem) {
             std::vector<std::shared_ptr<Type> > params;
             std::shared_ptr<Type> ret = std::make_shared<PrimitiveType>("void");
             if (funcItem->function_parameters_) {
-                for (auto *param: funcItem->function_parameters_->function_params_) {
+                for (const auto &param: funcItem->function_parameters_->function_params_) {
                     Symbol symbol = scope_manager_.lookup(param->type_->toString());
                     params.emplace_back(symbol.type_);
                 }
@@ -39,7 +41,7 @@ void SymbolManager::visit(CrateNode *node) {
             scope_manager_.ModifyType(funcItem->identifier_, func_);
         }
     }
-    for (auto *item: node->items_) {
+    for (const auto &item: node->items_) {
         if (item) item->accept(this);
     }
 }
@@ -57,7 +59,7 @@ void SymbolManager::visit(StructNode *node) {
 }
 
 void SymbolManager::visit(EnumerationNode *node) {
-    for (auto *variant: node->enum_variant_nodes_) {
+    for (const auto &variant: node->enum_variant_nodes_) {
         if (variant) variant->accept(this);
     }
 }
@@ -80,7 +82,7 @@ void SymbolManager::visit(AssociatedItemNode *node) {
 
 void SymbolManager::visit(InherentImplNode *node) {
     if (node->type_node_) node->type_node_->accept(this);
-    for (auto *item: node->associated_item_nodes_) {
+    for (const auto &item: node->associated_item_nodes_) {
         if (item) item->accept(this);
     }
 }
@@ -89,7 +91,7 @@ void SymbolManager::visit(TraitImplNode *node) {
 }
 
 void SymbolManager::visit(FunctionParametersNode *node) {
-    for (auto *param: node->function_params_) {
+    for (const auto &param: node->function_params_) {
         if (param) param->accept(this);
     }
 }
@@ -113,7 +115,7 @@ void SymbolManager::visit(EnumVariantNode *node) {
 }
 
 void SymbolManager::visit(EnumVariantStructNode *node) {
-    for (auto *field: node->struct_field_nodes_) {
+    for (const auto &field: node->struct_field_nodes_) {
         if (field) field->accept(this);
     }
 }
@@ -135,7 +137,7 @@ void SymbolManager::visit(StatementNode *node) {
 }
 
 void SymbolManager::visit(StatementsNode *node) {
-    for (auto *stmt: node->statements_) {
+    for (const auto &stmt: node->statements_) {
         if (stmt) stmt->accept(this);
     }
     if (node->expression_) node->expression_->accept(this);
@@ -149,6 +151,12 @@ void SymbolManager::visit(LetStatementNode *node) {
     if (node->type_) node->type_->accept(this);
     if (node->expression_) node->expression_->accept(this);
     if (node->block_expression_) node->block_expression_->accept(this);
+}
+
+void SymbolManager::visit(VisItemStatementNode *node) {
+    if (node -> vis_item_node_) {
+        node -> vis_item_node_ -> accept(this);
+    }
 }
 
 void SymbolManager::visit(ExpressionStatementNode *node) {
@@ -235,7 +243,7 @@ void SymbolManager::visit(UnaryExpressionNode *node) {
 
 void SymbolManager::visit(FunctionCallExpressionNode *node) {
     if (node->callee_) node->callee_->accept(this);
-    for (auto *param: node->params_) {
+    for (const auto &param: node->params_) {
         if (param) param->accept(this);
     }
 }
@@ -254,11 +262,16 @@ void SymbolManager::visit(BlockExpressionNode *node) {
         ->next_level_scopes_[scope_manager_.current_scope->index++];
     scope_manager_.current_scope -> index = 0;
     if (node->statements_) {
-        for (auto *item: node->statements_->statements_) {
-            auto *structItem = dynamic_cast<StructNode *>(item);
+        for (const auto &item: node->statements_->statements_) {
+            auto visItemStmt = std::dynamic_pointer_cast<VisItemStatementNode>(item);
+            if (!visItemStmt || !visItemStmt->vis_item_node_) {
+                continue;
+            }
+
+            auto structItem = std::dynamic_pointer_cast<StructNode>(visItemStmt->vis_item_node_);
             if (structItem) {
                 std::vector<StructMember> members;
-                for (auto *field: structItem->struct_field_nodes_) {
+                for (const auto &field: structItem->struct_field_nodes_) {
                     Symbol symbol = scope_manager_.lookup(field->type_node_->toString());
                     StructMember member{field->identifier_, symbol.type_};
                     members.emplace_back(member);
@@ -267,12 +280,12 @@ void SymbolManager::visit(BlockExpressionNode *node) {
                 scope_manager_.ModifyType(structItem->identifier_, struct_);
                 continue;
             }
-            auto *funcItem = dynamic_cast<FunctionNode *>(item);
+            auto funcItem = std::dynamic_pointer_cast<FunctionNode>(visItemStmt->vis_item_node_);
             if (funcItem) {
                 std::vector<std::shared_ptr<Type>> params;
                 std::shared_ptr<Type> ret = std::make_shared<PrimitiveType>("void");
                 if (funcItem->function_parameters_) {
-                    for (auto *param: funcItem->function_parameters_->function_params_) {
+                    for (const auto &param: funcItem->function_parameters_->function_params_) {
                         Symbol symbol = scope_manager_.lookup(param->type_->toString());
                         params.emplace_back(symbol.type_);
                     }
@@ -333,7 +346,7 @@ void SymbolManager::visit(BoolLiteralNode *node) {
 }
 
 void SymbolManager::visit(ArrayLiteralNode *node) {
-    for (auto *expr: node->expressions_) {
+    for (const auto &expr: node->expressions_) {
         if (expr) expr->accept(this);
     }
     if (node->lhs_) node->lhs_->accept(this);
@@ -344,7 +357,7 @@ void SymbolManager::visit(PathExpressionNode *node) {
 }
 
 void SymbolManager::visit(PathInExpressionNode *node) {
-    for (auto *seg: node->path_indent_segments_) {
+    for (const auto &seg: node->path_indent_segments_) {
         if (seg) seg->accept(this);
     }
 }
@@ -362,7 +375,7 @@ void SymbolManager::visit(StructExpressionNode *node) {
 }
 
 void SymbolManager::visit(StructExprFieldsNode *node) {
-    for (auto *field: node->struct_expr_field_nodes_) {
+    for (const auto &field: node->struct_expr_field_nodes_) {
         if (field) field->accept(this);
     }
     if (node->struct_base_node_) node->struct_base_node_->accept(this);
@@ -381,7 +394,7 @@ void SymbolManager::visit(GroupedExpressionNode *node) {
 }
 
 void SymbolManager::visit(TupleExpressionNode *node) {
-    for (auto *expr: node->expressions_) {
+    for (const auto &expr: node->expressions_) {
         if (expr) expr->accept(this);
     }
 }
@@ -398,10 +411,10 @@ void SymbolManager::visit(LetChainConditionNode *node) {
 
 
 void SymbolManager::visit(MatchArmsNode *node) {
-    for (auto *arm: node->match_arm_nodes_) {
+    for (const auto &arm: node->match_arm_nodes_) {
         if (arm) arm->accept(this);
     }
-    for (auto *expr: node->expression_nodes_) {
+    for (const auto &expr: node->expression_nodes_) {
         if (expr) expr->accept(this);
     }
 }
@@ -415,7 +428,7 @@ void SymbolManager::visit(MatchArmGuardNode *node) {
 }
 
 void SymbolManager::visit(PatternNode *node) {
-    for (auto *pat: node->pattern_no_top_alts_) {
+    for (const auto &pat: node->pattern_no_top_alts_) {
         if (pat) pat->accept(this);
     }
 }
@@ -445,7 +458,7 @@ void SymbolManager::visit(GroupedPatternNode *node) {
 }
 
 void SymbolManager::visit(SlicePatternNode *node) {
-    for (auto *pat: node->patterns_) {
+    for (const auto &pat: node->patterns_) {
         if (pat) pat->accept(this);
     }
 }
@@ -473,7 +486,7 @@ void SymbolManager::visit(TypePathSegmentNode *node) {
 }
 
 void SymbolManager::visit(TupleTypeNode *node) {
-    for (auto *type: node->type_nodes_) {
+    for (const auto &type: node->type_nodes_) {
         if (type) type->accept(this);
     }
 }
@@ -489,4 +502,3 @@ void SymbolManager::visit(SliceTypeNode *node) {
 
 void SymbolManager::visit(ReferenceTypeNode *node) {
 }
-

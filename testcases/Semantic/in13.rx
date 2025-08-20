@@ -1,0 +1,12 @@
+fn main() {
+    let x: i32 = 10;
+    let y: i32 = 20;
+    printlnInt(x);
+    {
+        let x: bool = true;
+        printlnInt(y);
+        let z: i32 = 30;
+    }
+    printlnInt(x);
+    let should_fail = z;
+} // Scope Tree Test - 1

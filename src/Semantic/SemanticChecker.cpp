@@ -1,6 +1,8 @@
 #include "Semantic/SemanticChecker.h"
 #include "Semantic/ASTNode.h"
 #include "Semantic/SymbolCollector.h"
+#include "Semantic/Type.h"
+#include "Semantic/Symbol.h"
 
 extern SymbolCollector *symbol_collector;
 
@@ -10,7 +12,7 @@ void SemanticChecker::visit(ASTNode *node) {
 void SemanticChecker::visit(CrateNode *node) {
     scope_manager_.current_scope = scope_manager_.root;
     scope_manager_.current_scope -> index = 0;
-    for (auto *item: node->items_) {
+    for (const auto &item: node->items_) {
         if (item) item->accept(this);
     }
 }
@@ -22,10 +24,11 @@ void SemanticChecker::visit(FunctionNode *node) {
     if (node->function_parameters_) node->function_parameters_->accept(this);
     if (node->type_) node->type_->accept(this);
     if (node -> function_parameters_) {
-        for (auto& it: node->function_parameters_->function_params_) {
+        scope_manager_.current_scope = scope_manager_.current_scope
+            -> next_level_scopes_[scope_manager_.current_scope -> index];
+        for (const auto& it: node->function_parameters_->function_params_) {
             it->accept(this);
-            // TODO Fix FunctionParameterNode
-            auto* pattern_node = dynamic_cast<IdentifierPatternNode*>(it -> pattern_no_top_alt_node_);
+            auto pattern_node = std::dynamic_pointer_cast<IdentifierPatternNode>(it -> pattern_no_top_alt_node_);
             if (pattern_node) {
                 std::string identifier = pattern_node -> identifier_;
                 bool is_mut = pattern_node -> is_mut_;
@@ -34,11 +37,11 @@ void SemanticChecker::visit(FunctionNode *node) {
                 scope_manager_.declare(symbol);
                 continue;
             }
-            auto* path_pattern = dynamic_cast<PathPatternNode*> (it -> pattern_no_top_alt_node_);
+            auto path_pattern = std::dynamic_pointer_cast<PathPatternNode>(it -> pattern_no_top_alt_node_);
             if (path_pattern) {
                 bool is_mut;
                 std::string identifier;
-                auto* expression = dynamic_cast<PathInExpressionNode*>(path_pattern->expression_);
+                auto expression = std::dynamic_pointer_cast<PathInExpressionNode>(path_pattern->expression_);
                 if (expression) {
                     uint32_t len = expression -> path_indent_segments_.size();
                     if (len == 0) {
@@ -52,18 +55,19 @@ void SemanticChecker::visit(FunctionNode *node) {
                 scope_manager_.declare(symbol);
             }
         }
+        scope_manager_.PopScope();
     }
     if (node->block_expression_) node->block_expression_->accept(this);
 }
 
 void SemanticChecker::visit(StructNode *node) {
-    for (auto *field: node->struct_field_nodes_) {
+    for (const auto &field: node->struct_field_nodes_) {
         if (field) field->accept(this);
     }
 }
 
 void SemanticChecker::visit(EnumerationNode *node) {
-    for (auto *variant: node->enum_variant_nodes_) {
+    for (const auto &variant: node->enum_variant_nodes_) {
         if (variant) variant->accept(this);
     }
 }
@@ -86,7 +90,7 @@ void SemanticChecker::visit(AssociatedItemNode *node) {
 
 void SemanticChecker::visit(InherentImplNode *node) {
     if (node->type_node_) node->type_node_->accept(this);
-    for (auto *item: node->associated_item_nodes_) {
+    for (const auto &item: node->associated_item_nodes_) {
         if (item) item->accept(this);
     }
 }
@@ -95,7 +99,7 @@ void SemanticChecker::visit(TraitImplNode *node) {
 }
 
 void SemanticChecker::visit(FunctionParametersNode *node) {
-    for (auto *param: node->function_params_) {
+    for (const auto &param: node->function_params_) {
         if (param) param->accept(this);
     }
 }
@@ -120,7 +124,7 @@ void SemanticChecker::visit(EnumVariantNode *node) {
 }
 
 void SemanticChecker::visit(EnumVariantStructNode *node) {
-    for (auto *field: node->struct_field_nodes_) {
+    for (const auto &field: node->struct_field_nodes_) {
         if (field) field->accept(this);
     }
 }
@@ -134,7 +138,7 @@ void SemanticChecker::visit(StatementNode *node) {
 }
 
 void SemanticChecker::visit(StatementsNode *node) {
-    for (auto *stmt: node->statements_) {
+    for (const auto &stmt: node->statements_) {
         if (stmt) stmt->accept(this);
     }
     if (node->expression_) node->expression_->accept(this);
@@ -150,14 +154,14 @@ void SemanticChecker::visit(LetStatementNode *node) {
     std::string identifier;
     if (node->pattern_no_top_alt_) {
         // node->pattern_no_top_alt_->accept(this);
-        auto *tmp = dynamic_cast<IdentifierPatternNode *>(node->pattern_no_top_alt_);
+        auto tmp = std::dynamic_pointer_cast<IdentifierPatternNode>(node->pattern_no_top_alt_);
         if (tmp) {
             identifier = tmp->identifier_;
             is_mut = tmp->is_mut_;
         }
-        auto* path_pattern = dynamic_cast<PathPatternNode*> (node -> pattern_no_top_alt_);
+        auto path_pattern = std::dynamic_pointer_cast<PathPatternNode>(node -> pattern_no_top_alt_);
         if (path_pattern) {
-            auto* expression = dynamic_cast<PathInExpressionNode*>(path_pattern->expression_);
+            auto expression = std::dynamic_pointer_cast<PathInExpressionNode>(path_pattern->expression_);
             if (expression) {
                 uint32_t len = expression -> path_indent_segments_.size();
                 if (len == 0) {
@@ -176,7 +180,7 @@ void SemanticChecker::visit(LetStatementNode *node) {
         node->expression_->accept(this);
         if (type) {
             bool match = false;
-            for (auto& it: node -> expression_ -> types) {
+            for (const auto& it: node -> expression_ -> types) {
                 if (type -> equal(it)) {
                     match = true;
                     break;
@@ -193,7 +197,7 @@ void SemanticChecker::visit(LetStatementNode *node) {
         node->block_expression_->accept(this);
         if (type) {
             bool match = false;
-            for (auto& it: node -> block_expression_ -> types) {
+            for (const auto& it: node -> block_expression_ -> types) {
                 if (type -> equal(it)) {
                     match = true;
                     break;
@@ -209,6 +213,12 @@ void SemanticChecker::visit(LetStatementNode *node) {
 
     Symbol symbol(node -> pos_, identifier, type, SymbolType::Variable, is_mut);
     scope_manager_.declare(symbol);
+}
+
+void SemanticChecker::visit(VisItemStatementNode *node) {
+    if (node -> vis_item_node_) {
+        node -> vis_item_node_ -> accept(this);
+    }
 }
 
 void SemanticChecker::visit(ExpressionStatementNode *node) {
@@ -230,7 +240,7 @@ void SemanticChecker::visit(ComparisonExpressionNode *node) {
     if (node -> lhs_ && node -> rhs_) {
         auto cap_types = cap(node -> lhs_ -> types, node -> rhs_ -> types);
         bool valid = false;
-        for (auto& it: cap_types) {
+        for (const auto& it: cap_types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
@@ -243,7 +253,7 @@ void SemanticChecker::visit(ComparisonExpressionNode *node) {
             throw SemanticError("Semantic Error: Invalid ComparisonExpressionNode", node -> pos_);
         }
     }
-    node -> types.emplace_back(std::make_shared<PrimitiveType>("bool"));
+    node -> types.emplace_back(scope_manager_.lookup("bool").type_);
 }
 
 void SemanticChecker::visit(TypeCastExpressionNode *node) {
@@ -259,6 +269,9 @@ void SemanticChecker::visit(AssignmentExpressionNode *node) {
         node->lhs_->accept(this);
         if (!node->lhs_->is_assignable_) {
             throw SemanticError("Semantic Error: Left Value Error", node->pos_);
+        }
+        if (!node -> lhs_ -> is_mutable_) {
+            throw SemanticError("Semantic Error: Left Value is not mutable", node -> pos_);
         }
     }
     if (node->rhs_) node->rhs_->accept(this);
@@ -288,7 +301,7 @@ void SemanticChecker::visit(LogicOrExpressionNode *node) {
     if (node -> lhs_ && node -> rhs_) {
         auto cap_types = cap(node->lhs_->types, node->rhs_->types);
         bool valid = false;
-        for (auto& it: cap_types) {
+        for (const auto& it: cap_types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp->name_ == "bool") {
@@ -309,7 +322,7 @@ void SemanticChecker::visit(LogicAndExpressionNode *node) {
     if (node -> lhs_ && node -> rhs_) {
         auto cap_types = cap(node->lhs_->types, node->rhs_->types);
         bool valid = false;
-        for (auto& it: cap_types) {
+        for (const auto& it: cap_types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp->name_ == "bool") {
@@ -330,7 +343,7 @@ void SemanticChecker::visit(BitwiseOrExpressionNode *node) {
     if (node -> lhs_ && node -> rhs_) {
         auto cap_types = cap(node->lhs_->types, node->rhs_->types);
         bool valid = false;
-        for (auto& it: cap_types) {
+        for (const auto& it: cap_types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp->name_ == "i32" || tmp->name_ == "u32" ||
@@ -353,7 +366,7 @@ void SemanticChecker::visit(BitwiseXorExpressionNode *node) {
     if (node -> lhs_ && node -> rhs_) {
         auto cap_types = cap(node->lhs_->types, node->rhs_->types);
         bool valid = false;
-        for (auto& it: cap_types) {
+        for (const auto& it: cap_types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp->name_ == "i32" || tmp->name_ == "u32" ||
@@ -376,7 +389,7 @@ void SemanticChecker::visit(BitwiseAndExpressionNode *node) {
     if (node -> lhs_ && node -> rhs_) {
         auto cap_types = cap(node->lhs_->types, node->rhs_->types);
         bool valid = false;
-        for (auto& it: cap_types) {
+        for (const auto& it: cap_types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp->name_ == "i32" || tmp->name_ == "u32" ||
@@ -397,7 +410,7 @@ void SemanticChecker::visit(ShiftExpressionNode *node) {
     if (node->lhs_) {
         node->lhs_->accept(this);
         bool match = false;
-        for (auto& it: node -> lhs_ -> types) {
+        for (const auto& it: node -> lhs_ -> types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
@@ -414,7 +427,7 @@ void SemanticChecker::visit(ShiftExpressionNode *node) {
     if (node->rhs_) {
         node->rhs_->accept(this);
         bool match = false;
-        for (auto& it: node -> rhs_ -> types) {
+        for (const auto& it: node -> rhs_ -> types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
@@ -435,7 +448,7 @@ void SemanticChecker::visit(AddMinusExpressionNode *node) {
     if (node -> lhs_ && node -> rhs_) {
         auto cap_types = cap(node -> lhs_ -> types, node -> rhs_ -> types);
         bool valid = false;
-        for (auto& it: cap_types) {
+        for (const auto& it: cap_types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
@@ -457,7 +470,7 @@ void SemanticChecker::visit(MulDivModExpressionNode *node) {
     if (node -> lhs_ && node -> rhs_) {
         auto cap_types = cap(node -> lhs_ -> types, node -> rhs_ -> types);
         bool valid = false;
-        for (auto& it: cap_types) {
+        for (const auto& it: cap_types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp) {
                 if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
@@ -478,9 +491,9 @@ void SemanticChecker::visit(UnaryExpressionNode *node) {
         node->expression_->accept(this);
         if (node -> type_ == TokenType::Minus) {
             bool match = false;
-            for (auto& it: node -> expression_ -> types) {
+            for (const auto& it: node -> expression_ -> types) {
                 auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
-                if (tmp -> name_ == "i32" || tmp -> name_ == "isize") {
+                if (tmp && (tmp -> name_ == "i32" || tmp -> name_ == "isize")) {
                     match = true;
                     node -> types.emplace_back(it);
                 }
@@ -493,11 +506,11 @@ void SemanticChecker::visit(UnaryExpressionNode *node) {
         }
         if (node -> type_ == TokenType::Not) {
             bool match = false;
-            for (auto& it: node -> expression_ -> types) {
+            for (const auto& it: node -> expression_ -> types) {
                 auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
-                if (tmp -> name_ == "i32" || tmp -> name_ == "isize" ||
+                if (tmp && (tmp -> name_ == "i32" || tmp -> name_ == "isize" ||
                     tmp -> name_ == "u32" || tmp -> name_ == "usize" ||
-                    tmp -> name_ == "bool") {
+                    tmp -> name_ == "bool")) {
                     match = true;
                     node -> types.emplace_back(it);
                 }
@@ -525,20 +538,20 @@ void SemanticChecker::visit(FunctionCallExpressionNode *node) {
         throw SemanticError("Semantic Error: Incorrect Parameter Numbers", node -> pos_);
     }
     uint32_t index = 0;
-    for (auto *param: node->params_) {
+    for (const auto &param: node->params_) {
         if (param) {
             param->accept(this);
             bool match = false;
-            for (auto& it: param -> types) {
+            for (const auto& it: param -> types) {
                 if (type -> params_[index] -> equal(it)) {
                     match = true;
-                    ++index;
                     break;
                 }
             }
             if (!match) {
                 throw SemanticError("Semantic Error: Function Param Type Not Match", node -> pos_);
             }
+            ++index;
         }
     }
     if (index != type -> params_.size()) {
@@ -552,6 +565,7 @@ void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
     if (node->base_) {
         node->base_->accept(this);
         auto tmp = node -> base_ -> types[0];
+        node -> is_mutable_ = node -> base_ -> is_mutable_;
         type = std::dynamic_pointer_cast<ArrayType>(tmp);
         if (!type) {
             throw SemanticError("Semantic Error: Not an array type before the arrayIndexExpression",
@@ -561,7 +575,7 @@ void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
     if (node->index_) {
         node->index_->accept(this);
         bool valid = false;
-        for (auto& it: node -> index_ -> types) {
+        for (const auto& it: node -> index_ -> types) {
             auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
             if (tmp && tmp -> name_ == "usize") {
                 valid = true;
@@ -579,16 +593,17 @@ void SemanticChecker::visit(MemberAccessExpressionNode *node) {
     if (node->base_) {
         node->base_->accept(this);
         std::shared_ptr<Type> type = node -> base_ -> types[0];
+        node -> is_mutable_ = node -> base_ -> is_mutable_;
         auto tmp = std::dynamic_pointer_cast<StructType>(type);
         if (tmp) {
-            for (auto& it: tmp -> members_) {
+            for (const auto& it: tmp -> members_) {
                 if (it.name_ == node -> member_.token) {
                     node -> types.emplace_back(it.type_);
                     return;
                 }
             }
         }
-        for (auto& it: type -> methods_) {
+        for (const auto& it: type -> methods_) {
             if (it.name_ == node -> member_.token) {
                 node -> types.emplace_back(it.type_);
                 return;
@@ -677,7 +692,7 @@ void SemanticChecker::visit(BoolLiteralNode *node) {
 void SemanticChecker::visit(ArrayLiteralNode *node) {
     bool init = true;
     std::vector<std::shared_ptr<Type> > element_types;
-    for (auto *expr: node->expressions_) {
+    for (const auto &expr: node->expressions_) {
         if (expr) {
             expr->accept(this);
             std::vector<std::shared_ptr<Type> > tmp;
@@ -707,7 +722,7 @@ void SemanticChecker::visit(ArrayLiteralNode *node) {
     uint32_t size = 0;
     if (node->rhs_) {
         node->rhs_->accept(this);
-        auto *tmp = dynamic_cast<IntLiteralNode *>(node->rhs_);
+        auto tmp = std::dynamic_pointer_cast<IntLiteralNode>(node->rhs_);
         if (!tmp) {
             throw SemanticError(
                 "Semantic Error: The size of an array must be an integer literal", node->pos_);
@@ -723,12 +738,13 @@ void SemanticChecker::visit(PathExpressionNode *node) {
 }
 
 void SemanticChecker::visit(PathInExpressionNode *node) {
-    for (auto *seg: node->path_indent_segments_) {
+    for (const auto &seg: node->path_indent_segments_) {
         if (seg) seg->accept(this);
     }
     uint32_t len = node -> path_indent_segments_.size();
     Symbol symbol = scope_manager_.lookup(node -> path_indent_segments_[len - 1]->identifier_);
     node -> types.emplace_back(symbol.type_);
+    node -> is_mutable_ = symbol.is_mutable_;
 }
 
 void SemanticChecker::visit(PathIndentSegmentNode *node) {
@@ -744,7 +760,7 @@ void SemanticChecker::visit(StructExpressionNode *node) {
 }
 
 void SemanticChecker::visit(StructExprFieldsNode *node) {
-    for (auto *field: node->struct_expr_field_nodes_) {
+    for (const auto &field: node->struct_expr_field_nodes_) {
         if (field) field->accept(this);
     }
     if (node->struct_base_node_) node->struct_base_node_->accept(this);
@@ -766,7 +782,7 @@ void SemanticChecker::visit(GroupedExpressionNode *node) {
 }
 
 void SemanticChecker::visit(TupleExpressionNode *node) {
-    for (auto *expr: node->expressions_) {
+    for (const auto &expr: node->expressions_) {
         if (expr) expr->accept(this);
     }
 }
@@ -783,10 +799,10 @@ void SemanticChecker::visit(LetChainConditionNode *node) {
 
 
 void SemanticChecker::visit(MatchArmsNode *node) {
-    for (auto *arm: node->match_arm_nodes_) {
+    for (const auto &arm: node->match_arm_nodes_) {
         if (arm) arm->accept(this);
     }
-    for (auto *expr: node->expression_nodes_) {
+    for (const auto &expr: node->expression_nodes_) {
         if (expr) expr->accept(this);
     }
 }
@@ -800,7 +816,7 @@ void SemanticChecker::visit(MatchArmGuardNode *node) {
 }
 
 void SemanticChecker::visit(PatternNode *node) {
-    for (auto *pat: node->pattern_no_top_alts_) {
+    for (const auto &pat: node->pattern_no_top_alts_) {
         if (pat) pat->accept(this);
     }
 }
@@ -830,7 +846,7 @@ void SemanticChecker::visit(GroupedPatternNode *node) {
 }
 
 void SemanticChecker::visit(SlicePatternNode *node) {
-    for (auto *pat: node->patterns_) {
+    for (const auto &pat: node->patterns_) {
         if (pat) pat->accept(this);
     }
 }
@@ -863,7 +879,7 @@ void SemanticChecker::visit(TypePathSegmentNode *node) {
 }
 
 void SemanticChecker::visit(TupleTypeNode *node) {
-    for (auto *type: node->type_nodes_) {
+    for (const auto &type: node->type_nodes_) {
         if (type) type->accept(this);
     }
 }
@@ -877,7 +893,7 @@ void SemanticChecker::visit(ArrayTypeNode *node) {
     }
     if (node->expression_node_) {
         node->expression_node_->accept(this);
-        auto* tmp = dynamic_cast<IntLiteralNode*> (node -> expression_node_);
+        auto tmp = std::dynamic_pointer_cast<IntLiteralNode>(node -> expression_node_);
         if (!tmp) {
             throw SemanticError(
                 "Semantic Error: The size of an array must be an integer literal", node->pos_);
@@ -917,7 +933,7 @@ std::vector<std::shared_ptr<Type> > SemanticChecker::cap(const std::vector<std::
                                                          const std::vector<std::shared_ptr<Type> > &b) {
     std::vector<std::shared_ptr<Type> > ret;
     for (const auto &it: a) {
-        for (auto &itp: b) {
+        for (const auto &itp: b) {
             if (it -> equal(itp)) {
                 ret.emplace_back(it);
                 break;

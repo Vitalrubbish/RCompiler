@@ -1,9 +1,10 @@
 #include "Parser/Parser.h"
 #include "Error.h"
 #include "Util.h"
+#include <memory>
 
 void Parser::ConsumeString(const std::string &str) {
-    if (tokens[parseIndex].token == str) {
+    if (parseIndex < tokens.size() && tokens[parseIndex].token == str) {
         parseIndex++;
     } else {
         throw ParseError("Cannot Match " + str, tokens[parseIndex].pos);
@@ -11,70 +12,53 @@ void Parser::ConsumeString(const std::string &str) {
 }
 
 /****************  Items  ****************/
-CrateNode *Parser::ParseCrate() {
+std::shared_ptr<CrateNode> Parser::ParseCrate() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<VisItemNode *> items;
-    try {
-        while (parseIndex != tokens.size()) {
-            auto *tmp = ParseVisItem();
-            items.emplace_back(tmp);
-        }
-        return new CrateNode(pos, items);
-    } catch (std::exception &) {
-        for (const auto &it: items) {
-            delete it;
-        }
-        throw;
+    std::vector<std::shared_ptr<VisItemNode>> items;
+    while (parseIndex != tokens.size()) {
+        auto tmp = ParseVisItem();
+        items.emplace_back(tmp);
     }
+    return std::make_shared<CrateNode>(pos, std::move(items));
 }
 
-VisItemNode *Parser::ParseVisItem() {
+std::shared_ptr<VisItemNode> Parser::ParseVisItem() {
     Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
-    VisItemNode *node = nullptr;
+
     try {
-        node = ParseFunction();
-        return node;
-    } catch (std::exception &e) {
-        // std::cout << e.what() << '\n';
-        delete node;
-        node = nullptr;
+        return ParseFunction();
+    } catch (const ParseError &) {
         parseIndex = start;
     }
 
     try {
         if (tokens[parseIndex].type == TokenType::Const) {
-            node = ParseConstantItem();
-            return node;
+            return ParseConstantItem();
         }
         if (tokens[parseIndex].type == TokenType::Struct) {
-            node = ParseStruct();
-            return node;
+            return ParseStruct();
         }
         if (tokens[parseIndex].type == TokenType::Enum) {
-            node = ParseEnumeration();
-            return node;
+            return ParseEnumeration();
         }
         if (tokens[parseIndex].type == TokenType::Impl) {
-            node = ParseImplementation();
-            return node;
+            return ParseImplementation();
         }
         if (tokens[parseIndex].type == TokenType::Trait) {
-            node = ParseTrait();
-            return node;
+            return ParseTrait();
         }
         throw ParseError("Parse Error: VisItem Not Match", pos);
-    } catch (std::exception &) {
-        delete node;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-FunctionNode *Parser::ParseFunction() {
+std::shared_ptr<FunctionNode> Parser::ParseFunction() {
     Position pos = tokens[parseIndex].pos;
-    FunctionParametersNode *function_parameters_node = nullptr;
-    TypeNode *type_node = nullptr;
-    BlockExpressionNode *block_expression_node = nullptr;
+    std::shared_ptr<FunctionParametersNode> function_parameters_node = nullptr;
+    std::shared_ptr<TypeNode> type_node = nullptr;
+    std::shared_ptr<BlockExpressionNode> block_expression_node = nullptr;
     try {
         bool is_const = false;
         if (tokens[parseIndex].type == TokenType::Const) {
@@ -100,96 +84,80 @@ FunctionNode *Parser::ParseFunction() {
         } else {
             ConsumeString(";");
         }
-        return new FunctionNode(pos, is_const, identifier, function_parameters_node,
+        return std::make_shared<FunctionNode>(pos, is_const, identifier, function_parameters_node,
                                 type_node, block_expression_node);
-    } catch (std::exception &) {
-        delete type_node;
-        delete function_parameters_node;
-        delete block_expression_node;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-TypeNode *Parser::ParseFunctionReturnType() {
-    TypeNode *type = nullptr;
+std::shared_ptr<TypeNode> Parser::ParseFunctionReturnType() {
     try {
         ConsumeString("->");
-        type = ParseType();
-        return type;
-    } catch (std::exception &) {
-        delete type;
+        return ParseType();
+    } catch (const ParseError &) {
         throw;
     }
 }
 
 
-FunctionParametersNode *Parser::ParseFunctionParameters() {
+std::shared_ptr<FunctionParametersNode> Parser::ParseFunctionParameters() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<FunctionParamNode *> function_param_nodes;
-    FunctionParamNode *tmp = nullptr;
+    std::vector<std::shared_ptr<FunctionParamNode>> function_param_nodes;
     try {
-        tmp = ParseFunctionParam();
-        function_param_nodes.emplace_back(tmp);
+        function_param_nodes.emplace_back(ParseFunctionParam());
         while (tokens[parseIndex].type == TokenType::Comma) {
             ConsumeString(",");
-            tmp = ParseFunctionParam();
-            function_param_nodes.emplace_back(tmp);
             if (tokens[parseIndex].type == TokenType::RParen) {
                 break;
             }
+            function_param_nodes.emplace_back(ParseFunctionParam());
         }
-        return new FunctionParametersNode(pos, function_param_nodes);
-    } catch (std::exception &) {
-        delete tmp;
-        for (auto &it: function_param_nodes) {
-            delete it;
-        }
+        return std::make_shared<FunctionParametersNode>(pos, std::move(function_param_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-FunctionParamNode *Parser::ParseFunctionParam() {
+std::shared_ptr<FunctionParamNode> Parser::ParseFunctionParam() {
     Position pos = tokens[parseIndex].pos;
-    PatternNoTopAltNode *function_param_pattern_node = nullptr;
-    TypeNode *type_node = nullptr;
+    std::shared_ptr<PatternNoTopAltNode> function_param_pattern_node = nullptr;
+    std::shared_ptr<TypeNode> type_node = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::DotDotDot) {
             ConsumeString("...");
-            return new FunctionParamNode(pos, function_param_pattern_node, type_node, true);
+            return std::make_shared<FunctionParamNode>(pos, function_param_pattern_node, type_node, true);
         }
         function_param_pattern_node = ParsePatternNoTopAlt();
         ConsumeString(":");
         type_node = ParseType();
-        return new FunctionParamNode(pos, function_param_pattern_node, type_node, false);
-    } catch (std::exception &) {
+        return std::make_shared<FunctionParamNode>(pos, function_param_pattern_node, type_node, false);
+    } catch (const ParseError &) {
         throw ParseError("Parse Error: Failed to Match FunctionParam", pos);
     }
 }
 
-FunctionParamPatternNode *Parser::ParseFunctionParamPattern() {
+std::shared_ptr<FunctionParamPatternNode> Parser::ParseFunctionParamPattern() {
     Position pos = tokens[parseIndex].pos;
-    PatternNoTopAltNode *pattern_no_top_alt_node = nullptr;
-    TypeNode *type_node = nullptr;
+    std::shared_ptr<PatternNoTopAltNode> pattern_no_top_alt_node = nullptr;
+    std::shared_ptr<TypeNode> type_node = nullptr;
     try {
         pattern_no_top_alt_node = ParsePatternNoTopAlt();
         ConsumeString(":");
         if (tokens[parseIndex].type == TokenType::DotDotDot) {
             ConsumeString("...");
-            return new FunctionParamPatternNode(pos, pattern_no_top_alt_node, type_node, true);
+            return std::make_shared<FunctionParamPatternNode>(pos, pattern_no_top_alt_node, type_node, true);
         }
         type_node = ParseType();
-        return new FunctionParamPatternNode(pos, pattern_no_top_alt_node, type_node, false);
-    } catch (std::exception &) {
-        delete pattern_no_top_alt_node;
-        delete type_node;
+        return std::make_shared<FunctionParamPatternNode>(pos, pattern_no_top_alt_node, type_node, false);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-StructNode *Parser::ParseStruct() {
+std::shared_ptr<StructNode> Parser::ParseStruct() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<StructFieldNode *> struct_field_nodes;
-    StructFieldNode *struct_field_node = nullptr;
+    std::vector<std::shared_ptr<StructFieldNode>> struct_field_nodes;
     try {
         ConsumeString("struct");
         if (tokens[parseIndex].type != TokenType::Identifier) {
@@ -199,53 +167,44 @@ StructNode *Parser::ParseStruct() {
         parseIndex++;
         if (tokens[parseIndex].type == TokenType::Semicolon) {
             ConsumeString(";");
-            return new StructNode(pos, identifier, struct_field_nodes);
+            return std::make_shared<StructNode>(pos, identifier, std::move(struct_field_nodes));
         }
         ConsumeString("{");
-        struct_field_node = ParseStructFieldNode();
-        struct_field_nodes.emplace_back(struct_field_node);
-        struct_field_node = nullptr;
-        while (tokens[parseIndex].type == TokenType::Comma) {
-            ConsumeString(",");
-            if (tokens[parseIndex].type == TokenType::RBrace) {
-                break;
+        if (tokens[parseIndex].type != TokenType::RBrace) {
+            struct_field_nodes.emplace_back(ParseStructFieldNode());
+            while (tokens[parseIndex].type == TokenType::Comma) {
+                ConsumeString(",");
+                if (tokens[parseIndex].type == TokenType::RBrace) {
+                    break;
+                }
+                struct_field_nodes.emplace_back(ParseStructFieldNode());
             }
-            struct_field_node = ParseStructFieldNode();
-            struct_field_nodes.emplace_back(struct_field_node);
-            struct_field_node = nullptr;
         }
         ConsumeString("}");
-        return new StructNode(pos, identifier, struct_field_nodes);
-    } catch (std::exception &) {
-        for (auto &it: struct_field_nodes) {
-            delete it;
-        }
-        delete struct_field_node;
+        return std::make_shared<StructNode>(pos, identifier, std::move(struct_field_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-StructFieldNode *Parser::ParseStructFieldNode() {
+std::shared_ptr<StructFieldNode> Parser::ParseStructFieldNode() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode *type_node = nullptr;
     try {
         if (tokens[parseIndex].type != TokenType::Identifier) {
             throw ParseError("Parse Error: Identifier Not Found", tokens[parseIndex].pos);
         }
         std::string identifier = tokens[parseIndex++].token;
         ConsumeString(":");
-        type_node = ParseType();
-        return new StructFieldNode(pos, identifier, type_node);
-    } catch (std::exception &) {
-        delete type_node;
+        auto type_node = ParseType();
+        return std::make_shared<StructFieldNode>(pos, identifier, type_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-EnumerationNode *Parser::ParseEnumeration() {
+std::shared_ptr<EnumerationNode> Parser::ParseEnumeration() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<EnumVariantNode *> enum_variant_nodes;
-    EnumVariantNode *enum_variant_node;
+    std::vector<std::shared_ptr<EnumVariantNode>> enum_variant_nodes;
     try {
         ConsumeString("enum");
         if (tokens[parseIndex].type != TokenType::Identifier) {
@@ -255,35 +214,27 @@ EnumerationNode *Parser::ParseEnumeration() {
         ConsumeString("{");
         if (tokens[parseIndex].type == TokenType::RBrace) {
             ConsumeString("}");
-            return new EnumerationNode(pos, identifier, enum_variant_nodes);
+            return std::make_shared<EnumerationNode>(pos, identifier, std::move(enum_variant_nodes));
         }
-        enum_variant_node = ParseEnumVariant();
-        enum_variant_nodes.emplace_back(enum_variant_node);
-        enum_variant_node = nullptr;
+        enum_variant_nodes.emplace_back(ParseEnumVariant());
         while (tokens[parseIndex].type == TokenType::Comma) {
             ConsumeString(",");
             if (tokens[parseIndex].type == TokenType::RBrace) {
                 break;
             }
-            enum_variant_node = ParseEnumVariant();
-            enum_variant_nodes.emplace_back(enum_variant_node);
-            enum_variant_node = nullptr;
+            enum_variant_nodes.emplace_back(ParseEnumVariant());
         }
         ConsumeString("}");
-        return new EnumerationNode(pos, identifier, enum_variant_nodes);
-    } catch (std::exception &) {
-        for (auto &it: enum_variant_nodes) {
-            delete it;
-        }
-        delete enum_variant_node;
+        return std::make_shared<EnumerationNode>(pos, identifier, std::move(enum_variant_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-EnumVariantNode *Parser::ParseEnumVariant() {
+std::shared_ptr<EnumVariantNode> Parser::ParseEnumVariant() {
     Position pos = tokens[parseIndex].pos;
-    EnumVariantStructNode *enum_variant_struct_node = nullptr;
-    EnumVariantDiscriminantNode *enum_variant_discriminant_node = nullptr;
+    std::shared_ptr<EnumVariantStructNode> enum_variant_struct_node = nullptr;
+    std::shared_ptr<EnumVariantDiscriminantNode> enum_variant_discriminant_node = nullptr;
     try {
         if (tokens[parseIndex].type != TokenType::Identifier) {
             throw ParseError("Parse Error: Identifier Not Found", tokens[parseIndex].pos);
@@ -295,65 +246,55 @@ EnumVariantNode *Parser::ParseEnumVariant() {
         if (tokens[parseIndex].type == TokenType::Eq) {
             enum_variant_discriminant_node = ParseEnumVariantDiscriminant();
         }
-        return new EnumVariantNode(pos, identifier, enum_variant_struct_node,
+        return std::make_shared<EnumVariantNode>(pos, identifier, enum_variant_struct_node,
                                    enum_variant_discriminant_node);
-    } catch (std::exception &) {
-        delete enum_variant_struct_node;
-        delete enum_variant_discriminant_node;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-EnumVariantStructNode *Parser::ParseEnumVariantStruct() {
+std::shared_ptr<EnumVariantStructNode> Parser::ParseEnumVariantStruct() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<StructFieldNode *> struct_field_nodes;
-    StructFieldNode *struct_field_node = nullptr;
+    std::vector<std::shared_ptr<StructFieldNode>> struct_field_nodes;
     try {
         ConsumeString("{");
-        struct_field_node = ParseStructFieldNode();
-        struct_field_nodes.emplace_back(struct_field_node);
+        struct_field_nodes.emplace_back(ParseStructFieldNode());
         while (tokens[parseIndex].type == TokenType::Comma) {
             ConsumeString(",");
-            struct_field_node = ParseStructFieldNode();
-            struct_field_nodes.emplace_back(struct_field_node);
             if (tokens[parseIndex].type == TokenType::RBrace) {
                 break;
             }
+            struct_field_nodes.emplace_back(ParseStructFieldNode());
         }
         ConsumeString("}");
-        return new EnumVariantStructNode(pos, struct_field_nodes);
-    } catch (std::exception &) {
-        delete struct_field_node;
-        for (auto &it: struct_field_nodes) {
-            delete it;
-        }
+        return std::make_shared<EnumVariantStructNode>(pos, std::move(struct_field_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-EnumVariantDiscriminantNode *Parser::ParseEnumVariantDiscriminant() {
+std::shared_ptr<EnumVariantDiscriminantNode> Parser::ParseEnumVariantDiscriminant() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *expression_node = nullptr;
     try {
         ConsumeString("=");
-        expression_node = ParseExpression();
-        return new EnumVariantDiscriminantNode(pos, expression_node);
-    } catch (std::exception &) {
-        delete expression_node;
+        auto expression_node = ParseExpression();
+        return std::make_shared<EnumVariantDiscriminantNode>(pos, expression_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ConstantItemNode *Parser::ParseConstantItem() {
+std::shared_ptr<ConstantItemNode> Parser::ParseConstantItem() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode *type_node = nullptr;
-    ExpressionNode *expression_node = nullptr;
+    std::shared_ptr<TypeNode> type_node = nullptr;
+    std::shared_ptr<ExpressionNode> expression_node = nullptr;
     try {
         bool is_underscore = false;
         std::string identifier;
         ConsumeString("const");
         if (tokens[parseIndex].type == TokenType::Underscore) {
             is_underscore = true;
+            parseIndex++;
         } else {
             if (tokens[parseIndex].type != TokenType::Identifier) {
                 throw ParseError("Parse Error: Identifier Not Found", tokens[parseIndex].pos);
@@ -366,83 +307,63 @@ ConstantItemNode *Parser::ParseConstantItem() {
             ConsumeString("=");
             expression_node = ParseExpression();
         }
-        return new ConstantItemNode(pos, identifier, is_underscore, type_node, expression_node);
-    } catch (std::exception &) {
-        delete type_node;
-        delete expression_node;
+        return std::make_shared<ConstantItemNode>(pos, identifier, is_underscore, type_node, expression_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-AssociatedItemNode *Parser::ParseAssociatedItem() {
+std::shared_ptr<AssociatedItemNode> Parser::ParseAssociatedItem() {
     Position pos = tokens[parseIndex].pos;
-    ConstantItemNode *constant_item_node = nullptr;
-    FunctionNode *function_node = nullptr;
+    std::shared_ptr<ConstantItemNode> constant_item_node = nullptr;
+    std::shared_ptr<FunctionNode> function_node = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::Const) {
             constant_item_node = ParseConstantItem();
         } else {
             function_node = ParseFunction();
         }
-        return new AssociatedItemNode(pos, constant_item_node, function_node);
-    } catch (std::exception &) {
-        delete constant_item_node;
-        delete function_node;
+        return std::make_shared<AssociatedItemNode>(pos, constant_item_node, function_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ImplementationNode *Parser::ParseImplementation() {
-    ImplementationNode *ret = nullptr;
+std::shared_ptr<ImplementationNode> Parser::ParseImplementation() {
     uint32_t start = parseIndex;
     try {
-        ret = ParseInherentImpl();
-        return ret;
-    } catch (std::exception &) {
-        delete ret;
-        ret = nullptr;
+        return ParseInherentImpl();
+    } catch (const ParseError &) {
         parseIndex = start;
     }
 
     try {
-        ret = ParseTraitImpl();
-        return ret;
-    } catch (std::exception &) {
-        delete ret;
+        return ParseTraitImpl();
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-InherentImplNode *Parser::ParseInherentImpl() {
+std::shared_ptr<InherentImplNode> Parser::ParseInherentImpl() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode *type_node = nullptr;
-    std::vector<AssociatedItemNode *> associated_item_nodes;
-    AssociatedItemNode *associated_item_node = nullptr;
+    std::vector<std::shared_ptr<AssociatedItemNode>> associated_item_nodes;
     try {
         ConsumeString("impl");
-        type_node = ParseType();
+        auto type_node = ParseType();
         ConsumeString("{");
         while (tokens[parseIndex].type != TokenType::RBrace) {
-            associated_item_node = ParseAssociatedItem();
-            associated_item_nodes.emplace_back(associated_item_node);
+            associated_item_nodes.emplace_back(ParseAssociatedItem());
         }
         ConsumeString("}");
-        return new InherentImplNode(pos, type_node, associated_item_nodes);
-    } catch (std::exception &) {
-        delete type_node;
-        delete associated_item_node;
-        for (auto &it: associated_item_nodes) {
-            delete it;
-        }
+        return std::make_shared<InherentImplNode>(pos, type_node, std::move(associated_item_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-TraitImplNode *Parser::ParseTraitImpl() {
+std::shared_ptr<TraitImplNode> Parser::ParseTraitImpl() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode *type_node = nullptr;
-    std::vector<AssociatedItemNode *> associated_item_nodes;
-    AssociatedItemNode *associated_item_node = nullptr;
+    std::vector<std::shared_ptr<AssociatedItemNode>> associated_item_nodes;
     try {
         ConsumeString("impl");
         if (tokens[parseIndex].type != TokenType::Identifier) {
@@ -450,28 +371,21 @@ TraitImplNode *Parser::ParseTraitImpl() {
         }
         std::string identifier = tokens[parseIndex++].token;
         ConsumeString("for");
-        type_node = ParseType();
+        auto type_node = ParseType();
         ConsumeString("{");
         while (tokens[parseIndex].type != TokenType::RBrace) {
-            associated_item_node = ParseAssociatedItem();
-            associated_item_nodes.emplace_back(associated_item_node);
+            associated_item_nodes.emplace_back(ParseAssociatedItem());
         }
         ConsumeString("}");
-        return new TraitImplNode(pos, identifier, type_node, associated_item_nodes);
-    } catch (std::exception &) {
-        delete type_node;
-        delete associated_item_node;
-        for (auto &it: associated_item_nodes) {
-            delete it;
-        }
+        return std::make_shared<TraitImplNode>(pos, identifier, type_node, std::move(associated_item_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-TraitNode *Parser::ParseTrait() {
+std::shared_ptr<TraitNode> Parser::ParseTrait() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<AssociatedItemNode *> associated_item_nodes;
-    AssociatedItemNode *associated_item_node = nullptr;
+    std::vector<std::shared_ptr<AssociatedItemNode>> associated_item_nodes;
     try {
         ConsumeString("trait");
         if (tokens[parseIndex].type != TokenType::Identifier) {
@@ -480,125 +394,113 @@ TraitNode *Parser::ParseTrait() {
         std::string identifier = tokens[parseIndex++].token;
         ConsumeString("{");
         while (tokens[parseIndex].type != TokenType::RBrace) {
-            associated_item_node = ParseAssociatedItem();
-            associated_item_nodes.emplace_back(associated_item_node);
+            associated_item_nodes.emplace_back(ParseAssociatedItem());
         }
         ConsumeString("}");
-        return new TraitNode(pos, identifier, associated_item_nodes);
-    } catch (std::exception &) {
-        delete associated_item_node;
-        for (auto &it: associated_item_nodes) {
-            delete it;
-        }
+        return std::make_shared<TraitNode>(pos, identifier, std::move(associated_item_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
 /****************  Expression  ****************/
-ExpressionNode *Parser::ParseExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseExpression() {
     uint32_t start = parseIndex;
     try {
-        auto *ret = ParseExpressionWithBlock();
-        return ret;
-    } catch (std::exception &) {
+        return ParseExpressionWithBlock();
+    } catch (const ParseError &) {
         parseIndex = start;
     }
 
     try {
-        auto *ret = ParseExpressionWithoutBlock();
-        return ret;
-    } catch (std::exception &) {
+        return ParseExpressionWithoutBlock();
+    } catch (const ParseError &) {
         throw;
     }
 }
 
 /****************  Expression With Block  ****************/
-ExpressionNode *Parser::ParseExpressionWithBlock() {
-    ExpressionWithBlockNode *node = nullptr;
+std::shared_ptr<ExpressionNode> Parser::ParseExpressionWithBlock() {
     try {
         if (tokens[parseIndex].type == TokenType::Const) {
-            node = ParseConstBlockExpression();
+            return ParseConstBlockExpression();
         } else if (tokens[parseIndex].type == TokenType::Loop) {
-            node = ParseInfiniteLoopExpression();
+            return ParseInfiniteLoopExpression();
         } else if (tokens[parseIndex].type == TokenType::While) {
-            node = ParsePredicateLoopExpression();
+            return ParsePredicateLoopExpression();
         } else if (tokens[parseIndex].type == TokenType::If) {
-            node = ParseIfExpression();
+            return ParseIfExpression();
         } else if (tokens[parseIndex].type == TokenType::Match) {
-            node = ParseMatchExpression();
+            return ParseMatchExpression();
         } else {
-            node = ParseBlockExpression();
+            return ParseBlockExpression();
         }
-        return node;
-    } catch (std::exception &) {
-        delete node;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-BlockExpressionNode *Parser::ParseBlockExpression() {
+std::shared_ptr<BlockExpressionNode> Parser::ParseBlockExpression() {
     Position pos = tokens[parseIndex].pos;
     try {
-        StatementsNode *node = nullptr;
+        std::shared_ptr<StatementsNode> node = nullptr;
         ConsumeString("{");
         if (tokens[parseIndex].type != TokenType::RBrace) {
             node = ParseStatements();
         }
         ConsumeString("}");
-        return new BlockExpressionNode(pos, false, node);
-    } catch (std::exception &) {
+        return std::make_shared<BlockExpressionNode>(pos, false, node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-BlockExpressionNode *Parser::ParseConstBlockExpression() {
+std::shared_ptr<BlockExpressionNode> Parser::ParseConstBlockExpression() {
     Position pos = tokens[parseIndex].pos;
     ConsumeString("const");
     try {
-        StatementsNode *node = nullptr;
+        std::shared_ptr<StatementsNode> node = nullptr;
         ConsumeString("{");
         if (tokens[parseIndex].type != TokenType::RBrace) {
             node = ParseStatements();
         }
         ConsumeString("}");
-        return new BlockExpressionNode(pos, true, node);
-    } catch (std::exception &) {
+        return std::make_shared<BlockExpressionNode>(pos, true, node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
 
-InfiniteLoopExpressionNode *Parser::ParseInfiniteLoopExpression() {
+std::shared_ptr<InfiniteLoopExpressionNode> Parser::ParseInfiniteLoopExpression() {
     Position pos = tokens[parseIndex].pos;
     ConsumeString("loop");
     try {
-        auto *node = ParseBlockExpression();
-        return new InfiniteLoopExpressionNode(pos, node);
-    } catch (std::exception &) {
+        auto node = ParseBlockExpression();
+        return std::make_shared<InfiniteLoopExpressionNode>(pos, node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-PredicateLoopExpressionNode *Parser::ParsePredicateLoopExpression() {
+std::shared_ptr<PredicateLoopExpressionNode> Parser::ParsePredicateLoopExpression() {
     Position pos = tokens[parseIndex].pos;
-    ConditionsNode *conditions = nullptr;
     try {
         ConsumeString("while");
-        conditions = ParseConditions();
-        auto *node = ParseBlockExpression();
-        return new PredicateLoopExpressionNode(pos, conditions, node);
-    } catch (std::exception &) {
-        delete conditions;
+        auto conditions = ParseConditions();
+        auto node = ParseBlockExpression();
+        return std::make_shared<PredicateLoopExpressionNode>(pos, conditions, node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-IfExpressionNode *Parser::ParseIfExpression() {
+std::shared_ptr<IfExpressionNode> Parser::ParseIfExpression() {
     Position pos = tokens[parseIndex].pos;
-    ConditionsNode *conditions_node = nullptr;
-    BlockExpressionNode *true_block_expression_node = nullptr;
-    BlockExpressionNode *false_block_expression_node = nullptr;
-    IfExpressionNode *if_expression_node = nullptr;
+    std::shared_ptr<ConditionsNode> conditions_node = nullptr;
+    std::shared_ptr<BlockExpressionNode> true_block_expression_node = nullptr;
+    std::shared_ptr<BlockExpressionNode> false_block_expression_node = nullptr;
+    std::shared_ptr<IfExpressionNode> if_expression_node = nullptr;
     try {
         ConsumeString("if");
         conditions_node = ParseConditions();
@@ -611,21 +513,17 @@ IfExpressionNode *Parser::ParseIfExpression() {
                 false_block_expression_node = ParseBlockExpression();
             }
         }
-        return new IfExpressionNode(pos, conditions_node, true_block_expression_node,
+        return std::make_shared<IfExpressionNode>(pos, conditions_node, true_block_expression_node,
                                     false_block_expression_node, if_expression_node);
-    } catch (std::exception &) {
-        delete conditions_node;
-        delete true_block_expression_node;
-        delete false_block_expression_node;
-        delete if_expression_node;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-MatchExpressionNode *Parser::ParseMatchExpression() {
+std::shared_ptr<MatchExpressionNode> Parser::ParseMatchExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *expression_node = nullptr;
-    MatchArmsNode *match_arms_node = nullptr;
+    std::shared_ptr<ExpressionNode> expression_node = nullptr;
+    std::shared_ptr<MatchArmsNode> match_arms_node = nullptr;
     try {
         ConsumeString("match");
         expression_node = ParseExpression(); // TODO Check whether it is a StructExpression
@@ -634,28 +532,22 @@ MatchExpressionNode *Parser::ParseMatchExpression() {
             match_arms_node = ParseMatchArms();
         }
         ConsumeString("}");
-        return new MatchExpressionNode(pos, expression_node, match_arms_node);
-    } catch (std::exception &) {
-        delete expression_node;
-        delete match_arms_node;
+        return std::make_shared<MatchExpressionNode>(pos, expression_node, match_arms_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-MatchArmsNode *Parser::ParseMatchArms() {
+std::shared_ptr<MatchArmsNode> Parser::ParseMatchArms() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<MatchArmNode *> match_arms_nodes;
-    MatchArmNode *match_arm_node = nullptr;
-    std::vector<ExpressionNode *> expression_nodes;
-    ExpressionNode *expression_node = nullptr;
+    std::vector<std::shared_ptr<MatchArmNode>> match_arms_nodes;
+    std::vector<std::shared_ptr<ExpressionNode>> expression_nodes;
     try {
         while (tokens[parseIndex].type != TokenType::RBrace) {
-            match_arm_node = ParseMatchArm();
-            match_arms_nodes.emplace_back(match_arm_node);
+            match_arms_nodes.emplace_back(ParseMatchArm());
             ConsumeString("=>");
-            expression_node = ParseExpression();
-            expression_nodes.emplace_back(expression_node);
-            if (dynamic_cast<BlockExpressionNode *>(expression_node) != nullptr) {
+            expression_nodes.emplace_back(ParseExpression());
+            if (std::dynamic_pointer_cast<BlockExpressionNode>(expression_nodes.back()) != nullptr) {
                 if (tokens[parseIndex].type == TokenType::Comma) {
                     ConsumeString(",");
                 }
@@ -667,70 +559,58 @@ MatchArmsNode *Parser::ParseMatchArms() {
                 }
             }
         }
-        return new MatchArmsNode(pos, match_arms_nodes, expression_nodes);
-    } catch (std::exception &) {
-        for (auto &it: expression_nodes) {
-            delete it;
-        }
-        for (auto &it: match_arms_nodes) {
-            delete it;
-        }
+        return std::make_shared<MatchArmsNode>(pos, std::move(match_arms_nodes), std::move(expression_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-MatchArmNode *Parser::ParseMatchArm() {
+std::shared_ptr<MatchArmNode> Parser::ParseMatchArm() {
     Position pos = tokens[parseIndex].pos;
-    PatternNode *pattern_node = nullptr;
-    ExpressionNode *expression_node = nullptr;
+    std::shared_ptr<PatternNode> pattern_node = nullptr;
+    std::shared_ptr<ExpressionNode> expression_node = nullptr;
     try {
         pattern_node = ParsePattern();
         if (tokens[parseIndex].type == TokenType::If) {
             ConsumeString("if");
             expression_node = ParseExpression();
         }
-        return new MatchArmNode(pos, pattern_node, expression_node);
-    } catch (std::exception &) {
-        delete pattern_node;
-        delete expression_node;
+        return std::make_shared<MatchArmNode>(pos, pattern_node, expression_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
 /****************  Expression Without Block  ****************/
-ExpressionNode *Parser::ParseExpressionWithoutBlock() {
+std::shared_ptr<ExpressionNode> Parser::ParseExpressionWithoutBlock() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *expression_node = nullptr;
     if (tokens[parseIndex].type == TokenType::Continue) {
         ConsumeString("continue");
-        return new ContinueExpressionNode(pos);
+        return std::make_shared<ContinueExpressionNode>(pos);
     }
     try {
-        expression_node = ParseJumpExpression();
-        return expression_node;
-    } catch (std::exception &) {
-        delete expression_node;
+        return ParseJumpExpression();
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseTupleExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseTupleExpression() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<ExpressionNode *> expression_nodes;
+    std::vector<std::shared_ptr<ExpressionNode>> expression_nodes;
     try {
         ConsumeString("(");
         while (tokens[parseIndex].token != ")") {
-            auto *tmp = ParseExpression();
-            expression_nodes.emplace_back(tmp);
+            expression_nodes.emplace_back(ParseExpression());
         }
         ConsumeString(")");
-        return new TupleExpressionNode(pos, expression_nodes);
-    } catch (std::exception &) {
+        return std::make_shared<TupleExpressionNode>(pos, std::move(expression_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseJumpExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseJumpExpression() {
     Position pos = tokens[parseIndex].pos;
     try {
         TokenType type;
@@ -741,250 +621,202 @@ ExpressionNode *Parser::ParseJumpExpression() {
             type = TokenType::Return;
             parseIndex++;
         } else {
-            auto *tmp = ParseAssignmentExpression();
-            return tmp;
+            return ParseAssignmentExpression();
         }
 
-        ExpressionNode *tmp = nullptr;
+        std::shared_ptr<ExpressionNode> tmp = nullptr;
         try {
             tmp = ParseAssignmentExpression();
-        } catch (std::exception &) {
-            delete tmp;
+        } catch (const ParseError &) {
             tmp = nullptr;
         }
 
-        return new JumpExpressionNode(pos, type, tmp);
-    } catch (std::exception &) {
+        return std::make_shared<JumpExpressionNode>(pos, type, tmp);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseAssignmentExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseAssignmentExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    ExpressionNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseLogicalOrExpression();
+        auto lhs_ = ParseLogicalOrExpression();
         if (tokens[parseIndex].type == TokenType::Eq || tokens[parseIndex].type == TokenType::PlusEq ||
             tokens[parseIndex].type == TokenType::MinusEq || tokens[parseIndex].type == TokenType::MulEq ||
             tokens[parseIndex].type == TokenType::DivEq || tokens[parseIndex].type == TokenType::ModEq ||
             tokens[parseIndex].type == TokenType::AndEq || tokens[parseIndex].type == TokenType::OrEq ||
             tokens[parseIndex].type == TokenType::XorEq || tokens[parseIndex].type == TokenType::SLEq ||
             tokens[parseIndex].type == TokenType::SREq) {
-            TokenType type;
-            type = tokens[parseIndex].type;
+            TokenType type = tokens[parseIndex].type;
             parseIndex++;
-            rhs_ = ParseAssignmentExpression();
-            return new AssignmentExpressionNode(pos, type, lhs_, rhs_);
+            auto rhs_ = ParseAssignmentExpression();
+            return std::make_shared<AssignmentExpressionNode>(pos, type, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseLogicalOrExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseLogicalOrExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    ExpressionNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseLogicalAndExpression();
+        auto lhs_ = ParseLogicalAndExpression();
         while (tokens[parseIndex].type == TokenType::OrOr) {
             ConsumeString("||");
-            rhs_ = ParseLogicalAndExpression();
-            lhs_ = new LogicOrExpressionNode(pos, lhs_, rhs_);
+            auto rhs_ = ParseLogicalAndExpression();
+            lhs_ = std::make_shared<LogicOrExpressionNode>(pos, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseLogicalAndExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseLogicalAndExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    ExpressionNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseComparisonExpression();
+        auto lhs_ = ParseComparisonExpression();
         while (tokens[parseIndex].type == TokenType::AndAnd) {
             ConsumeString("&&");
-            rhs_ = ParseComparisonExpression();
-            lhs_ = new LogicAndExpressionNode(pos, lhs_, rhs_);
+            auto rhs_ = ParseComparisonExpression();
+            lhs_ = std::make_shared<LogicAndExpressionNode>(pos, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseComparisonExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseComparisonExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    ExpressionNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseBitwiseOrExpression();
+        auto lhs_ = ParseBitwiseOrExpression();
         while (tokens[parseIndex].type == TokenType::Lt || tokens[parseIndex].type == TokenType::Gt
                || tokens[parseIndex].type == TokenType::LEq || tokens[parseIndex].type == TokenType::GEq
                || tokens[parseIndex].type == TokenType::EqEq || tokens[parseIndex].type == TokenType::NEq) {
             TokenType type = tokens[parseIndex].type;
             parseIndex++;
-            rhs_ = ParseBitwiseOrExpression();
-            lhs_ = new ComparisonExpressionNode(pos, type, lhs_, rhs_);
+            auto rhs_ = ParseBitwiseOrExpression();
+            lhs_ = std::make_shared<ComparisonExpressionNode>(pos, type, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseBitwiseOrExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseBitwiseOrExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    ExpressionNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseBitwiseXorExpression();
+        auto lhs_ = ParseBitwiseXorExpression();
         while (tokens[parseIndex].type == TokenType::Or) {
             parseIndex++;
-            rhs_ = ParseBitwiseXorExpression();
-            lhs_ = new BitwiseOrExpressionNode(pos, lhs_, rhs_);
+            auto rhs_ = ParseBitwiseXorExpression();
+            lhs_ = std::make_shared<BitwiseOrExpressionNode>(pos, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseBitwiseXorExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseBitwiseXorExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    ExpressionNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseBitwiseAndExpression();
+        auto lhs_ = ParseBitwiseAndExpression();
         while (tokens[parseIndex].type == TokenType::Xor) {
             parseIndex++;
-            rhs_ = ParseBitwiseAndExpression();
-            lhs_ = new BitwiseXorExpressionNode(pos, lhs_, rhs_);
+            auto rhs_ = ParseBitwiseAndExpression();
+            lhs_ = std::make_shared<BitwiseXorExpressionNode>(pos, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseBitwiseAndExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseBitwiseAndExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    ExpressionNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseShiftExpression();
+        auto lhs_ = ParseShiftExpression();
         while (tokens[parseIndex].type == TokenType::And) {
             parseIndex++;
-            rhs_ = ParseShiftExpression();
-            lhs_ = new BitwiseAndExpressionNode(pos, lhs_, rhs_);
+            auto rhs_ = ParseShiftExpression();
+            lhs_ = std::make_shared<BitwiseAndExpressionNode>(pos, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseShiftExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseShiftExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    ExpressionNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseAddMinusExpression();
+        auto lhs_ = ParseAddMinusExpression();
         while (tokens[parseIndex].type == TokenType::SL || tokens[parseIndex].type == TokenType::SR) {
             TokenType type = tokens[parseIndex].type;
             parseIndex++;
-            rhs_ = ParseAddMinusExpression();
-            lhs_ = new ShiftExpressionNode(pos, type, lhs_, rhs_);
+            auto rhs_ = ParseAddMinusExpression();
+            lhs_ = std::make_shared<ShiftExpressionNode>(pos, type, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseAddMinusExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseAddMinusExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    ExpressionNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseMulDivModExpression();
+        auto lhs_ = ParseMulDivModExpression();
         while (tokens[parseIndex].type == TokenType::Plus || tokens[parseIndex].type == TokenType::Minus) {
             TokenType type = tokens[parseIndex].type;
             parseIndex++;
-            rhs_ = ParseMulDivModExpression();
-            lhs_ = new AddMinusExpressionNode(pos, type, lhs_, rhs_);
+            auto rhs_ = ParseMulDivModExpression();
+            lhs_ = std::make_shared<AddMinusExpressionNode>(pos, type, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseMulDivModExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseMulDivModExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    ExpressionNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseTypeCastExpression();
+        auto lhs_ = ParseTypeCastExpression();
         while (tokens[parseIndex].type == TokenType::Mul || tokens[parseIndex].type == TokenType::Div
                || tokens[parseIndex].type == TokenType::MOD) {
             TokenType type = tokens[parseIndex].type;
             parseIndex++;
-            rhs_ = ParseTypeCastExpression();
-            lhs_ = new MulDivModExpressionNode(pos, type, lhs_, rhs_);
+            auto rhs_ = ParseTypeCastExpression();
+            lhs_ = std::make_shared<MulDivModExpressionNode>(pos, type, lhs_, rhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseTypeCastExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseTypeCastExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    TypeNode *rhs_ = nullptr;
     try {
-        lhs_ = ParseUnaryExpression();
+        auto lhs_ = ParseUnaryExpression();
         while (tokens[parseIndex].type == TokenType::As) {
             parseIndex++;
-            rhs_ = ParseType();
-            lhs_ = new TypeCastExpressionNode(pos, rhs_, lhs_);
+            auto rhs_ = ParseType();
+            lhs_ = std::make_shared<TypeCastExpressionNode>(pos, rhs_, lhs_);
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseUnaryExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseUnaryExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *rhs_ = nullptr;
     try {
         while (tokens[parseIndex].type == TokenType::Minus ||
             tokens[parseIndex].type == TokenType::Not ||
@@ -1000,29 +832,25 @@ ExpressionNode *Parser::ParseUnaryExpression() {
                 ConsumeString("mut");
                 type = TokenType::AndAndMut;
             }
-            rhs_ = ParseUnaryExpression();
-            return new UnaryExpressionNode(pos, type, rhs_);
+            auto rhs_ = ParseUnaryExpression();
+            return std::make_shared<UnaryExpressionNode>(pos, type, rhs_);
         }
         return ParseCallExpression();
-    } catch (std::exception &) {
-        delete rhs_;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseCallExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParseCallExpression() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *lhs_ = nullptr;
-    std::vector<ExpressionNode *> params_;
-    ExpressionNode *expression_node = nullptr;
     try {
-        lhs_ = ParsePrimaryExpression();
+        auto lhs_ = ParsePrimaryExpression();
         while (true) {
             if (tokens[parseIndex].type == TokenType::LParen) {
                 ConsumeString("(");
+                std::vector<std::shared_ptr<ExpressionNode>> params_;
                 while (tokens[parseIndex].type != TokenType::RParen) {
-                    auto *tmp = ParseExpression();
-                    params_.push_back(tmp);
+                    params_.push_back(ParseExpression());
                     if (tokens[parseIndex].type == TokenType::Comma) {
                         ConsumeString(",");
                     } else if (tokens[parseIndex].type != TokenType::RParen) {
@@ -1030,17 +858,17 @@ ExpressionNode *Parser::ParseCallExpression() {
                     }
                 }
                 ConsumeString(")");
-                lhs_ = new FunctionCallExpressionNode(pos, lhs_, params_);
+                lhs_ = std::make_shared<FunctionCallExpressionNode>(pos, lhs_, std::move(params_));
             } else if (tokens[parseIndex].type == TokenType::LBracket) {
                 ConsumeString("[");
-                expression_node = ParseExpression();
+                auto expression_node = ParseExpression();
                 ConsumeString("]");
-                lhs_ = new ArrayIndexExpressionNode(pos, lhs_, expression_node);
+                lhs_ = std::make_shared<ArrayIndexExpressionNode>(pos, lhs_, expression_node);
             } else if (tokens[parseIndex].type == TokenType::Dot) {
                 ConsumeString(".");
                 if (tokens[parseIndex].type == TokenType::IntegerLiteral ||
                     tokens[parseIndex].type == TokenType::Identifier) {
-                    lhs_ = new MemberAccessExpressionNode(pos, lhs_, tokens[parseIndex]);
+                    lhs_ = std::make_shared<MemberAccessExpressionNode>(pos, lhs_, tokens[parseIndex]);
                     parseIndex++;
                 } else {
                     throw ParseError("Parse Error: Expected an identifier or integer after .", pos);
@@ -1050,31 +878,24 @@ ExpressionNode *Parser::ParseCallExpression() {
             }
         }
         return lhs_;
-    } catch (std::exception &) {
-        delete lhs_;
-        delete expression_node;
-        for (auto &it: params_) {
-            delete it;
-        }
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParsePrimaryExpression() {
+std::shared_ptr<ExpressionNode> Parser::ParsePrimaryExpression() {
     Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
-    std::vector<ExpressionNode *> expression_nodes;
+
     try {
-        auto *tmp = ParseLiteral();
-        return tmp;
-    } catch (std::exception &) {
+        return ParseLiteral();
+    } catch (const ParseError &) {
         parseIndex = start;
     }
 
     try {
-        auto *tmp = ParseStructExpression();
-        return tmp;
-    } catch (std::exception &) {
+        return ParseStructExpression();
+    } catch (const ParseError &) {
         parseIndex = start;
     }
 
@@ -1084,37 +905,35 @@ ExpressionNode *Parser::ParsePrimaryExpression() {
         }
         if (tokens[parseIndex].type == TokenType::LParen) {
             ConsumeString("(");
-            auto *first = ParseExpression();
+            auto first = ParseExpression();
             if (tokens[parseIndex].type == TokenType::Comma) {
+                std::vector<std::shared_ptr<ExpressionNode>> expression_nodes;
                 expression_nodes.emplace_back(first);
                 while (tokens[parseIndex].type != TokenType::RParen) {
-                    auto *tmp = ParseExpression();
-                    expression_nodes.push_back(tmp);
+                    expression_nodes.push_back(ParseExpression());
                     if (tokens[parseIndex].type == TokenType::Comma) {
                         ConsumeString(",");
                     } else {
-                        ConsumeString(")");
+                        break; // Allow trailing comma
                     }
                 }
-                return new TupleExpressionNode(pos, expression_nodes);
+                ConsumeString(")");
+                return std::make_shared<TupleExpressionNode>(pos, std::move(expression_nodes));
             }
             ConsumeString(")");
-            return new GroupedExpressionNode(pos, first);
+            return std::make_shared<GroupedExpressionNode>(pos, first);
         }
         throw ParseError("Parse Error: Invalid Primary Expression", pos);
-    } catch (std::exception &) {
-        for (auto &it: expression_nodes) {
-            delete it;
-        }
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-StructExpressionNode *Parser::ParseStructExpression() {
+std::shared_ptr<StructExpressionNode> Parser::ParseStructExpression() {
     Position pos = tokens[parseIndex].pos;
-    PathInExpressionNode *path_in_expression_node = nullptr;
-    StructExprFieldsNode *struct_field_node = nullptr;
-    StructBaseNode *struct_base_node = nullptr;
+    std::shared_ptr<PathInExpressionNode> path_in_expression_node = nullptr;
+    std::shared_ptr<StructExprFieldsNode> struct_field_node = nullptr;
+    std::shared_ptr<StructBaseNode> struct_base_node = nullptr;
     try {
         path_in_expression_node = ParsePathInExpression();
         ConsumeString("{");
@@ -1124,19 +943,16 @@ StructExpressionNode *Parser::ParseStructExpression() {
             struct_field_node = ParseStructExprFields();
         }
         ConsumeString("}");
-        return new StructExpressionNode(pos, path_in_expression_node,
+        return std::make_shared<StructExpressionNode>(pos, path_in_expression_node,
                                         struct_field_node, struct_base_node);
-    } catch (std::exception &) {
-        delete path_in_expression_node;
-        delete struct_field_node;
-        delete struct_base_node;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-StructExprFieldNode *Parser::ParseStructExprField() {
+std::shared_ptr<StructExprFieldNode> Parser::ParseStructExprField() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *expr = nullptr;
+    std::shared_ptr<ExpressionNode> expr = nullptr;
     try {
         if (tokens[parseIndex].type != TokenType::Identifier) {
             throw ParseError("Parse Error: Identifier Not Found", pos);
@@ -1147,21 +963,18 @@ StructExprFieldNode *Parser::ParseStructExprField() {
             ConsumeString(":");
             expr = ParseExpression();
         }
-        return new StructExprFieldNode(pos, identifier, expr);
-    } catch (std::exception &) {
-        delete expr;
+        return std::make_shared<StructExprFieldNode>(pos, identifier, expr);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-StructExprFieldsNode *Parser::ParseStructExprFields() {
+std::shared_ptr<StructExprFieldsNode> Parser::ParseStructExprFields() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<StructExprFieldNode *> fields;
-    StructExprFieldNode *field_node = nullptr;
-    StructBaseNode *base = nullptr;
+    std::vector<std::shared_ptr<StructExprFieldNode>> fields;
+    std::shared_ptr<StructBaseNode> base = nullptr;
     try {
-        field_node = ParseStructExprField();
-        fields.emplace_back(field_node);
+        fields.emplace_back(ParseStructExprField());
         while (tokens[parseIndex].type == TokenType::Comma) {
             ConsumeString(",");
             if (tokens[parseIndex].type == TokenType::DotDot) {
@@ -1171,38 +984,27 @@ StructExprFieldsNode *Parser::ParseStructExprFields() {
             if (tokens[parseIndex].type == TokenType::RBrace) {
                 break;
             }
-            field_node = ParseStructExprField();
-            fields.emplace_back(field_node);
+            fields.emplace_back(ParseStructExprField());
         }
-        return new StructExprFieldsNode(pos, fields, base);
+        return std::make_shared<StructExprFieldsNode>(pos, std::move(fields), base);
     } catch (const ParseError &) {
-        for (auto it: fields) {
-            delete it;
-        }
-        delete field_node;
-        delete base;
         throw;
     }
 }
 
-StructBaseNode *Parser::ParseStructBase() {
+std::shared_ptr<StructBaseNode> Parser::ParseStructBase() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *expr = nullptr;
     try {
         ConsumeString("..");
-        expr = ParseExpression();
-        return new StructBaseNode(pos, expr);
-    } catch (std::exception &) {
-        delete expr;
+        auto expr = ParseExpression();
+        return std::make_shared<StructBaseNode>(pos, expr);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionNode *Parser::ParseLiteral() {
+std::shared_ptr<ExpressionNode> Parser::ParseLiteral() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<ExpressionNode *> expression_nodes;
-    ExpressionNode *lhs = nullptr;
-    ExpressionNode *rhs = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::IntegerLiteral) {
             std::string token_ = tokens[parseIndex].token;
@@ -1228,231 +1030,196 @@ ExpressionNode *Parser::ParseLiteral() {
                     is_i32 = is_u32 = is_isize = false;
                 }
             }
-            return new IntLiteralNode(pos, StringToInt(tokens[parseIndex++].token),
+            return std::make_shared<IntLiteralNode>(pos, StringToInt(tokens[parseIndex++].token),
                 is_u32, is_i32, is_usize, is_isize);
         }
         if (tokens[parseIndex].type == TokenType::StringLiteral ||
             tokens[parseIndex].type == TokenType::RawStringLiteral) {
-            return new StringLiteralNode(pos, rust_str_to_cpp(tokens[parseIndex++].token));
+            return std::make_shared<StringLiteralNode>(pos, rust_str_to_cpp(tokens[parseIndex++].token));
         }
         if (tokens[parseIndex].type == TokenType::CStringLiteral ||
             tokens[parseIndex].type == TokenType::RawCStringLiteral) {
-            return new CStringLiteralNode(pos, rust_str_to_cpp(tokens[parseIndex++].token));
+            return std::make_shared<CStringLiteralNode>(pos, rust_str_to_cpp(tokens[parseIndex++].token));
         }
         if (tokens[parseIndex].type == TokenType::CharLiteral) {
-            return new CharLiteralNode(pos, rust_char_to_cpp(tokens[parseIndex++].token));
+            return std::make_shared<CharLiteralNode>(pos, rust_char_to_cpp(tokens[parseIndex++].token));
         }
         if (tokens[parseIndex].type == TokenType::True) {
             parseIndex++;
-            return new BoolLiteralNode(pos, true);
+            return std::make_shared<BoolLiteralNode>(pos, true);
         }
         if (tokens[parseIndex].type == TokenType::False) {
             parseIndex++;
-            return new BoolLiteralNode(pos, false);
+            return std::make_shared<BoolLiteralNode>(pos, false);
         }
         if (tokens[parseIndex].type == TokenType::LBracket) {
             ConsumeString("[");
+            std::vector<std::shared_ptr<ExpressionNode>> expression_nodes;
+            std::shared_ptr<ExpressionNode> lhs = nullptr;
+            std::shared_ptr<ExpressionNode> rhs = nullptr;
             if (tokens[parseIndex].type == TokenType::RBracket) {
                 ConsumeString("]");
-                return new ArrayLiteralNode(pos, expression_nodes, lhs, rhs);
+                return std::make_shared<ArrayLiteralNode>(pos, std::move(expression_nodes), lhs, rhs);
             }
-            auto *tmp = ParseExpression();
+            auto tmp = ParseExpression();
             if (tokens[parseIndex].type == TokenType::Semicolon) {
                 lhs = tmp;
                 ConsumeString(";");
                 rhs = ParseExpression();
                 ConsumeString("]");
-                return new ArrayLiteralNode(pos, expression_nodes, lhs, rhs);
+                return std::make_shared<ArrayLiteralNode>(pos, std::move(expression_nodes), lhs, rhs);
             }
             expression_nodes.emplace_back(tmp);
             while (tokens[parseIndex].type == TokenType::Comma) {
                 ConsumeString(",");
-                tmp = ParseExpression();
-                expression_nodes.push_back(tmp);
+                if (tokens[parseIndex].type == TokenType::RBracket) {
+                    break;
+                }
+                expression_nodes.push_back(ParseExpression());
             }
             ConsumeString("]");
-            return new ArrayLiteralNode(pos, expression_nodes, lhs, rhs);
+            return std::make_shared<ArrayLiteralNode>(pos, std::move(expression_nodes), lhs, rhs);
         }
         throw ParseError("Parse Error: Not A Literal", pos);
-    } catch (std::exception &) {
-        for (auto &it: expression_nodes) {
-            delete it;
-        }
-        delete lhs;
-        delete rhs;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-PathExpressionNode *Parser::ParsePathExpression() {
-    PathInExpressionNode *path_in_expression_node = nullptr;
+std::shared_ptr<PathExpressionNode> Parser::ParsePathExpression() {
     try {
-        path_in_expression_node = ParsePathInExpression();
-        return path_in_expression_node;
-    } catch (std::exception &) {
-        delete path_in_expression_node;
+        return ParsePathInExpression();
+    } catch (const ParseError &) {
         throw;
     }
 }
 
 
-PathInExpressionNode *Parser::ParsePathInExpression() {
+std::shared_ptr<PathInExpressionNode> Parser::ParsePathInExpression() {
     Position pos = tokens[parseIndex].pos;
-    PathIndentSegmentNode *tmp = nullptr;
-    std::vector<PathIndentSegmentNode *> simple_path_segments;
+    std::vector<std::shared_ptr<PathIndentSegmentNode>> simple_path_segments;
     try {
         if (tokens[parseIndex].type == TokenType::ColonColon) {
             ConsumeString("::");
         }
-        tmp = ParsePathIndentSegment();
-        simple_path_segments.emplace_back(tmp);
+        simple_path_segments.emplace_back(ParsePathIndentSegment());
         while (tokens[parseIndex].type == TokenType::ColonColon) {
             ConsumeString("::");
-            tmp = ParsePathIndentSegment();
-            simple_path_segments.emplace_back(tmp);
+            simple_path_segments.emplace_back(ParsePathIndentSegment());
         }
-        return new PathInExpressionNode(pos, simple_path_segments);
-    } catch (std::exception &) {
-        delete tmp;
-        for (auto &it: simple_path_segments) {
-            delete it;
-        }
+        return std::make_shared<PathInExpressionNode>(pos, std::move(simple_path_segments));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-StatementsNode *Parser::ParseStatements() {
+std::shared_ptr<StatementsNode> Parser::ParseStatements() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<StatementNode *> statement_nodes;
-    ExpressionNode *expression_node = nullptr;
+    std::vector<std::shared_ptr<StatementNode>> statement_nodes;
+    std::shared_ptr<ExpressionNode> expression_node = nullptr;
     while (tokens[parseIndex].type != TokenType::RBrace) {
-        StatementNode *tmp;
         uint32_t start = parseIndex;
         try {
-            tmp = ParseStatement();
-            statement_nodes.emplace_back(tmp);
+            statement_nodes.emplace_back(ParseStatement());
             continue;
-        } catch (std::exception &) {
+        } catch (const ParseError &) {
             parseIndex = start;
         }
 
         try {
             expression_node = ParseExpressionWithoutBlock();
             break;
-        } catch (std::exception &) {
-            for (auto &it: statement_nodes) {
-                delete it;
-            }
+        } catch (const ParseError &) {
             throw;
         }
     }
-    return new StatementsNode(pos, statement_nodes, expression_node);
+    return std::make_shared<StatementsNode>(pos, std::move(statement_nodes), expression_node);
 }
 
-ConditionsNode *Parser::ParseConditions() {
+std::shared_ptr<ConditionsNode> Parser::ParseConditions() {
     Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
-    ExpressionNode *tmp = nullptr;
-    LetChainNode *let_chain_node = nullptr;
+    std::shared_ptr<ExpressionNode> tmp = nullptr;
+    std::shared_ptr<LetChainNode> let_chain_node = nullptr;
     try {
         tmp = ParseExpression();
-        return new ConditionsNode(pos, tmp, let_chain_node);
-    } catch (std::exception &) {
-        delete tmp;
+        return std::make_shared<ConditionsNode>(pos, tmp, let_chain_node);
+    } catch (const ParseError &) {
         parseIndex = start;
     }
 
     try {
         let_chain_node = ParseLetChain();
-        return new ConditionsNode(pos, tmp, let_chain_node);
-    } catch (std::exception &) {
-        delete let_chain_node;
+        return std::make_shared<ConditionsNode>(pos, tmp, let_chain_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-LetChainNode *Parser::ParseLetChain() {
+std::shared_ptr<LetChainNode> Parser::ParseLetChain() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<LetChainConditionNode *> let_chain_condition_nodes;
-    LetChainConditionNode *let_chain_condition_node = nullptr;
+    std::vector<std::shared_ptr<LetChainConditionNode>> let_chain_condition_nodes;
     try {
-        let_chain_condition_node = ParseLetChainCondition();
-        let_chain_condition_nodes.emplace_back(let_chain_condition_node);
+        let_chain_condition_nodes.emplace_back(ParseLetChainCondition());
         while (tokens[parseIndex].type == TokenType::AndAnd) {
             ConsumeString("&&");
-            let_chain_condition_node = ParseLetChainCondition();
-            let_chain_condition_nodes.emplace_back(let_chain_condition_node);
+            let_chain_condition_nodes.emplace_back(ParseLetChainCondition());
         }
-        return new LetChainNode(pos, let_chain_condition_nodes);
-    } catch (std::exception &) {
-        for (auto &it: let_chain_condition_nodes) {
-            delete it;
-        }
-        delete let_chain_condition_node;
+        return std::make_shared<LetChainNode>(pos, std::move(let_chain_condition_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-LetChainConditionNode *Parser::ParseLetChainCondition() {
+std::shared_ptr<LetChainConditionNode> Parser::ParseLetChainCondition() {
     Position pos = tokens[parseIndex].pos;
-    PatternNode *pattern_node = nullptr;
-    ExpressionNode *expression_node = nullptr;
+    std::shared_ptr<PatternNode> pattern_node = nullptr;
+    std::shared_ptr<ExpressionNode> expression_node = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::Let) {
             ConsumeString("let");
             pattern_node = ParsePattern();
             ConsumeString("=");
             expression_node = ParseExpression();
-            return new LetChainConditionNode(pos, pattern_node, expression_node);
+            return std::make_shared<LetChainConditionNode>(pos, pattern_node, expression_node);
         }
         expression_node = ParseExpression();
-        return new LetChainConditionNode(pos, pattern_node, expression_node);
-    } catch (std::exception &) {
-        delete pattern_node;
-        delete expression_node;
+        return std::make_shared<LetChainConditionNode>(pos, pattern_node, expression_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
 /****************  Statement  ****************/
-StatementNode *Parser::ParseStatement() {
+std::shared_ptr<StatementNode> Parser::ParseStatement() {
     Position pos = tokens[parseIndex].pos;
-    StatementNode *statement_node = nullptr;
-    VisItemNode *vis_item_node = nullptr;
     uint32_t start = parseIndex;
     try {
         if (tokens[parseIndex].type == TokenType::Semicolon) {
             ConsumeString(";");
-            return new EmptyStatementNode(pos);
+            return std::make_shared<EmptyStatementNode>(pos);
         }
         if (tokens[parseIndex].type == TokenType::Let) {
-            statement_node = ParseLetStatement();
-            return statement_node;
+            return ParseLetStatement();
         }
-        statement_node = ParseExpressionStatement();
-        return statement_node;
-    } catch (std::exception &) {
+        return ParseExpressionStatement();
+    } catch (const ParseError &) {
         parseIndex = start;
-        delete statement_node;
-        statement_node = nullptr;
     }
 
     try {
-        vis_item_node = ParseVisItem();
-        return new VisItemStatementNode(pos, vis_item_node);
-    } catch (std::exception &) {
-        delete vis_item_node;
-        delete statement_node;
+        return std::make_shared<VisItemStatementNode>(pos, ParseVisItem());
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-LetStatementNode *Parser::ParseLetStatement() {
+std::shared_ptr<LetStatementNode> Parser::ParseLetStatement() {
     Position pos = tokens[parseIndex].pos;
-    PatternNoTopAltNode *pattern_no_top_alt_node = nullptr;
-    TypeNode *type_node = nullptr;
-    ExpressionNode *expression_node = nullptr;
-    BlockExpressionNode *block_expression_node = nullptr;
+    std::shared_ptr<PatternNoTopAltNode> pattern_no_top_alt_node = nullptr;
+    std::shared_ptr<TypeNode> type_node = nullptr;
+    std::shared_ptr<ExpressionNode> expression_node = nullptr;
+    std::shared_ptr<BlockExpressionNode> block_expression_node = nullptr;
     try {
         ConsumeString("let");
         pattern_no_top_alt_node = ParsePatternNoTopAlt();
@@ -1468,28 +1235,22 @@ LetStatementNode *Parser::ParseLetStatement() {
             // TODO Check Whether the expression node is lazyBooleanExpression Or end with a '}'
         }
         ConsumeString(";");
-        return new LetStatementNode(pos, pattern_no_top_alt_node, type_node,
+        return std::make_shared<LetStatementNode>(pos, pattern_no_top_alt_node, type_node,
                                     expression_node, block_expression_node);
-    } catch (std::exception &) {
-        delete pattern_no_top_alt_node;
-        delete type_node;
-        delete expression_node;
-        delete block_expression_node;
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ExpressionStatementNode *Parser::ParseExpressionStatement() {
+std::shared_ptr<ExpressionStatementNode> Parser::ParseExpressionStatement() {
     Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
-    ExpressionNode *expression_node = nullptr;
+    std::shared_ptr<ExpressionNode> expression_node = nullptr;
     try {
         expression_node = ParseExpressionWithoutBlock();
         ConsumeString(";");
-        return new ExpressionStatementNode(pos, expression_node);
-    } catch (std::exception &) {
-        delete expression_node;
-        expression_node = nullptr;
+        return std::make_shared<ExpressionStatementNode>(pos, expression_node);
+    } catch (const ParseError &) {
         parseIndex = start;
     }
 
@@ -1498,137 +1259,107 @@ ExpressionStatementNode *Parser::ParseExpressionStatement() {
         if (tokens[parseIndex].type == TokenType::Semicolon) {
             ConsumeString(";");
         }
-        return new ExpressionStatementNode(pos, expression_node);
-    } catch (std::exception &) {
-        delete expression_node;
+        return std::make_shared<ExpressionStatementNode>(pos, expression_node);
+    } catch (const ParseError &) {
         throw ParseError("Parse Error: Failed to match ExpressionStatement", pos);
     }
 }
 
 
 /****************  Pattern  ****************/
-PatternNode *Parser::ParsePattern() {
+std::shared_ptr<PatternNode> Parser::ParsePattern() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<PatternNoTopAltNode *> pattern_no_top_alt_nodes;
-    PatternNoTopAltNode *tmp = nullptr;
+    std::vector<std::shared_ptr<PatternNoTopAltNode>> pattern_no_top_alt_nodes;
     try {
         if (tokens[parseIndex].type == TokenType::Or) {
             ConsumeString("|");
         }
-        tmp = ParsePatternNoTopAlt();
-        pattern_no_top_alt_nodes.emplace_back(tmp);
+        pattern_no_top_alt_nodes.emplace_back(ParsePatternNoTopAlt());
         while (tokens[parseIndex].type == TokenType::Or) {
             ConsumeString("|");
-            tmp = ParsePatternNoTopAlt();
-            pattern_no_top_alt_nodes.emplace_back(tmp);
+            pattern_no_top_alt_nodes.emplace_back(ParsePatternNoTopAlt());
         }
-        return new PatternNode(pos, pattern_no_top_alt_nodes);
-    } catch (std::exception &) {
-        delete tmp;
-        for (auto &it: pattern_no_top_alt_nodes) {
-            delete it;
-        }
+        return std::make_shared<PatternNode>(pos, std::move(pattern_no_top_alt_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-PatternNoTopAltNode *Parser::ParsePatternNoTopAlt() {
+std::shared_ptr<PatternNoTopAltNode> Parser::ParsePatternNoTopAlt() {
     try {
-        PatternNoTopAltNode *ret = ParsePatternWithoutRange();
-        return ret;
-    } catch (std::exception &) {
+        return ParsePatternWithoutRange();
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-PatternWithoutRangeNode *Parser::ParsePatternWithoutRange() {
+std::shared_ptr<PatternWithoutRangeNode> Parser::ParsePatternWithoutRange() {
     Position pos = tokens[parseIndex].pos;
     uint32_t start = parseIndex;
-    PatternWithoutRangeNode *tmp = nullptr;
-    PatternNode *pattern_node = nullptr;
-    try {
-        tmp = ParseLiteralPattern();
-        return tmp;
-    } catch (std::exception &) {
-        parseIndex = start;
-    }
 
-    try {
-        tmp = ParsePathPattern();
-        return tmp;
-    } catch (std::exception &) {
-        parseIndex = start;
-    }
-
-    try {
-        tmp = ParseIdentifierPattern();
-        return tmp;
-    } catch (std::exception &) {
-        parseIndex = start;
-    }
+    try { return ParseLiteralPattern(); } catch (const ParseError &) { parseIndex = start; }
+    try { return ParsePathPattern(); } catch (const ParseError &) { parseIndex = start; }
+    try { return ParseIdentifierPattern(); } catch (const ParseError &) { parseIndex = start; }
 
     try {
         ConsumeString("_");
-        return new WildcardPatternNode(pos);
-    } catch (std::exception &) {
+        return std::make_shared<WildcardPatternNode>(pos);
+    } catch (const ParseError &) {
         parseIndex = start;
     }
 
     try {
         ConsumeString("..");
-        return new RestPatternNode(pos);
-    } catch (std::exception &) {
+        return std::make_shared<RestPatternNode>(pos);
+    } catch (const ParseError &) {
         parseIndex = start;
     }
 
     try {
         ConsumeString("(");
-        pattern_node = ParsePattern();
+        auto pattern_node = ParsePattern();
         ConsumeString(")");
-        return new GroupedPatternNode(pos, pattern_node);
-    } catch (std::exception &) {
+        return std::make_shared<GroupedPatternNode>(pos, pattern_node);
+    } catch (const ParseError &) {
         parseIndex = start;
     }
 
     try {
-        tmp = ParseSlicePattern();
-        return tmp;
-    } catch (std::exception &) {
+        return ParseSlicePattern();
+    } catch (const ParseError &) {
         parseIndex = start;
         throw ParseError("Parse Error: Failed to Parse PatternWithoutRange", pos);
     }
 }
 
-LiteralPatternNode *Parser::ParseLiteralPattern() {
+std::shared_ptr<LiteralPatternNode> Parser::ParseLiteralPattern() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *expression_node = nullptr;
     try {
-        bool have_minus_ = false;
+        bool have_minus = false;
         if (tokens[parseIndex].type == TokenType::Minus) {
-            have_minus_ = true;
+            have_minus = true;
             ConsumeString("-");
         }
-        expression_node = ParseLiteral();
-        return new LiteralPatternNode(pos, have_minus_, expression_node);
-    } catch (std::exception &) {
-        delete expression_node;
+        auto expression_node = ParseLiteral();
+        return std::make_shared<LiteralPatternNode>(pos, have_minus, expression_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-IdentifierPatternNode *Parser::ParseIdentifierPattern() {
+std::shared_ptr<IdentifierPatternNode> Parser::ParseIdentifierPattern() {
     Position pos = tokens[parseIndex].pos;
-    PatternNoTopAltNode *pattern_no_top_alt_node = nullptr;
+    std::shared_ptr<PatternNoTopAltNode> pattern_no_top_alt_node = nullptr;
     try {
-        bool is_ref_ = false;
-        bool is_mut_ = false;
+        bool is_ref = false;
+        bool is_mut = false;
         if (tokens[parseIndex].type == TokenType::Ref) {
             ConsumeString("ref");
-            is_ref_ = true;
+            is_ref = true;
         }
         if (tokens[parseIndex].type == TokenType::Mut) {
             ConsumeString("mut");
-            is_mut_ = true;
+            is_mut = true;
         }
         if (tokens[parseIndex].type != TokenType::Identifier) {
             throw ParseError("Parse Error: Identifier is missing", pos);
@@ -1639,151 +1370,107 @@ IdentifierPatternNode *Parser::ParseIdentifierPattern() {
             ConsumeString("@");
             pattern_no_top_alt_node = ParsePatternNoTopAlt();
         }
-        return new IdentifierPatternNode(pos, is_ref_, is_mut_, identifier, pattern_no_top_alt_node);
-    } catch (std::exception &) {
-        delete pattern_no_top_alt_node;
+        return std::make_shared<IdentifierPatternNode>(pos, is_ref, is_mut, identifier, pattern_no_top_alt_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-SlicePatternNode *Parser::ParseSlicePattern() {
+std::shared_ptr<SlicePatternNode> Parser::ParseSlicePattern() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<PatternNode *> pattern_nodes;
-    PatternNode *tmp = nullptr;
+    std::vector<std::shared_ptr<PatternNode>> pattern_nodes;
     try {
         ConsumeString("[");
-        tmp = ParsePattern();
-        pattern_nodes.emplace_back(tmp);
-        while (tokens[parseIndex].type == TokenType::Comma) {
-            ConsumeString(",");
-            if (tokens[parseIndex].type == TokenType::RBracket) {
-                break;
+        if (tokens[parseIndex].type != TokenType::RBracket) {
+            pattern_nodes.emplace_back(ParsePattern());
+            while (tokens[parseIndex].type == TokenType::Comma) {
+                ConsumeString(",");
+                if (tokens[parseIndex].type == TokenType::RBracket) {
+                    break;
+                }
+                pattern_nodes.emplace_back(ParsePattern());
             }
-            tmp = ParsePattern();
-            pattern_nodes.emplace_back(tmp);
         }
-        return new SlicePatternNode(pos, pattern_nodes);
-    } catch (std::exception &) {
-        delete tmp;
-        for (auto &it: pattern_nodes) {
-            delete it;
-        }
+        ConsumeString("]");
+        return std::make_shared<SlicePatternNode>(pos, std::move(pattern_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-PathPatternNode *Parser::ParsePathPattern() {
+std::shared_ptr<PathPatternNode> Parser::ParsePathPattern() {
     Position pos = tokens[parseIndex].pos;
-    ExpressionNode *expression_node = nullptr;
     try {
-        expression_node = ParsePathExpression();
-        return new PathPatternNode(pos, expression_node);
-    } catch (std::exception &) {
-        delete expression_node;
+        auto expression_node = ParsePathExpression();
+        return std::make_shared<PathPatternNode>(pos, expression_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
 /****************  Types  ****************/
-TypeNode *Parser::ParseType() {
-    TypeNode *type_node = nullptr;
+std::shared_ptr<TypeNode> Parser::ParseType() {
     try {
-        type_node = ParseTypeNoBounds();
-        return type_node;
-    } catch (std::exception &) {
-        delete type_node;
+        return ParseTypeNoBounds();
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-TypeNoBoundsNode *Parser::ParseTypeNoBounds() {
+std::shared_ptr<TypeNoBoundsNode> Parser::ParseTypeNoBounds() {
     Position pos = tokens[parseIndex].pos;
-    TypeNoBoundsNode *ret = nullptr;
     uint32_t start = parseIndex;
-    try {
-        ret = ParseParenthesizedType();
-        return ret;
-    } catch (std::exception &) {
-        parseIndex = start;
-    }
+    try { return ParseParenthesizedType(); } catch (const ParseError &) { parseIndex = start; }
+    try { return ParseTypePath(); } catch (const ParseError &) { parseIndex = start; }
+    try { return ParseTupleType(); } catch (const ParseError &) { parseIndex = start; }
+    try { return ParseArrayType(); } catch (const ParseError &) { parseIndex = start; }
+    try { return ParseSliceType(); } catch (const ParseError &) { parseIndex = start; }
 
-    try {
-        ret = ParseTypePath();
-        return ret;
-    } catch (std::exception &) {
-        parseIndex = start;
-    }
-
-    try {
-        ret = ParseTupleType();
-        return ret;
-    } catch (std::exception &) {
-        parseIndex = start;
-    }
-
-    try {
-        ret = ParseArrayType();
-        return ret;
-    } catch (std::exception &) {
-        parseIndex = start;
-    }
-
-    try {
-        ret = ParseSliceType();
-        return ret;
-    } catch (std::exception &) {
-        parseIndex = start;
-        throw ParseError("Parse Error: Failed to Parse TypeNoBounds", pos);
-    }
+    throw ParseError("Parse Error: Failed to Parse TypeNoBounds", pos);
 }
 
-ParenthesizedTypeNode *Parser::ParseParenthesizedType() {
+std::shared_ptr<ParenthesizedTypeNode> Parser::ParseParenthesizedType() {
     Position pos = tokens[parseIndex].pos;
     try {
         ConsumeString("(");
-        auto *tmp = ParseType();
+        auto tmp = ParseType();
         ConsumeString(")");
-        return new ParenthesizedTypeNode(pos, tmp);
-    } catch (std::exception &) {
+        return std::make_shared<ParenthesizedTypeNode>(pos, tmp);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-TypePathNode *Parser::ParseTypePath() {
+std::shared_ptr<TypePathNode> Parser::ParseTypePath() {
     Position pos = tokens[parseIndex].pos;
-    TypePathSegmentNode *tmp = nullptr;
     try {
         if (tokens[parseIndex].type == TokenType::ColonColon) {
             ConsumeString("::");
         }
-        tmp = ParseTypePathSegment();
-        return new TypePathNode(pos, tmp);
-    } catch (std::exception &) {
-        delete tmp;
+        auto tmp = ParseTypePathSegment();
+        return std::make_shared<TypePathNode>(pos, tmp);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-TypePathSegmentNode *Parser::ParseTypePathSegment() {
+std::shared_ptr<TypePathSegmentNode> Parser::ParseTypePathSegment() {
     Position pos = tokens[parseIndex].pos;
-    PathIndentSegmentNode *tmp = nullptr;
     try {
-        tmp = ParsePathIndentSegment();
-        return new TypePathSegmentNode(pos, tmp);
-    } catch (std::exception &) {
-        delete tmp;
+        auto tmp = ParsePathIndentSegment();
+        return std::make_shared<TypePathSegmentNode>(pos, tmp);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-TupleTypeNode *Parser::ParseTupleType() {
+std::shared_ptr<TupleTypeNode> Parser::ParseTupleType() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<TypeNode *> type_nodes;
+    std::vector<std::shared_ptr<TypeNode>> type_nodes;
     try {
         ConsumeString("(");
         while (tokens[parseIndex].type != TokenType::RParen) {
-            auto *tmp = ParseType();
-            type_nodes.emplace_back(tmp);
+            type_nodes.emplace_back(ParseType());
             if (tokens[parseIndex].type == TokenType::Comma) {
                 ConsumeString(",");
             } else {
@@ -1791,56 +1478,52 @@ TupleTypeNode *Parser::ParseTupleType() {
             }
         }
         ConsumeString(")");
-        return new TupleTypeNode(pos, type_nodes);
-    } catch (std::exception &) {
+        return std::make_shared<TupleTypeNode>(pos, std::move(type_nodes));
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-ArrayTypeNode *Parser::ParseArrayType() {
+std::shared_ptr<ArrayTypeNode> Parser::ParseArrayType() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode *type_node = nullptr;
-    ExpressionNode *expression_node = nullptr;
     try {
         ConsumeString("[");
-        type_node = ParseType();
+        auto type_node = ParseType();
         ConsumeString(";");
-        expression_node = ParseExpression();
+        auto expression_node = ParseExpression();
         ConsumeString("]");
-        return new ArrayTypeNode(pos, type_node, expression_node);
-    } catch (std::exception &) {
-        delete type_node;
-        delete expression_node;
+        return std::make_shared<ArrayTypeNode>(pos, type_node, expression_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
-SliceTypeNode *Parser::ParseSliceType() {
+std::shared_ptr<SliceTypeNode> Parser::ParseSliceType() {
     Position pos = tokens[parseIndex].pos;
-    TypeNode *type_node = nullptr;
     try {
         ConsumeString("[");
-        type_node = ParseType();
+        auto type_node = ParseType();
         ConsumeString("]");
-        return new SliceTypeNode(pos, type_node);
-    } catch (std::exception &) {
-        delete type_node;
+        return std::make_shared<SliceTypeNode>(pos, type_node);
+    } catch (const ParseError &) {
         throw;
     }
 }
 
 
 /****************  Paths  ****************/
-PathIndentSegmentNode *Parser::ParsePathIndentSegment() {
+std::shared_ptr<PathIndentSegmentNode> Parser::ParsePathIndentSegment() {
     Position pos = tokens[parseIndex].pos;
     try {
         if (tokens[parseIndex].type == TokenType::Super || tokens[parseIndex].type == TokenType::Self ||
             tokens[parseIndex].type == TokenType::SELF || tokens[parseIndex].type == TokenType::Crate ||
             tokens[parseIndex].type == TokenType::Identifier) {
-            return new PathIndentSegmentNode(pos, tokens[parseIndex].type, tokens[parseIndex++].token);
+            auto node = std::make_shared<PathIndentSegmentNode>(pos, tokens[parseIndex].type, tokens[parseIndex].token);
+            parseIndex++;
+            return node;
         }
         throw ParseError("Parse Error: Invalid SimplePathSegment", pos);
-    } catch (std::exception &) {
+    } catch (const ParseError &) {
         throw;
     }
 }

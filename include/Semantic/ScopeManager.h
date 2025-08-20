@@ -122,7 +122,7 @@ public:
             }
             cursor = cursor -> parent_scope_;
         }
-        throw SemanticError("Semantic Error: Symbol not found");
+        throw SemanticError("Semantic Error: Symbol not found - " + name);
     }
 
     void ModifyType(const std::string &name, const std::shared_ptr<Type>& type) const {
