@@ -1,0 +1,14 @@
+fn main() {
+    let mut a = 0;
+    let b = true;
+    while (b) {
+        a = a + 1;
+        if (a > 5) {
+            // 'continue' 和 'break' 在 while 中不返回值
+            continue;
+        }
+        if (a > 10) {
+            break;
+        }
+    }
+} // Test Basic while expression.

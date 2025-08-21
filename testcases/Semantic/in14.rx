@@ -1,5 +1,5 @@
 fn calculate(param: i32) -> i32 {
-    if param > 10 {
+    if (param > 10) {
         let param: i32 = 99;
         return param;
     }

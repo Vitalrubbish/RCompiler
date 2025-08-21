@@ -281,7 +281,7 @@ void SemanticChecker::visit(AssignmentExpressionNode *node) {
 }
 
 void SemanticChecker::visit(ContinueExpressionNode *node) {
-    if (!scope_manager_.in_loop()) {
+    if (!in_loop_) {
         throw SemanticError("Semantic Error: Continue outside of loop", node->pos_);
     }
 }
@@ -291,10 +291,31 @@ void SemanticChecker::visit(UnderscoreExpressionNode *node) {
 
 void SemanticChecker::visit(JumpExpressionNode *node) {
     if (node->expression_) {
-        if (node -> type_ == TokenType::Break && !scope_manager_.in_loop()) {
-            throw SemanticError("Semantic Error: Continue outside of loop", node->pos_);
+        if (in_loop_ && in_while_loop_) {
+            throw SemanticError("Semantic Error: Expression is not allowed after break in while loop",
+                node -> pos_);
         }
         node->expression_->accept(this);
+        if (node -> type_ == TokenType::Break) {
+            if (!in_loop_) {
+                throw SemanticError("Semantic Error: Break outside of loop", node->pos_);
+            }
+            if (loop_return_type_.empty()) {
+                loop_return_type_ = node -> expression_ -> types;
+            } else {
+                loop_return_type_ = cap(loop_return_type_, node -> expression_ -> types);
+                if (loop_return_type_.empty()) {
+                    throw SemanticError("Semantic Error: Break type is not consistent in loop", node -> pos_);
+                }
+            }
+        }
+        return;
+    }
+    if (node -> type_ == TokenType::Break) {
+        if (!in_loop_) {
+            throw SemanticError("Semantic Error: Break outside of loop", node->pos_);
+        }
+        loop_return_type_.emplace_back(scope_manager_.lookup("void").type_);
     }
 }
 
@@ -635,12 +656,38 @@ void SemanticChecker::visit(LoopExpressionNode *node) {
 }
 
 void SemanticChecker::visit(InfiniteLoopExpressionNode *node) {
-    if (node->block_expression_) node->block_expression_->accept(this);
+    if (node->block_expression_) {
+        bool prev_in_loop = in_loop_;
+        bool prev_in_for_loop = in_for_loop_;
+        bool prev_in_while_loop = in_while_loop_;
+        in_loop_ = true;
+        in_for_loop_ = true;
+        in_while_loop_ = false;
+        node->block_expression_->accept(this);
+        node -> types = loop_return_type_;
+        loop_return_type_.clear();
+        in_loop_ = prev_in_loop;
+        in_for_loop_ = prev_in_for_loop;
+        in_while_loop_ = prev_in_while_loop;
+    }
 }
 
 void SemanticChecker::visit(PredicateLoopExpressionNode *node) {
     if (node->conditions_) node->conditions_->accept(this);
-    if (node->block_expression_) node->block_expression_->accept(this);
+    if (node->block_expression_) {
+        bool prev_in_loop = in_loop_;
+        bool prev_in_for_loop = in_for_loop_;
+        bool prev_in_while_loop = in_while_loop_;
+        in_loop_ = true;
+        in_for_loop_ = false;
+        in_while_loop_ = true;
+        node->block_expression_->accept(this);
+        node -> types = loop_return_type_;
+        loop_return_type_.clear();
+        in_loop_ = prev_in_loop;
+        in_for_loop_ = prev_in_for_loop;
+        in_while_loop_ = prev_in_while_loop;
+    }
 }
 
 void SemanticChecker::visit(IfExpressionNode *node) {
@@ -816,7 +863,20 @@ void SemanticChecker::visit(TupleExpressionNode *node) {
 }
 
 void SemanticChecker::visit(ConditionsNode *node) {
-    if (node->expression_) node->expression_->accept(this);
+    if (node->expression_) {
+        node->expression_->accept(this);
+        bool valid = false;
+        for (auto& it: node -> expression_ -> types) {
+            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
+            if (tmp && tmp -> name_ == "bool") {
+                valid = true;
+                break;
+            }
+        }
+        if (!valid) {
+            throw SemanticError("Semantic Error: Expression in condition is not a bool type", node -> pos_);
+        }
+    }
 }
 
 void SemanticChecker::visit(LetChainNode *node) {

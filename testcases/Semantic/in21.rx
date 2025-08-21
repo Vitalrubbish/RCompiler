@@ -1,0 +1,10 @@
+fn main() {
+    let mut condition = true;
+    let result = loop {
+        if (condition) {
+            break 10;
+        } else {
+            break true;
+        }
+    };
+}

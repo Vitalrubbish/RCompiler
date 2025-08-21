@@ -28,7 +28,8 @@ std::shared_ptr<VisItemNode> Parser::ParseVisItem() {
 
     try {
         return ParseFunction();
-    } catch (const ParseError &) {
+    } catch (const ParseError &e) {
+        // std::cout << e.what() << '\n';
         parseIndex = start;
     }
 
@@ -407,13 +408,13 @@ std::shared_ptr<TraitNode> Parser::ParseTrait() {
 std::shared_ptr<ExpressionNode> Parser::ParseExpression() {
     uint32_t start = parseIndex;
     try {
-        return ParseExpressionWithBlock();
+        return ParseExpressionWithoutBlock();
     } catch (const ParseError &) {
         parseIndex = start;
     }
 
     try {
-        return ParseExpressionWithoutBlock();
+        return ParseExpressionWithBlock();
     } catch (const ParseError &) {
         throw;
     }
@@ -900,6 +901,9 @@ std::shared_ptr<ExpressionNode> Parser::ParsePrimaryExpression() {
     }
 
     try {
+        if (tokens[parseIndex].type == TokenType::LBrace) {
+            return ParseBlockExpression();
+        }
         if (tokens[parseIndex].type == TokenType::Identifier) {
             return ParsePathExpression();
         }
@@ -1142,14 +1146,18 @@ std::shared_ptr<ConditionsNode> Parser::ParseConditions() {
     std::shared_ptr<ExpressionNode> tmp = nullptr;
     std::shared_ptr<LetChainNode> let_chain_node = nullptr;
     try {
+        ConsumeString("(");
         tmp = ParseExpression();
+        ConsumeString(")");
         return std::make_shared<ConditionsNode>(pos, tmp, let_chain_node);
     } catch (const ParseError &) {
         parseIndex = start;
     }
 
     try {
+        ConsumeString("(");
         let_chain_node = ParseLetChain();
+        ConsumeString(")");
         return std::make_shared<ConditionsNode>(pos, tmp, let_chain_node);
     } catch (const ParseError &) {
         throw;

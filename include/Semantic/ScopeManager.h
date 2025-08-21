@@ -128,9 +128,5 @@ public:
     void ModifyType(const std::string &name, const std::shared_ptr<Type>& type) const {
         current_scope -> ModifyType(name, type);
     }
-
-    [[nodiscard]] bool in_loop() const {
-        return current_scope -> in_loop_;
-    }
 };
 #endif //SCOPEMANAGER_H

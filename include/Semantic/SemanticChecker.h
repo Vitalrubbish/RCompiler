@@ -4,6 +4,10 @@
 
 class SemanticChecker : public ASTVisitor {
     ScopeManager& scope_manager_;
+    bool in_loop_ = false;
+    bool in_while_loop_ = false;
+    bool in_for_loop_ = false;
+    std::vector<std::shared_ptr<Type>> loop_return_type_;
 public:
     explicit SemanticChecker(ScopeManager & scope_manager):
         scope_manager_(scope_manager) {}

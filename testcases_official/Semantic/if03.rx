@@ -1,6 +1,6 @@
 fn main() {
     let n = 8;
-    if n % 2 == 0 {
+    if (n % 2 == 0) {
         let even = true;
     } else {
         let even = false;

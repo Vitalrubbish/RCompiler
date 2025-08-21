@@ -12,13 +12,9 @@ class Scope {
 public:
     std::vector<std::shared_ptr<Scope> > next_level_scopes_;
     std::shared_ptr<Scope> parent_scope_;
-    bool in_loop_ = false;
     uint32_t index = 0;
 
     Scope() = default;
-
-    explicit Scope(bool in_loop) : in_loop_(in_loop) {
-    }
 
     void declare(const Symbol &symbol) {
         if (symbols_.find(symbol.name_) != symbols_.end()) {

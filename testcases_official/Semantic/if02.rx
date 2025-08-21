@@ -1,6 +1,6 @@
 fn main() {
     let mut flag = true;
-    if flag {
+    if (flag) {
         flag = false;
     } else {
         flag = true;

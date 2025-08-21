@@ -4,10 +4,10 @@ fn main() {
     fn add(a : i32, b : i32, ) -> i32 {
         return a + b;
     }
-    while condition {
+    while (condition) {
         let inner_val: i32 = 5;
         counter = add(inner_val, counter);
-        if counter > 10 {
+        if (counter > 10) {
             condition = false;
         }
     }

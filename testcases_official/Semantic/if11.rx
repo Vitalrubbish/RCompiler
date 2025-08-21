@@ -1,5 +1,5 @@
 fn main() {
-    if some_condition {
+    if (some_condition) {
         let _ = 0;
     }
 }

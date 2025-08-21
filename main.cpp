@@ -19,8 +19,8 @@ SemanticChecker *semantic_checker = new SemanticChecker{scope_manager};
 SymbolManager *symbol_manager = new SymbolManager{scope_manager};
 
 int main() {
-    // freopen("../testcases_official/Semantic/if07.rx", "r", stdin);
-    // freopen("../testcases/Semantic/in00.rx", "r", stdin);
+    // freopen("../testcases_official/Semantic/loop03.rx", "r", stdin);
+    // freopen("../testcases/Semantic/in19.rx", "r", stdin);
     std::string text, line;
     while (std::getline(std::cin, line)) {
         text += line;
@@ -56,7 +56,7 @@ int main() {
         root->accept(semantic_checker);
         std::cout << 0 << '\r';
     } catch (std::exception &error) {
-        std::cout << error.what() << '\n';
+        // std::cout << error.what() << '\n';
         std::cout << -1 << '\r';
     }
 }
