@@ -96,7 +96,7 @@ class PathPatternNode;
 class TypeNoBoundsNode;
 class ParenthesizedTypeNode;
 class TypePathSegmentNode;
-class TupleTypeNode;
+class UnitTypeNode;
 class ArrayTypeNode;
 class SliceTypeNode;
 class ReferenceTypeNode;
@@ -198,7 +198,7 @@ public:
     virtual void visit(ParenthesizedTypeNode *node) = 0;
     virtual void visit(TypePathNode *node) = 0;
     virtual void visit(TypePathSegmentNode *node) = 0;
-    virtual void visit(TupleTypeNode *node) = 0;
+    virtual void visit(UnitTypeNode *node) = 0;
     virtual void visit(ArrayTypeNode *node) = 0;
     virtual void visit(SliceTypeNode *node) = 0;
     virtual void visit(ReferenceTypeNode *node) = 0;

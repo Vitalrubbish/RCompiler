@@ -99,7 +99,7 @@ public:
     std::shared_ptr<ParenthesizedTypeNode> ParseParenthesizedType();
     std::shared_ptr<TypePathNode> ParseTypePath();
     std::shared_ptr<TypePathSegmentNode> ParseTypePathSegment();
-    std::shared_ptr<TupleTypeNode> ParseTupleType();
+    std::shared_ptr<UnitTypeNode> ParseUnitType();
     std::shared_ptr<ArrayTypeNode> ParseArrayType();
     std::shared_ptr<SliceTypeNode> ParseSliceType();
 

@@ -1430,7 +1430,7 @@ std::shared_ptr<TypeNoBoundsNode> Parser::ParseTypeNoBounds() {
     uint32_t start = parseIndex;
     try { return ParseParenthesizedType(); } catch (const ParseError &) { parseIndex = start; }
     try { return ParseTypePath(); } catch (const ParseError &) { parseIndex = start; }
-    try { return ParseTupleType(); } catch (const ParseError &) { parseIndex = start; }
+    try { return ParseUnitType(); } catch (const ParseError &) { parseIndex = start; }
     try { return ParseArrayType(); } catch (const ParseError &) { parseIndex = start; }
     try { return ParseSliceType(); } catch (const ParseError &) { parseIndex = start; }
 
@@ -1472,21 +1472,12 @@ std::shared_ptr<TypePathSegmentNode> Parser::ParseTypePathSegment() {
     }
 }
 
-std::shared_ptr<TupleTypeNode> Parser::ParseTupleType() {
+std::shared_ptr<UnitTypeNode> Parser::ParseUnitType() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<std::shared_ptr<TypeNode>> type_nodes;
     try {
         ConsumeString("(");
-        while (tokens[parseIndex].type != TokenType::RParen) {
-            type_nodes.emplace_back(ParseType());
-            if (tokens[parseIndex].type == TokenType::Comma) {
-                ConsumeString(",");
-            } else {
-                break;
-            }
-        }
         ConsumeString(")");
-        return std::make_shared<TupleTypeNode>(pos, std::move(type_nodes));
+        return std::make_shared<UnitTypeNode>(pos);
     } catch (const ParseError &) {
         throw;
     }

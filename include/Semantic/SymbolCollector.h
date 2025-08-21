@@ -103,7 +103,7 @@ public:
     void visit(ParenthesizedTypeNode *node) override;
     void visit(TypePathNode *node) override;
     void visit(TypePathSegmentNode *node) override;
-    void visit(TupleTypeNode *node) override;
+    void visit(UnitTypeNode *node) override;
     void visit(ArrayTypeNode *node) override;
     void visit(SliceTypeNode *node) override;
     void visit(ReferenceTypeNode *node) override;

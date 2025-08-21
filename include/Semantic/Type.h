@@ -17,7 +17,7 @@ struct Method {
 
 enum class TypeKind {
     Primitive, Function, Struct, Enumeration, Tuple,
-    Slice, Inferred, Array
+    Slice, Inferred, Array, Unit, Reference
 };
 
 class Type {
@@ -183,47 +183,6 @@ public:
     }
 };
 
-class TupleType : public Type {
-public:
-    std::vector<std::shared_ptr<Type> > types_;
-
-    explicit TupleType(std::vector<std::shared_ptr<Type> > types)
-        : types_(std::move(types)) {
-    }
-
-    TupleType &operator=(const Type &other) override {
-        methods_ = other.methods_;
-        if (const auto *ptr = dynamic_cast<const TupleType *>(&other)) {
-            types_ = ptr->types_;
-        } else {
-            throw std::runtime_error("Cannot assign non-TupleType to TupleType");
-        }
-        return *this;
-    }
-
-    [[nodiscard]] TypeKind getKind() const override { return TypeKind::Tuple; }
-
-    [[nodiscard]] std::string toString() const override {
-        std::string str = "(";
-        for (const auto &type: types_) {
-            str += type->toString();
-            str += ", ";
-        }
-        str += ")";
-        return str;
-    }
-
-    [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
-        if (!other || other->getKind() != TypeKind::Tuple) return false;
-        auto ptr = std::dynamic_pointer_cast<TupleType>(other);
-        if (types_.size() != ptr->types_.size()) return false;
-        for (size_t i = 0; i < types_.size(); i++) {
-            if (!types_[i]->equal(ptr->types_[i])) return false;
-        }
-        return true;
-    }
-};
-
 class SliceType : public Type {
     std::shared_ptr<Type> type_;
 
@@ -284,6 +243,70 @@ public:
         if (!other || other->getKind() != TypeKind::Array) return false;
         auto ptr = std::dynamic_pointer_cast<ArrayType>(other);
         return length_ == ptr->length_ && base_->equal(ptr->base_);
+    }
+};
+
+class UnitType: public Type {
+public:
+    UnitType() = default;
+
+    UnitType &operator=(const Type& other) override {
+        methods_ = other.methods_;
+        const auto *ptr = dynamic_cast<const UnitType *>(&other);
+        if (!ptr) {
+            throw std::runtime_error("Cannot assign non-UnitType to ArrayType");
+        }
+        return *this;
+    }
+
+    [[nodiscard]] TypeKind getKind() const override {
+        return TypeKind::Unit;
+    }
+
+    [[nodiscard]] std::string toString() const override {
+        return "()";
+    }
+
+    [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
+        if (!other || other -> getKind() != TypeKind::Unit) {
+            return false;
+        }
+        return true;
+    }
+};
+
+class ReferenceType: public Type {
+public:
+    std::shared_ptr<Type> type_;
+
+    explicit ReferenceType(const std::shared_ptr<Type> &type) {
+        type_ = type;
+    }
+
+    ReferenceType &operator= (const Type& other) override {
+        methods_ = other.methods_;
+        if (const auto *ptr = dynamic_cast<const ReferenceType *>(&other)) {
+            type_ = ptr -> type_;
+        } else {
+            throw std::runtime_error("Cannot assign non-ArrayType to ArrayType");
+        }
+        return *this;
+    }
+
+    [[nodiscard]] TypeKind getKind() const override {
+        return TypeKind::Reference;
+    }
+
+    [[nodiscard]] std::string toString() const override {
+        return "&" + type_ -> toString();
+    }
+
+    [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
+        if (!other || other -> getKind() != TypeKind::Reference) {
+            return false;
+        }
+        auto ptr = std::dynamic_pointer_cast<ReferenceType>(other);
+        return type_->equal(ptr->type_);
     }
 };
 

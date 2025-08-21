@@ -485,10 +485,7 @@ void SymbolManager::visit(TypePathSegmentNode *node) {
     if (node->path_indent_segment_node_) node->path_indent_segment_node_->accept(this);
 }
 
-void SymbolManager::visit(TupleTypeNode *node) {
-    for (const auto &type: node->type_nodes_) {
-        if (type) type->accept(this);
-    }
+void SymbolManager::visit(UnitTypeNode *node) {
 }
 
 void SymbolManager::visit(ArrayTypeNode *node) {

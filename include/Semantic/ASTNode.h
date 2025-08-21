@@ -362,7 +362,8 @@ public:
 
     TraitNode(Position pos, std::string identifier,
               std::vector<std::shared_ptr<AssociatedItemNode> > associated_item_nodes)
-        : VisItemNode(pos), identifier_(std::move(identifier)), associated_item_nodes_(std::move(associated_item_nodes)) {
+        : VisItemNode(pos), identifier_(std::move(identifier)),
+          associated_item_nodes_(std::move(associated_item_nodes)) {
     }
 
     ~TraitNode() override = default;
@@ -1364,24 +1365,15 @@ public:
     void accept(ASTVisitor *visitor) override { visitor->visit(this); }
 };
 
-class TupleTypeNode : public TypeNoBoundsNode {
+class UnitTypeNode : public TypeNoBoundsNode {
 public:
-    std::vector<std::shared_ptr<TypeNode> > type_nodes_;
-
-    TupleTypeNode(Position pos, std::vector<std::shared_ptr<TypeNode> > type_nodes)
-        : TypeNoBoundsNode(pos), type_nodes_(std::move(type_nodes)) {
+    explicit UnitTypeNode(Position pos): TypeNoBoundsNode(pos) {
     }
 
-    ~TupleTypeNode() override = default;
+    ~UnitTypeNode() override = default;
 
     [[nodiscard]] std::string toString() override {
-        std::string str = "( ";
-        for (auto &it: type_nodes_) {
-            str += it->toString();
-            str += ",";
-        }
-        str += " )";
-        return str;
+        return "()";
     }
 
     void accept(ASTVisitor *visitor) override { visitor->visit(this); }
