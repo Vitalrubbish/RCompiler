@@ -1,19 +1,11 @@
-#ifndef SEMANTICCHECKER_H
-#define SEMANTICCHECKER_H
-#include "ASTNode.h"
-
-class SemanticChecker : public ASTVisitor {
-    ScopeManager& scope_manager_;
-    bool in_loop_ = false;
-    bool in_while_loop_ = false;
-    bool in_for_loop_ = false;
-    std::vector<std::shared_ptr<Type>> loop_return_type_;
-    std::vector<std::shared_ptr<Type>> function_return_type_;
+#ifndef IRBUILDER_H
+#define IRBUILDER_H
+#include "Semantic/ASTVisitor.h"
+class IRBuilder: public ASTVisitor {
 public:
-    explicit SemanticChecker(ScopeManager & scope_manager):
-        scope_manager_(scope_manager) {}
+    IRBuilder() = default;
 
-    ~SemanticChecker() override = default;
+    ~IRBuilder() override = default;
 
     void visit(ASTNode *node) override;
     void visit(CrateNode *node) override;
@@ -112,8 +104,5 @@ public:
     void visit(ArrayTypeNode *node) override;
     void visit(SliceTypeNode *node) override;
     void visit(ReferenceTypeNode *node) override;
-
-    static std::vector<std::shared_ptr<Type>> cap(const std::vector<std::shared_ptr<Type>>& a,
-    const std::vector<std::shared_ptr<Type>>& b);
 };
-#endif //SEMANTICCHECKER_H
+#endif //IRBUILDER_H

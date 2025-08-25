@@ -2,8 +2,12 @@
 #define SCOPE_H
 #include <string>
 #include <unordered_map>
+#include <variant>
 #include "Symbol.h"
 #include "Error.h"
+
+using ConstValue = std::variant<int64_t,std::string>;
+
 
 class Scope {
     std::unordered_map<std::string, Symbol> symbols_;
@@ -12,6 +16,7 @@ class Scope {
 public:
     std::vector<std::shared_ptr<Scope> > next_level_scopes_;
     std::shared_ptr<Scope> parent_scope_;
+    std::unordered_map<std::string, ConstValue> value_map_;
     uint32_t index = 0;
 
     Scope() = default;

@@ -36,11 +36,17 @@ void SymbolCollector::visit(StructNode *node) {
 }
 
 void SymbolCollector::visit(EnumerationNode *node) {
-    std::shared_ptr<Type> type = std::make_shared<EnumerationType>(
-        node->identifier_, std::vector<std::string>{});
+    std::vector<std::string> variants;
     for (const auto &variant: node->enum_variant_nodes_) {
-        if (variant) variant->accept(this);
+        if (variant) {
+            variant->accept(this);
+            variants.emplace_back(variant -> identifier_);
+        }
     }
+    std::shared_ptr<Type> type = std::make_shared<EnumerationType>(
+        node->identifier_, variants);
+    Symbol symbol(node->pos_, node -> identifier_, type, SymbolType::Enumeration, false);
+    scope_manager_.declare(symbol);
 }
 
 void SymbolCollector::visit(ConstantItemNode *node) {
@@ -60,10 +66,12 @@ void SymbolCollector::visit(AssociatedItemNode *node) {
 }
 
 void SymbolCollector::visit(InherentImplNode *node) {
+    scope_manager_.AddScope();
     if (node->type_node_) node->type_node_->accept(this);
     for (const auto &item: node->associated_item_nodes_) {
         if (item) item->accept(this);
     }
+    scope_manager_.PopScope();
 }
 
 void SymbolCollector::visit(TraitImplNode *node) {

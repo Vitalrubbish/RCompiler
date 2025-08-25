@@ -3,6 +3,7 @@
 #include <vector>
 #include "Scope.h"
 
+using ConstValue = std::variant<int64_t, std::string>;
 
 class ScopeManager {
 public:
@@ -58,12 +59,16 @@ public:
             void_type
         );
         std::shared_ptr<Type> getString = std::make_shared<FunctionType>(
-            std::vector{void_type},
+            std::vector<std::shared_ptr<Type>>{},
             string_type
         );
         std::shared_ptr<Type> getInt = std::make_shared<FunctionType>(
-            std::vector{void_type},
+            std::vector<std::shared_ptr<Type>>{},
             i32_type
+        );
+        std::shared_ptr<Type> exit = std::make_shared<FunctionType>(
+            std::vector{i32_type},
+            void_type
         );
         Symbol print_(pos, "print", print, SymbolType::Function);
         Symbol println_(pos, "println", println, SymbolType::Function);
@@ -71,12 +76,14 @@ public:
         Symbol printlnInt_(pos, "printlnInt", printlnInt, SymbolType::Function);
         Symbol getString_(pos, "getString", getString, SymbolType::Function);
         Symbol getInt_(pos, "getInt", getInt, SymbolType::Function);
+        Symbol exit_(pos, "exit", exit, SymbolType::Function);
         declare(print_);
         declare(println_);
         declare(printInt_);
         declare(printlnInt_);
         declare(getString_);
         declare(getInt_);
+        declare(exit_);
 
         i32_type->methods_.emplace_back(
             Method{"toString", std::make_shared<FunctionType>(
@@ -125,8 +132,41 @@ public:
         throw SemanticError("Semantic Error: Symbol not found - " + name);
     }
 
+    Symbol lookupArray(const std::string& name) {
+
+    }
+
+    void AddConstant(const std::string &name, const ConstValue& val) const {
+        current_scope->value_map_[name] = val;
+    }
+
+    [[nodiscard]] ConstValue SearchValue(const std::string &name) const {
+        std::shared_ptr<Scope> cursor = current_scope;
+        while (cursor != nullptr) {
+            Symbol symbol = cursor -> lookup(name);
+            if (symbol.symbol_type_ != SymbolType::None) {
+                return cursor ->value_map_[name];
+            }
+            cursor = cursor -> parent_scope_;
+        }
+        throw SemanticError("This Error should not be occurred, please check your code!!!");
+    }
+
     void ModifyType(const std::string &name, const std::shared_ptr<Type>& type) const {
         current_scope -> ModifyType(name, type);
+    }
+
+    void RemoteModifyType(const std::string &name, const std::shared_ptr<Type>& type) const {
+        std::shared_ptr<Scope> cursor = current_scope;
+        while (cursor != nullptr) {
+            Symbol symbol = cursor -> lookup(name);
+            if (symbol.symbol_type_ != SymbolType::None) {
+                cursor -> ModifyType(name, type);
+                return;
+            }
+            cursor = cursor -> parent_scope_;
+        }
+        throw SemanticError("Semantic Error: Symbol not found - " + name);
     }
 };
 #endif //SCOPEMANAGER_H

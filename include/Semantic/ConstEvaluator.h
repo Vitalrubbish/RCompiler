@@ -1,19 +1,13 @@
-#ifndef SEMANTICCHECKER_H
-#define SEMANTICCHECKER_H
-#include "ASTNode.h"
+#ifndef CONSTEVALUATOR_H
+#define CONSTEVALUATOR_H
+#include "ASTVisitor.h"
 
-class SemanticChecker : public ASTVisitor {
+class ConstEvaluator : public ASTVisitor {
     ScopeManager& scope_manager_;
-    bool in_loop_ = false;
-    bool in_while_loop_ = false;
-    bool in_for_loop_ = false;
-    std::vector<std::shared_ptr<Type>> loop_return_type_;
-    std::vector<std::shared_ptr<Type>> function_return_type_;
 public:
-    explicit SemanticChecker(ScopeManager & scope_manager):
-        scope_manager_(scope_manager) {}
+    explicit ConstEvaluator(ScopeManager& scope_manager): scope_manager_(scope_manager) {}
 
-    ~SemanticChecker() override = default;
+    ~ConstEvaluator() override = default;
 
     void visit(ASTNode *node) override;
     void visit(CrateNode *node) override;
@@ -112,8 +106,5 @@ public:
     void visit(ArrayTypeNode *node) override;
     void visit(SliceTypeNode *node) override;
     void visit(ReferenceTypeNode *node) override;
-
-    static std::vector<std::shared_ptr<Type>> cap(const std::vector<std::shared_ptr<Type>>& a,
-    const std::vector<std::shared_ptr<Type>>& b);
 };
-#endif //SEMANTICCHECKER_H
+#endif //CONSTEVALUATOR_H

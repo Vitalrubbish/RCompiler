@@ -14,6 +14,7 @@ struct Symbol {
     std::shared_ptr<Type> type_ = nullptr;
     SymbolType symbol_type_ = SymbolType::None;
     bool is_mutable_ = false;
+    bool is_const_ = false;
     Position pos_;
 
     Symbol() = default;
@@ -25,6 +26,10 @@ struct Symbol {
         type_ = type;
         symbol_type_ = symbol_type;
         is_mutable_ = is_mutable;
+    }
+
+    void SetConst(bool is_const = false) {
+        is_const_ = true;
     }
 };
 #endif //SYMBOL_H

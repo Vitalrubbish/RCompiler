@@ -38,6 +38,7 @@ public:
     std::shared_ptr<FunctionParametersNode> ParseFunctionParameters();
     std::shared_ptr<FunctionParamNode> ParseFunctionParam();
     std::shared_ptr<FunctionParamPatternNode> ParseFunctionParamPattern();
+    std::shared_ptr<SelfParamNode> ParseSelfParamNode();
 
     /****************  Expression  ****************/
     std::shared_ptr<ExpressionNode> ParseExpression();
@@ -102,6 +103,7 @@ public:
     std::shared_ptr<UnitTypeNode> ParseUnitType();
     std::shared_ptr<ArrayTypeNode> ParseArrayType();
     std::shared_ptr<SliceTypeNode> ParseSliceType();
+    std::shared_ptr<ReferenceTypeNode> ParseReferenceType();
 
     /****************  Paths  ****************/
     std::shared_ptr<PathIndentSegmentNode> ParsePathIndentSegment();

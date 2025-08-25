@@ -10,6 +10,8 @@
 #include "Lexer/Token.h"
 #include "Semantic/ASTVisitor.h"
 
+using ConstValue = std::variant<int64_t,std::string>;
+
 // Forward declarations
 class ASTVisitor;
 class ASTNode;
@@ -185,17 +187,61 @@ public:
     void accept(ASTVisitor *visitor) override { visitor->visit(this); }
 };
 
+class SelfParamNode;
 class FunctionParametersNode : public ASTNode {
 public:
+    std::shared_ptr<SelfParamNode> self_param_node_;
     std::vector<std::shared_ptr<FunctionParamNode> > function_params_;
 
-    FunctionParametersNode(Position pos, std::vector<std::shared_ptr<FunctionParamNode> > function_params)
+    FunctionParametersNode(Position pos, const std::shared_ptr<SelfParamNode>& self_param_node,
+        std::vector<std::shared_ptr<FunctionParamNode> > function_params)
         : ASTNode(pos), function_params_(std::move(function_params)) {
+        self_param_node_ = self_param_node;
     }
 
     ~FunctionParametersNode() override = default;
 
     void accept(ASTVisitor *visitor) override { visitor->visit(this); }
+};
+
+class SelfParamNode : public ASTNode {
+public:
+    explicit SelfParamNode(Position pos): ASTNode(pos) {}
+
+    ~SelfParamNode() override = default;
+
+    void accept(ASTVisitor* visitor) override {visitor -> visit(this);}
+};
+
+class ShortHandSelfNode : public SelfParamNode {
+public:
+    bool have_and_ = false;
+    bool is_mut_ = false;
+
+    ShortHandSelfNode(Position pos, bool have_and, bool is_mut): SelfParamNode(pos) {
+        have_and_ = have_and;
+        is_mut_ = is_mut;
+    }
+
+    ~ShortHandSelfNode() override = default;
+
+    void accept(ASTVisitor *visitor) override {visitor -> visit(this);}
+};
+
+class TypedSelfNode : public SelfParamNode {
+public:
+    bool is_mut_;
+    std::shared_ptr<TypeNode> type_node_;
+
+    TypedSelfNode(Position pos, bool is_mut, const std::shared_ptr<TypeNode>& type_node):
+        SelfParamNode(pos) {
+        is_mut_ = is_mut;
+        type_node_ = type_node;
+    }
+
+    ~TypedSelfNode() override = default;
+
+    void accept(ASTVisitor *visitor) override {visitor -> visit(this);}
 };
 
 class FunctionParamNode : public ASTNode {
@@ -420,6 +466,8 @@ public:
     std::vector<std::shared_ptr<Type> > types;
     bool is_assignable_;
     bool is_mutable_;
+    bool is_compiler_known_ = false;
+    ConstValue value = 0;
 
     ExpressionNode(Position pos, bool is_assignable)
         : ASTNode(pos), is_assignable_(is_assignable), is_mutable_(false) {
@@ -1401,7 +1449,7 @@ public:
             // For now, just indicate an unknown size.
             str += "_";
         } else {
-            str += std::to_string((tmp->int_literal_));
+            str += std::to_string(tmp->int_literal_);
         }
         str += "]";
         return str;
@@ -1430,8 +1478,15 @@ public:
     bool is_mut_;
     std::shared_ptr<TypeNode> type_node_;
 
-    ReferenceTypeNode(Position pos, bool is_mut, std::shared_ptr<TypeNode> type_node)
-        : TypeNoBoundsNode(pos), is_mut_(is_mut), type_node_(std::move(type_node)) {
+    ReferenceTypeNode(Position pos, bool is_mut, const std::shared_ptr<TypeNode> &type_node)
+        : TypeNoBoundsNode(pos), is_mut_(is_mut), type_node_(type_node) {
+    }
+
+    [[nodiscard]] std::string toString() override {
+        std::string str = "& ";
+        if (is_mut_) str += "mut ";
+        str += type_node_ -> toString();
+        return str;
     }
 
     ~ReferenceTypeNode() override = default;

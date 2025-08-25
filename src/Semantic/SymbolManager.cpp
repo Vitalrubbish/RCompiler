@@ -9,7 +9,7 @@ void SymbolManager::visit(ASTNode *node) {
 
 void SymbolManager::visit(CrateNode *node) {
     scope_manager_.current_scope = scope_manager_.root;
-    scope_manager_.current_scope -> index = 0;
+    scope_manager_.current_scope->index = 0;
     for (const auto &item: node->items_) {
         auto structItem = std::dynamic_pointer_cast<StructNode>(item);
         if (structItem) {
@@ -50,8 +50,8 @@ void SymbolManager::visit(VisItemNode *node) {
 }
 
 void SymbolManager::visit(FunctionNode *node) {
-    if (node -> block_expression_) {
-        node -> block_expression_ -> accept(this);
+    if (node->block_expression_) {
+        node->block_expression_->accept(this);
     }
 }
 
@@ -81,10 +81,66 @@ void SymbolManager::visit(AssociatedItemNode *node) {
 }
 
 void SymbolManager::visit(InherentImplNode *node) {
+    scope_manager_.current_scope = scope_manager_.current_scope
+            ->next_level_scopes_[scope_manager_.current_scope->index++];
+    scope_manager_.current_scope->index = 0;
     if (node->type_node_) node->type_node_->accept(this);
+    std::string name = node->type_node_->toString();
+    Symbol symbol = scope_manager_.lookup(name);
+    auto& name_set = symbol.type_->name_set;
     for (const auto &item: node->associated_item_nodes_) {
         if (item) item->accept(this);
+        if (item->constant_item_node_) {
+            auto constant_item = item->constant_item_node_;
+            Symbol sym = scope_manager_.lookup(constant_item->type_node_->toString());
+            Method method{constant_item->identifier_, sym.type_};
+            if (name_set.find(constant_item->identifier_) != name_set.end()) {
+                throw SemanticError("Semantic Error: Duplicate Definition of " + constant_item->identifier_,
+                    node->pos_);
+            }
+            name_set[constant_item->identifier_] = true;
+            symbol.type_->constants_.emplace_back(method);
+            scope_manager_.RemoteModifyType(name, symbol.type_);
+        }
+        if (item->function_node_) {
+            auto funcItem = item->function_node_;
+            bool have_and = false, is_mut = false, have_self = false;
+            std::vector<std::shared_ptr<Type> > params;
+            std::shared_ptr<Type> ret = std::make_shared<PrimitiveType>("void");
+            if (funcItem->function_parameters_) {
+                auto self_param = funcItem->function_parameters_->self_param_node_;
+                if (auto short_hand_self = std::dynamic_pointer_cast<ShortHandSelfNode>(self_param)) {
+                    have_self = true;
+                    have_and = short_hand_self->have_and_;
+                    is_mut = short_hand_self->is_mut_;
+                }
+                for (const auto &param: funcItem->function_parameters_->function_params_) {
+                    Symbol type_symbol = scope_manager_.lookup(param->type_->toString());
+                    params.emplace_back(type_symbol.type_);
+                }
+            }
+            if (funcItem->type_) {
+                Symbol type_symbol = scope_manager_.lookup(funcItem->type_->toString());
+                ret = type_symbol.type_;
+            }
+            auto func_ = std::make_shared<FunctionType>(params, ret);
+            func_->SetParam(have_self, have_and, is_mut);
+            Method method{funcItem->identifier_, func_};
+            if (name_set.find(funcItem->identifier_) != name_set.end()) {
+                throw SemanticError("Semantic Error: Duplicate Definition of " + funcItem->identifier_,
+                    node->pos_);
+            }
+            name_set[funcItem->identifier_] = true;
+            if (have_self) {
+                symbol.type_->methods_.emplace_back(method);
+            } else {
+                symbol.type_->inline_functions_.emplace_back(method);
+            }
+            scope_manager_.RemoteModifyType(name, symbol.type_);
+        }
     }
+
+    scope_manager_.PopScope();
 }
 
 void SymbolManager::visit(TraitImplNode *node) {
@@ -154,8 +210,8 @@ void SymbolManager::visit(LetStatementNode *node) {
 }
 
 void SymbolManager::visit(VisItemStatementNode *node) {
-    if (node -> vis_item_node_) {
-        node -> vis_item_node_ -> accept(this);
+    if (node->vis_item_node_) {
+        node->vis_item_node_->accept(this);
     }
 }
 
@@ -259,8 +315,8 @@ void SymbolManager::visit(MemberAccessExpressionNode *node) {
 
 void SymbolManager::visit(BlockExpressionNode *node) {
     scope_manager_.current_scope = scope_manager_.current_scope
-        ->next_level_scopes_[scope_manager_.current_scope->index++];
-    scope_manager_.current_scope -> index = 0;
+            ->next_level_scopes_[scope_manager_.current_scope->index++];
+    scope_manager_.current_scope->index = 0;
     if (node->statements_) {
         for (const auto &item: node->statements_->statements_) {
             auto visItemStmt = std::dynamic_pointer_cast<VisItemStatementNode>(item);
@@ -282,7 +338,7 @@ void SymbolManager::visit(BlockExpressionNode *node) {
             }
             auto funcItem = std::dynamic_pointer_cast<FunctionNode>(visItemStmt->vis_item_node_);
             if (funcItem) {
-                std::vector<std::shared_ptr<Type>> params;
+                std::vector<std::shared_ptr<Type> > params;
                 std::shared_ptr<Type> ret = std::make_shared<PrimitiveType>("void");
                 if (funcItem->function_parameters_) {
                     for (const auto &param: funcItem->function_parameters_->function_params_) {

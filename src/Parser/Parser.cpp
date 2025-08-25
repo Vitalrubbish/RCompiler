@@ -7,7 +7,7 @@ void Parser::ConsumeString(const std::string &str) {
     if (parseIndex < tokens.size() && tokens[parseIndex].token == str) {
         parseIndex++;
     } else {
-        throw ParseError("Cannot Match " + str, tokens[parseIndex].pos);
+        throw ParseError("Parse Error: Cannot Match :" + str, tokens[parseIndex].pos);
     }
 }
 
@@ -23,17 +23,11 @@ std::shared_ptr<CrateNode> Parser::ParseCrate() {
 }
 
 std::shared_ptr<VisItemNode> Parser::ParseVisItem() {
-    Position pos = tokens[parseIndex].pos;
-    uint32_t start = parseIndex;
-
     try {
-        return ParseFunction();
-    } catch (const ParseError &e) {
-        // std::cout << e.what() << '\n';
-        parseIndex = start;
-    }
-
-    try {
+        if (tokens[parseIndex].type == TokenType::Fn ||
+            (parseIndex < tokens.size() - 1 && tokens[parseIndex + 1].type == TokenType::Fn)) {
+            return ParseFunction();
+        }
         if (tokens[parseIndex].type == TokenType::Const) {
             return ParseConstantItem();
         }
@@ -46,10 +40,7 @@ std::shared_ptr<VisItemNode> Parser::ParseVisItem() {
         if (tokens[parseIndex].type == TokenType::Impl) {
             return ParseImplementation();
         }
-        if (tokens[parseIndex].type == TokenType::Trait) {
-            return ParseTrait();
-        }
-        throw ParseError("Parse Error: VisItem Not Match", pos);
+        return ParseTrait();
     } catch (const ParseError &) {
         throw;
     }
@@ -105,8 +96,17 @@ std::shared_ptr<TypeNode> Parser::ParseFunctionReturnType() {
 std::shared_ptr<FunctionParametersNode> Parser::ParseFunctionParameters() {
     Position pos = tokens[parseIndex].pos;
     std::vector<std::shared_ptr<FunctionParamNode>> function_param_nodes;
+    std::shared_ptr<SelfParamNode> self_param_node;
     try {
-        function_param_nodes.emplace_back(ParseFunctionParam());
+        if (tokens[parseIndex].type == TokenType::And || tokens[parseIndex].type == TokenType::Mut ||
+            tokens[parseIndex].type == TokenType::Self) {
+            self_param_node = ParseSelfParamNode();
+            if (tokens[parseIndex].type == TokenType::RParen) {
+                return std::make_shared<FunctionParametersNode>(pos, self_param_node, function_param_nodes);
+            }
+        } else {
+            function_param_nodes.emplace_back(ParseFunctionParam());
+        }
         while (tokens[parseIndex].type == TokenType::Comma) {
             ConsumeString(",");
             if (tokens[parseIndex].type == TokenType::RParen) {
@@ -114,7 +114,7 @@ std::shared_ptr<FunctionParametersNode> Parser::ParseFunctionParameters() {
             }
             function_param_nodes.emplace_back(ParseFunctionParam());
         }
-        return std::make_shared<FunctionParametersNode>(pos, std::move(function_param_nodes));
+        return std::make_shared<FunctionParametersNode>(pos, self_param_node, std::move(function_param_nodes));
     } catch (const ParseError &) {
         throw;
     }
@@ -137,6 +137,32 @@ std::shared_ptr<FunctionParamNode> Parser::ParseFunctionParam() {
         throw ParseError("Parse Error: Failed to Match FunctionParam", pos);
     }
 }
+
+std::shared_ptr<SelfParamNode> Parser::ParseSelfParamNode() {
+    Position pos = tokens[parseIndex].pos;
+    try {
+        bool is_mut = false;
+        bool have_and = false;
+        if (tokens[parseIndex].type == TokenType::And) {
+            ConsumeString("&");
+            have_and = true;
+        }
+        if (tokens[parseIndex].type == TokenType::Mut) {
+            ConsumeString("mut");
+            is_mut = true;
+        }
+        ConsumeString("self");
+        if (have_and || tokens[parseIndex].type != TokenType::Colon) {
+            return std::make_shared<ShortHandSelfNode>(pos, have_and, is_mut);
+        }
+        ConsumeString(":");
+        auto type_node = ParseType();
+        return std::make_shared<TypedSelfNode>(pos, is_mut, type_node);
+    } catch (std::exception&) {
+        throw;
+    }
+}
+
 
 std::shared_ptr<FunctionParamPatternNode> Parser::ParseFunctionParamPattern() {
     Position pos = tokens[parseIndex].pos;
@@ -308,6 +334,7 @@ std::shared_ptr<ConstantItemNode> Parser::ParseConstantItem() {
             ConsumeString("=");
             expression_node = ParseExpression();
         }
+        ConsumeString(";");
         return std::make_shared<ConstantItemNode>(pos, identifier, is_underscore, type_node, expression_node);
     } catch (const ParseError &) {
         throw;
@@ -334,7 +361,8 @@ std::shared_ptr<ImplementationNode> Parser::ParseImplementation() {
     uint32_t start = parseIndex;
     try {
         return ParseInherentImpl();
-    } catch (const ParseError &) {
+    } catch (const ParseError &e) {
+        // std::cout << e.what() << '\n';
         parseIndex = start;
     }
 
@@ -425,17 +453,20 @@ std::shared_ptr<ExpressionNode> Parser::ParseExpressionWithBlock() {
     try {
         if (tokens[parseIndex].type == TokenType::Const) {
             return ParseConstBlockExpression();
-        } else if (tokens[parseIndex].type == TokenType::Loop) {
-            return ParseInfiniteLoopExpression();
-        } else if (tokens[parseIndex].type == TokenType::While) {
-            return ParsePredicateLoopExpression();
-        } else if (tokens[parseIndex].type == TokenType::If) {
-            return ParseIfExpression();
-        } else if (tokens[parseIndex].type == TokenType::Match) {
-            return ParseMatchExpression();
-        } else {
-            return ParseBlockExpression();
         }
+        if (tokens[parseIndex].type == TokenType::Loop) {
+            return ParseInfiniteLoopExpression();
+        }
+        if (tokens[parseIndex].type == TokenType::While) {
+            return ParsePredicateLoopExpression();
+        }
+        if (tokens[parseIndex].type == TokenType::If) {
+            return ParseIfExpression();
+        }
+        if (tokens[parseIndex].type == TokenType::Match) {
+            return ParseMatchExpression();
+        }
+        return ParseBlockExpression();
     } catch (const ParseError &) {
         throw;
     }
@@ -904,7 +935,9 @@ std::shared_ptr<ExpressionNode> Parser::ParsePrimaryExpression() {
         if (tokens[parseIndex].type == TokenType::LBrace) {
             return ParseBlockExpression();
         }
-        if (tokens[parseIndex].type == TokenType::Identifier) {
+        if (tokens[parseIndex].type == TokenType::Identifier ||
+            tokens[parseIndex].type == TokenType::Self ||
+            tokens[parseIndex].type == TokenType::SELF) {
             return ParsePathExpression();
         }
         if (tokens[parseIndex].type == TokenType::LParen) {
@@ -1101,8 +1134,8 @@ std::shared_ptr<PathExpressionNode> Parser::ParsePathExpression() {
 
 std::shared_ptr<PathInExpressionNode> Parser::ParsePathInExpression() {
     Position pos = tokens[parseIndex].pos;
-    std::vector<std::shared_ptr<PathIndentSegmentNode>> simple_path_segments;
     try {
+        std::vector<std::shared_ptr<PathIndentSegmentNode>> simple_path_segments;
         if (tokens[parseIndex].type == TokenType::ColonColon) {
             ConsumeString("::");
         }
@@ -1427,14 +1460,20 @@ std::shared_ptr<TypeNode> Parser::ParseType() {
 
 std::shared_ptr<TypeNoBoundsNode> Parser::ParseTypeNoBounds() {
     Position pos = tokens[parseIndex].pos;
-    uint32_t start = parseIndex;
-    try { return ParseParenthesizedType(); } catch (const ParseError &) { parseIndex = start; }
-    try { return ParseTypePath(); } catch (const ParseError &) { parseIndex = start; }
-    try { return ParseUnitType(); } catch (const ParseError &) { parseIndex = start; }
-    try { return ParseArrayType(); } catch (const ParseError &) { parseIndex = start; }
-    try { return ParseSliceType(); } catch (const ParseError &) { parseIndex = start; }
-
-    throw ParseError("Parse Error: Failed to Parse TypeNoBounds", pos);
+    try {
+        if (tokens[parseIndex].type == TokenType::Identifier) {
+            return ParseTypePath();
+        }
+        if (tokens[parseIndex].type == TokenType::LParen) {
+            return ParseUnitType();
+        }
+        if (tokens[parseIndex].type == TokenType::LBracket) {
+            return ParseArrayType();
+        }
+        return ParseReferenceType();
+    } catch (std::exception&) {
+        throw ParseError("Parse Error: Failed to Parse TypeNoBounds", pos);
+    }
 }
 
 std::shared_ptr<ParenthesizedTypeNode> Parser::ParseParenthesizedType() {
@@ -1505,6 +1544,22 @@ std::shared_ptr<SliceTypeNode> Parser::ParseSliceType() {
         ConsumeString("]");
         return std::make_shared<SliceTypeNode>(pos, type_node);
     } catch (const ParseError &) {
+        throw;
+    }
+}
+
+std::shared_ptr<ReferenceTypeNode> Parser::ParseReferenceType() {
+    Position pos = tokens[parseIndex].pos;
+    try {
+        bool is_mut = false;
+        ConsumeString("&");
+        if (tokens[parseIndex].type == TokenType::Mut) {
+            ConsumeString("mut");
+            is_mut = true;
+        }
+        auto type = ParseType();
+        return std::make_shared<ReferenceTypeNode>(pos, is_mut, type);
+    } catch (std::exception&) {
         throw;
     }
 }

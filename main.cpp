@@ -19,13 +19,16 @@ SemanticChecker *semantic_checker = new SemanticChecker{scope_manager};
 SymbolManager *symbol_manager = new SymbolManager{scope_manager};
 
 int main() {
-    // freopen("../testcases_official/Semantic/loop03.rx", "r", stdin);
-    // freopen("../testcases/Semantic/in19.rx", "r", stdin);
-    std::string text, line;
-    while (std::getline(std::cin, line)) {
-        text += line;
+    // freopen("../stdin.txt", "r", stdin);
+    // freopen("../testcases_official/semantic-1/misc2/misc2.rx", "r", stdin);
+    // freopen("../testcases/Semantic/in28.rx", "r", stdin);
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::string text((std::istreambuf_iterator(std::cin)),
+                     std::istreambuf_iterator<char>());
+    if (text.empty() || text.back() != '\n') {
+        text += '\n';
     }
-    text += '\r';
     try {
         std::string current_text = text;
         uint32_t rowIndex = 1;

@@ -6,6 +6,8 @@
 #include <memory>
 #include <cstdint>
 #include <stdexcept>
+#include <variant>
+#include <unordered_map>
 
 class Type;
 class FunctionType;
@@ -20,18 +22,21 @@ enum class TypeKind {
     Slice, Inferred, Array, Unit, Reference
 };
 
+using ConstValue = std::variant<int64_t,std::string>;
+
 class Type {
 public:
-    std::vector<Method> methods_;
+    std::unordered_map<std::string, bool> name_set;
+    std::unordered_map<std::string, ConstValue> value_map;
+    std::vector<Method> methods_{};
+    std::vector<Method> inline_functions_{};
+    std::vector<Method> constants_{};
 
     Type() = default;
 
     virtual ~Type() = default;
 
-    virtual Type &operator=(const Type &other) {
-        methods_ = other.methods_;
-        return *this;
-    }
+    virtual Type &operator=(const Type &other) = default;
 
     [[nodiscard]] virtual TypeKind getKind() const = 0;
 
@@ -48,7 +53,11 @@ public:
     }
 
     PrimitiveType &operator=(const Type &other) override {
+        value_map = other.value_map;
+        name_set = other.name_set;
         methods_ = other.methods_;
+        inline_functions_ = other.inline_functions_;
+        constants_ = other.constants_;
         if (const auto *ptr = dynamic_cast<const PrimitiveType *>(&other)) {
             name_ = ptr->name_;
         } else {
@@ -82,7 +91,11 @@ public:
     }
 
     StructType &operator=(const Type &other) override {
+        value_map = other.value_map;
+        name_set = other.name_set;
         methods_ = other.methods_;
+        inline_functions_ = other.inline_functions_;
+        constants_ = other.constants_;
         if (const auto *ptr = dynamic_cast<const StructType *>(&other)) {
             name_ = ptr->name_;
             members_ = ptr->members_;
@@ -119,7 +132,11 @@ public:
     }
 
     EnumerationType &operator=(const Type &other) override {
+        value_map = other.value_map;
+        name_set = other.name_set;
         methods_ = other.methods_;
+        inline_functions_ = other.inline_functions_;
+        constants_ = other.constants_;
         if (const auto *ptr = dynamic_cast<const EnumerationType *>(&other)) {
             name_ = ptr->name_;
             variants_ = ptr->variants_;
@@ -141,6 +158,10 @@ public:
 
 class FunctionType : public Type {
 public:
+    bool have_self_ = false;
+    bool is_mut_ = false;
+    bool have_and_ = false;
+
     std::vector<std::shared_ptr<Type> > params_;
     std::shared_ptr<Type> ret_;
 
@@ -148,8 +169,18 @@ public:
         : params_(std::move(params)), ret_(std::move(ret)) {
     }
 
+    void SetParam(bool have_self, bool have_and, bool is_mut) {
+        have_self_ = have_self;
+        have_and_ = have_and;
+        is_mut_ = is_mut;
+    }
+
     FunctionType &operator=(const Type &other) override {
+        value_map = other.value_map;
+        name_set = other.name_set;
         methods_ = other.methods_;
+        inline_functions_ = other.inline_functions_;
+        constants_ = other.constants_;
         if (const auto *ptr = dynamic_cast<const FunctionType *>(&other)) {
             params_ = ptr->params_;
             ret_ = ptr->ret_;
@@ -191,7 +222,11 @@ public:
     }
 
     SliceType &operator=(const Type &other) override {
+        value_map = other.value_map;
+        name_set = other.name_set;
         methods_ = other.methods_;
+        inline_functions_ = other.inline_functions_;
+        constants_ = other.constants_;
         if (const auto *ptr = dynamic_cast<const SliceType *>(&other)) {
             type_ = ptr->type_;
         } else {
@@ -218,12 +253,14 @@ public:
     std::shared_ptr<Type> base_;
     uint32_t length_;
 
-    ArrayType(std::shared_ptr<Type> base, uint32_t length)
-        : base_(std::move(base)), length_(length) {
-    }
+    ArrayType(const std::shared_ptr<Type> &base, uint32_t length);
 
     ArrayType &operator=(const Type &other) override {
+        value_map = other.value_map;
+        name_set = other.name_set;
         methods_ = other.methods_;
+        inline_functions_ = other.inline_functions_;
+        constants_ = other.constants_;
         if (const auto *ptr = dynamic_cast<const ArrayType *>(&other)) {
             base_ = ptr->base_;
             length_ = ptr->length_;
@@ -251,7 +288,11 @@ public:
     UnitType() = default;
 
     UnitType &operator=(const Type& other) override {
+        value_map = other.value_map;
+        name_set = other.name_set;
         methods_ = other.methods_;
+        inline_functions_ = other.inline_functions_;
+        constants_ = other.constants_;
         const auto *ptr = dynamic_cast<const UnitType *>(&other);
         if (!ptr) {
             throw std::runtime_error("Cannot assign non-UnitType to ArrayType");
@@ -284,7 +325,11 @@ public:
     }
 
     ReferenceType &operator= (const Type& other) override {
+        value_map = other.value_map;
+        name_set = other.name_set;
         methods_ = other.methods_;
+        inline_functions_ = other.inline_functions_;
+        constants_ = other.constants_;
         if (const auto *ptr = dynamic_cast<const ReferenceType *>(&other)) {
             type_ = ptr -> type_;
         } else {

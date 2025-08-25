@@ -1,4 +1,4 @@
-#include "Semantic/SemanticChecker.h"
+#include "Semantic/ConstEvaluator.h"
 #include "Semantic/ASTNode.h"
 #include "Semantic/SymbolCollector.h"
 #include "Semantic/Type.h"
@@ -6,10 +6,10 @@
 
 extern SymbolCollector *symbol_collector;
 
-void SemanticChecker::visit(ASTNode *node) {
+void ConstEvaluator::visit(ASTNode *node) {
 }
 
-void SemanticChecker::visit(CrateNode *node) {
+void ConstEvaluator::visit(CrateNode *node) {
     scope_manager_.current_scope = scope_manager_.root;
     scope_manager_.current_scope -> index = 0;
     for (const auto &item: node->items_) {
@@ -17,10 +17,10 @@ void SemanticChecker::visit(CrateNode *node) {
     }
 }
 
-void SemanticChecker::visit(VisItemNode *node) {
+void ConstEvaluator::visit(VisItemNode *node) {
 }
 
-void SemanticChecker::visit(FunctionNode *node) {
+void ConstEvaluator::visit(FunctionNode *node) {
     if (node->function_parameters_) node->function_parameters_->accept(this);
     if (node->type_) node->type_->accept(this);
     if (node -> function_parameters_) {
@@ -62,19 +62,19 @@ void SemanticChecker::visit(FunctionNode *node) {
     }
 }
 
-void SemanticChecker::visit(StructNode *node) {
+void ConstEvaluator::visit(StructNode *node) {
     for (const auto &field: node->struct_field_nodes_) {
         if (field) field->accept(this);
     }
 }
 
-void SemanticChecker::visit(EnumerationNode *node) {
+void ConstEvaluator::visit(EnumerationNode *node) {
     for (const auto &variant: node->enum_variant_nodes_) {
         if (variant) variant->accept(this);
     }
 }
 
-void SemanticChecker::visit(ConstantItemNode *node) {
+void ConstEvaluator::visit(ConstantItemNode *node) {
     if (node->type_node_) node->type_node_->accept(this);
     if (node->expression_node_) node->expression_node_->accept(this);
     if (!node->expression_node_->is_compiler_known_) {
@@ -87,18 +87,18 @@ void SemanticChecker::visit(ConstantItemNode *node) {
     scope_manager_.declare(symbol);
 }
 
-void SemanticChecker::visit(TraitNode *node) {
+void ConstEvaluator::visit(TraitNode *node) {
 }
 
-void SemanticChecker::visit(ImplementationNode *node) {
+void ConstEvaluator::visit(ImplementationNode *node) {
 }
 
-void SemanticChecker::visit(AssociatedItemNode *node) {
+void ConstEvaluator::visit(AssociatedItemNode *node) {
     if (node->constant_item_node_) node->constant_item_node_->accept(this);
     if (node->function_node_) node->function_node_->accept(this);
 }
 
-void SemanticChecker::visit(InherentImplNode *node) {
+void ConstEvaluator::visit(InherentImplNode *node) {
     scope_manager_.current_scope = scope_manager_.current_scope
             ->next_level_scopes_[scope_manager_.current_scope->index++];
     scope_manager_.current_scope->index = 0;
@@ -134,59 +134,59 @@ void SemanticChecker::visit(InherentImplNode *node) {
     scope_manager_.PopScope();
 }
 
-void SemanticChecker::visit(TraitImplNode *node) {
+void ConstEvaluator::visit(TraitImplNode *node) {
 }
 
-void SemanticChecker::visit(FunctionParametersNode *node) {
+void ConstEvaluator::visit(FunctionParametersNode *node) {
     for (const auto &param: node->function_params_) {
         if (param) param->accept(this);
     }
 }
 
-void SemanticChecker::visit(FunctionParamNode *node) {
+void ConstEvaluator::visit(FunctionParamNode *node) {
     // if (node->pattern_no_top_alt_node_) node->pattern_no_top_alt_node_->accept(this);
     if (node->type_) node->type_->accept(this);
 }
 
-void SemanticChecker::visit(FunctionParamPatternNode *node) {
+void ConstEvaluator::visit(FunctionParamPatternNode *node) {
     if (node->pattern_no_top_alt_) node->pattern_no_top_alt_->accept(this);
     if (node->type_) node->type_->accept(this);
 }
 
-void SemanticChecker::visit(StructFieldNode *node) {
+void ConstEvaluator::visit(StructFieldNode *node) {
     if (node->type_node_) node->type_node_->accept(this);
 }
 
-void SemanticChecker::visit(EnumVariantNode *node) {
+void ConstEvaluator::visit(EnumVariantNode *node) {
     if (node->enum_variant_struct_node_) node->enum_variant_struct_node_->accept(this);
     if (node->enum_variant_discriminant_node_) node->enum_variant_discriminant_node_->accept(this);
 }
 
-void SemanticChecker::visit(EnumVariantStructNode *node) {
+void ConstEvaluator::visit(EnumVariantStructNode *node) {
     for (const auto &field: node->struct_field_nodes_) {
         if (field) field->accept(this);
     }
 }
 
-void SemanticChecker::visit(EnumVariantDiscriminantNode *node) {
+void ConstEvaluator::visit(EnumVariantDiscriminantNode *node) {
     if (node->expression_node_) node->expression_node_->accept(this);
 }
 
 
-void SemanticChecker::visit(StatementNode *node) {
+void ConstEvaluator::visit(StatementNode *node) {
 }
 
-void SemanticChecker::visit(StatementsNode *node) {
+void ConstEvaluator::visit(StatementsNode *node) {
     for (const auto &stmt: node->statements_) {
         if (stmt) stmt->accept(this);
     }
     if (node->expression_) node->expression_->accept(this);
 }
 
-void SemanticChecker::visit(EmptyStatementNode *node) {
+void ConstEvaluator::visit(EmptyStatementNode *node) {
 }
 
-void SemanticChecker::visit(LetStatementNode *node) {
+void ConstEvaluator::visit(LetStatementNode *node) {
     // We now only consider variable declaration
     bool is_mut = false;
     std::shared_ptr<Type> type;
@@ -254,26 +254,26 @@ void SemanticChecker::visit(LetStatementNode *node) {
     scope_manager_.declare(symbol);
 }
 
-void SemanticChecker::visit(VisItemStatementNode *node) {
+void ConstEvaluator::visit(VisItemStatementNode *node) {
     if (node -> vis_item_node_) {
         node -> vis_item_node_ -> accept(this);
     }
 }
 
-void SemanticChecker::visit(ExpressionStatementNode *node) {
+void ConstEvaluator::visit(ExpressionStatementNode *node) {
     if (node->expression_) node->expression_->accept(this);
 }
 
-void SemanticChecker::visit(ExpressionNode *node) {
+void ConstEvaluator::visit(ExpressionNode *node) {
 }
 
-void SemanticChecker::visit(ExpressionWithoutBlockNode *node) {
+void ConstEvaluator::visit(ExpressionWithoutBlockNode *node) {
 }
 
-void SemanticChecker::visit(ExpressionWithBlockNode *node) {
+void ConstEvaluator::visit(ExpressionWithBlockNode *node) {
 }
 
-void SemanticChecker::visit(ComparisonExpressionNode *node) {
+void ConstEvaluator::visit(ComparisonExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
     if (node -> lhs_ && node -> rhs_) {
@@ -297,7 +297,7 @@ void SemanticChecker::visit(ComparisonExpressionNode *node) {
     node -> types.emplace_back(scope_manager_.lookup("bool").type_);
 }
 
-void SemanticChecker::visit(TypeCastExpressionNode *node) {
+void ConstEvaluator::visit(TypeCastExpressionNode *node) {
     if (node->type_) {
         node->type_->accept(this);
         node -> types.emplace_back(node -> type_ -> type);
@@ -305,7 +305,7 @@ void SemanticChecker::visit(TypeCastExpressionNode *node) {
     if (node->expression_) node->expression_->accept(this);
 }
 
-void SemanticChecker::visit(AssignmentExpressionNode *node) {
+void ConstEvaluator::visit(AssignmentExpressionNode *node) {
     if (node->lhs_) {
         node->lhs_->accept(this);
         if (!node->lhs_->is_assignable_) {
@@ -319,16 +319,16 @@ void SemanticChecker::visit(AssignmentExpressionNode *node) {
     node -> types.emplace_back(scope_manager_.lookup("void").type_);
 }
 
-void SemanticChecker::visit(ContinueExpressionNode *node) {
+void ConstEvaluator::visit(ContinueExpressionNode *node) {
     if (!in_loop_) {
         throw SemanticError("Semantic Error: Continue outside of loop", node->pos_);
     }
 }
 
-void SemanticChecker::visit(UnderscoreExpressionNode *node) {
+void ConstEvaluator::visit(UnderscoreExpressionNode *node) {
 }
 
-void SemanticChecker::visit(JumpExpressionNode *node) {
+void ConstEvaluator::visit(JumpExpressionNode *node) {
     if (node->expression_) {
         if (in_loop_ && in_while_loop_) {
             throw SemanticError("Semantic Error: Expression is not allowed after break in while loop",
@@ -365,7 +365,7 @@ void SemanticChecker::visit(JumpExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(LogicOrExpressionNode *node) {
+void ConstEvaluator::visit(LogicOrExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
     if (node -> lhs_ && node -> rhs_) {
@@ -386,7 +386,7 @@ void SemanticChecker::visit(LogicOrExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(LogicAndExpressionNode *node) {
+void ConstEvaluator::visit(LogicAndExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
     if (node -> lhs_ && node -> rhs_) {
@@ -407,7 +407,7 @@ void SemanticChecker::visit(LogicAndExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(BitwiseOrExpressionNode *node) {
+void ConstEvaluator::visit(BitwiseOrExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
     if (node -> lhs_ && node -> rhs_) {
@@ -430,7 +430,7 @@ void SemanticChecker::visit(BitwiseOrExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(BitwiseXorExpressionNode *node) {
+void ConstEvaluator::visit(BitwiseXorExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
     if (node -> lhs_ && node -> rhs_) {
@@ -453,7 +453,7 @@ void SemanticChecker::visit(BitwiseXorExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(BitwiseAndExpressionNode *node) {
+void ConstEvaluator::visit(BitwiseAndExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
     if (node -> lhs_ && node -> rhs_) {
@@ -476,7 +476,7 @@ void SemanticChecker::visit(BitwiseAndExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(ShiftExpressionNode *node) {
+void ConstEvaluator::visit(ShiftExpressionNode *node) {
     if (node->lhs_) {
         node->lhs_->accept(this);
         bool match = false;
@@ -512,7 +512,7 @@ void SemanticChecker::visit(ShiftExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(AddMinusExpressionNode *node) {
+void ConstEvaluator::visit(AddMinusExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
     if (node -> lhs_ && node -> rhs_) {
@@ -547,7 +547,7 @@ void SemanticChecker::visit(AddMinusExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(MulDivModExpressionNode *node) {
+void ConstEvaluator::visit(MulDivModExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
     if (node -> lhs_ && node -> rhs_) {
@@ -584,7 +584,7 @@ void SemanticChecker::visit(MulDivModExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(UnaryExpressionNode *node) {
+void ConstEvaluator::visit(UnaryExpressionNode *node) {
     if (node->expression_) {
         node->expression_->accept(this);
         if (node -> type_ == TokenType::Minus) {
@@ -623,7 +623,7 @@ void SemanticChecker::visit(UnaryExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(FunctionCallExpressionNode *node) {
+void ConstEvaluator::visit(FunctionCallExpressionNode *node) {
     std::shared_ptr<FunctionType> type;
     if (node->callee_) {
         node->callee_->accept(this);
@@ -658,7 +658,7 @@ void SemanticChecker::visit(FunctionCallExpressionNode *node) {
     node -> types.emplace_back(type -> ret_);
 }
 
-void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
+void ConstEvaluator::visit(ArrayIndexExpressionNode *node) {
     std::shared_ptr<ArrayType> type;
     if (node->base_) {
         node->base_->accept(this);
@@ -687,7 +687,7 @@ void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
     node -> types.emplace_back(type -> base_);
 }
 
-void SemanticChecker::visit(MemberAccessExpressionNode *node) {
+void ConstEvaluator::visit(MemberAccessExpressionNode *node) {
     if (node->base_) {
         node->base_->accept(this);
         std::shared_ptr<Type> type = node -> base_ -> types[0];
@@ -711,7 +711,7 @@ void SemanticChecker::visit(MemberAccessExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(BlockExpressionNode *node) {
+void ConstEvaluator::visit(BlockExpressionNode *node) {
     scope_manager_.current_scope = scope_manager_.current_scope
         ->next_level_scopes_[scope_manager_.current_scope->index++];
     scope_manager_.current_scope -> index = 0;
@@ -726,10 +726,10 @@ void SemanticChecker::visit(BlockExpressionNode *node) {
     scope_manager_.PopScope();
 }
 
-void SemanticChecker::visit(LoopExpressionNode *node) {
+void ConstEvaluator::visit(LoopExpressionNode *node) {
 }
 
-void SemanticChecker::visit(InfiniteLoopExpressionNode *node) {
+void ConstEvaluator::visit(InfiniteLoopExpressionNode *node) {
     if (node->block_expression_) {
         bool prev_in_loop = in_loop_;
         bool prev_in_for_loop = in_for_loop_;
@@ -746,7 +746,7 @@ void SemanticChecker::visit(InfiniteLoopExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(PredicateLoopExpressionNode *node) {
+void ConstEvaluator::visit(PredicateLoopExpressionNode *node) {
     if (node->conditions_) node->conditions_->accept(this);
     if (node->block_expression_) {
         bool prev_in_loop = in_loop_;
@@ -764,7 +764,7 @@ void SemanticChecker::visit(PredicateLoopExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(IfExpressionNode *node) {
+void ConstEvaluator::visit(IfExpressionNode *node) {
     if (node->conditions_) node->conditions_->accept(this);
     if (node->true_block_expression_) node->true_block_expression_->accept(this);
     if (node->false_block_expression_) node->false_block_expression_->accept(this);
@@ -790,35 +790,35 @@ void SemanticChecker::visit(IfExpressionNode *node) {
     node -> types.emplace_back(scope_manager_.lookup("void").type_);
 }
 
-void SemanticChecker::visit(MatchExpressionNode *node) {
+void ConstEvaluator::visit(MatchExpressionNode *node) {
     if (node->expression_) node->expression_->accept(this);
     if (node->match_arms_) node->match_arms_->accept(this);
 }
 
-void SemanticChecker::visit(LiteralExpressionNode *node) {
+void ConstEvaluator::visit(LiteralExpressionNode *node) {
 }
 
-void SemanticChecker::visit(CharLiteralNode *node) {
+void ConstEvaluator::visit(CharLiteralNode *node) {
     std::shared_ptr<Type> type = scope_manager_.lookup("char").type_;
     node -> is_compiler_known_ = true;
     node->types.emplace_back(type);
 }
 
-void SemanticChecker::visit(StringLiteralNode *node) {
+void ConstEvaluator::visit(StringLiteralNode *node) {
     std::shared_ptr<Type> type = scope_manager_.lookup("string").type_;
     node->is_compiler_known_ = true;
     node->value = node->string_literal_;
     node->types.emplace_back(type);
 }
 
-void SemanticChecker::visit(CStringLiteralNode *node) {
+void ConstEvaluator::visit(CStringLiteralNode *node) {
     std::shared_ptr<Type> type = scope_manager_.lookup("cstring").type_;
     node->is_compiler_known_ = true;
     node->value = node->c_string_literal_;
     node->types.emplace_back(type);
 }
 
-void SemanticChecker::visit(IntLiteralNode *node) {
+void ConstEvaluator::visit(IntLiteralNode *node) {
     node->is_compiler_known_ = true;
     node->value = node->int_literal_;
     if (node->is_i32_) {
@@ -839,13 +839,13 @@ void SemanticChecker::visit(IntLiteralNode *node) {
     }
 }
 
-void SemanticChecker::visit(BoolLiteralNode *node) {
+void ConstEvaluator::visit(BoolLiteralNode *node) {
     std::shared_ptr<Type> type = scope_manager_.lookup("bool").type_;
     node -> is_compiler_known_ = true;
     node->types.emplace_back(type);
 }
 
-void SemanticChecker::visit(ArrayLiteralNode *node) {
+void ConstEvaluator::visit(ArrayLiteralNode *node) {
     bool init = true;
     std::vector<std::shared_ptr<Type> > element_types;
     node -> is_compiler_known_ = true;
@@ -891,10 +891,10 @@ void SemanticChecker::visit(ArrayLiteralNode *node) {
     }
 }
 
-void SemanticChecker::visit(PathExpressionNode *node) {
+void ConstEvaluator::visit(PathExpressionNode *node) {
 }
 
-void SemanticChecker::visit(PathInExpressionNode *node) {
+void ConstEvaluator::visit(PathInExpressionNode *node) {
     for (const auto &seg: node->path_indent_segments_) {
         if (seg) seg->accept(this);
     }
@@ -936,10 +936,10 @@ void SemanticChecker::visit(PathInExpressionNode *node) {
     }
 }
 
-void SemanticChecker::visit(PathIndentSegmentNode *node) {
+void ConstEvaluator::visit(PathIndentSegmentNode *node) {
 }
 
-void SemanticChecker::visit(StructExpressionNode *node) {
+void ConstEvaluator::visit(StructExpressionNode *node) {
     if (node->path_in_expression_node_) {
         node->path_in_expression_node_->accept(this);
         node -> types.emplace_back(node -> path_in_expression_node_ -> types[0]);
@@ -948,35 +948,35 @@ void SemanticChecker::visit(StructExpressionNode *node) {
     if (node->struct_base_node_) node->struct_base_node_->accept(this);
 }
 
-void SemanticChecker::visit(StructExprFieldsNode *node) {
+void ConstEvaluator::visit(StructExprFieldsNode *node) {
     for (const auto &field: node->struct_expr_field_nodes_) {
         if (field) field->accept(this);
     }
     if (node->struct_base_node_) node->struct_base_node_->accept(this);
 }
 
-void SemanticChecker::visit(StructExprFieldNode *node) {
+void ConstEvaluator::visit(StructExprFieldNode *node) {
     if (node->expression_node_) node->expression_node_->accept(this);
 }
 
-void SemanticChecker::visit(StructBaseNode *node) {
+void ConstEvaluator::visit(StructBaseNode *node) {
     if (node->expression_node_) node->expression_node_->accept(this);
 }
 
-void SemanticChecker::visit(GroupedExpressionNode *node) {
+void ConstEvaluator::visit(GroupedExpressionNode *node) {
     if (node->expression_) {
         node->expression_->accept(this);
         node -> types = node -> expression_ -> types;
     }
 }
 
-void SemanticChecker::visit(TupleExpressionNode *node) {
+void ConstEvaluator::visit(TupleExpressionNode *node) {
     for (const auto &expr: node->expressions_) {
         if (expr) expr->accept(this);
     }
 }
 
-void SemanticChecker::visit(ConditionsNode *node) {
+void ConstEvaluator::visit(ConditionsNode *node) {
     if (node->expression_) {
         node->expression_->accept(this);
         bool valid = false;
@@ -993,14 +993,14 @@ void SemanticChecker::visit(ConditionsNode *node) {
     }
 }
 
-void SemanticChecker::visit(LetChainNode *node) {
+void ConstEvaluator::visit(LetChainNode *node) {
 }
 
-void SemanticChecker::visit(LetChainConditionNode *node) {
+void ConstEvaluator::visit(LetChainConditionNode *node) {
 }
 
 
-void SemanticChecker::visit(MatchArmsNode *node) {
+void ConstEvaluator::visit(MatchArmsNode *node) {
     for (const auto &arm: node->match_arm_nodes_) {
         if (arm) arm->accept(this);
     }
@@ -1009,65 +1009,65 @@ void SemanticChecker::visit(MatchArmsNode *node) {
     }
 }
 
-void SemanticChecker::visit(MatchArmNode *node) {
+void ConstEvaluator::visit(MatchArmNode *node) {
     if (node->pattern_node_) node->pattern_node_->accept(this);
     if (node->match_arm_guard_) node->match_arm_guard_->accept(this);
 }
 
-void SemanticChecker::visit(MatchArmGuardNode *node) {
+void ConstEvaluator::visit(MatchArmGuardNode *node) {
 }
 
-void SemanticChecker::visit(PatternNode *node) {
+void ConstEvaluator::visit(PatternNode *node) {
     for (const auto &pat: node->pattern_no_top_alts_) {
         if (pat) pat->accept(this);
     }
 }
 
-void SemanticChecker::visit(PatternNoTopAltNode *node) {
+void ConstEvaluator::visit(PatternNoTopAltNode *node) {
 }
 
-void SemanticChecker::visit(PatternWithoutRangeNode *node) {
+void ConstEvaluator::visit(PatternWithoutRangeNode *node) {
 }
 
-void SemanticChecker::visit(LiteralPatternNode *node) {
+void ConstEvaluator::visit(LiteralPatternNode *node) {
     if (node->expression_) node->expression_->accept(this);
 }
 
-void SemanticChecker::visit(IdentifierPatternNode *node) {
+void ConstEvaluator::visit(IdentifierPatternNode *node) {
     if (node->node_) node->node_->accept(this);
 }
 
-void SemanticChecker::visit(WildcardPatternNode *node) {
+void ConstEvaluator::visit(WildcardPatternNode *node) {
 }
 
-void SemanticChecker::visit(RestPatternNode *node) {
+void ConstEvaluator::visit(RestPatternNode *node) {
 }
 
-void SemanticChecker::visit(GroupedPatternNode *node) {
+void ConstEvaluator::visit(GroupedPatternNode *node) {
     if (node->pattern_) node->pattern_->accept(this);
 }
 
-void SemanticChecker::visit(SlicePatternNode *node) {
+void ConstEvaluator::visit(SlicePatternNode *node) {
     for (const auto &pat: node->patterns_) {
         if (pat) pat->accept(this);
     }
 }
 
-void SemanticChecker::visit(PathPatternNode *node) {
+void ConstEvaluator::visit(PathPatternNode *node) {
     if (node->expression_) node->expression_->accept(this);
 }
 
-void SemanticChecker::visit(TypeNode *node) {
+void ConstEvaluator::visit(TypeNode *node) {
 }
 
-void SemanticChecker::visit(TypeNoBoundsNode *node) {
+void ConstEvaluator::visit(TypeNoBoundsNode *node) {
 }
 
-void SemanticChecker::visit(ParenthesizedTypeNode *node) {
+void ConstEvaluator::visit(ParenthesizedTypeNode *node) {
     if (node->type_) node->type_->accept(this);
 }
 
-void SemanticChecker::visit(TypePathNode *node) {
+void ConstEvaluator::visit(TypePathNode *node) {
     if (node->type_path_segment_node_) {
         node->type_path_segment_node_->accept(this);
         Symbol sym = scope_manager_.lookup(node->type_path_segment_node_->
@@ -1076,14 +1076,14 @@ void SemanticChecker::visit(TypePathNode *node) {
     }
 }
 
-void SemanticChecker::visit(TypePathSegmentNode *node) {
+void ConstEvaluator::visit(TypePathSegmentNode *node) {
     if (node->path_indent_segment_node_) node->path_indent_segment_node_->accept(this);
 }
 
-void SemanticChecker::visit(UnitTypeNode *node) {
+void ConstEvaluator::visit(UnitTypeNode *node) {
 }
 
-void SemanticChecker::visit(ArrayTypeNode *node) {
+void ConstEvaluator::visit(ArrayTypeNode *node) {
     std::shared_ptr<Type> base_type;
     uint32_t size = 0;
     if (node->type_) {
@@ -1102,7 +1102,7 @@ void SemanticChecker::visit(ArrayTypeNode *node) {
     node -> type = std::make_shared<ArrayType>(base_type, size);
 }
 
-void SemanticChecker::visit(SliceTypeNode *node) {
+void ConstEvaluator::visit(SliceTypeNode *node) {
     std::shared_ptr<Type> base_type;
     if (node->type_) {
         node->type_->accept(this);
@@ -1111,24 +1111,24 @@ void SemanticChecker::visit(SliceTypeNode *node) {
     node -> type = std::make_shared<SliceType>(base_type);
 }
 
-void SemanticChecker::visit(ReferenceTypeNode *node) {
+void ConstEvaluator::visit(ReferenceTypeNode *node) {
 }
 
 
-void SemanticChecker::visit(ConstParamNode *node) {
+void ConstEvaluator::visit(ConstParamNode *node) {
 }
 
-void SemanticChecker::visit(TypeParamNode *node) {
+void ConstEvaluator::visit(TypeParamNode *node) {
 }
 
-void SemanticChecker::visit(TypeParamBoundsNode *node) {
+void ConstEvaluator::visit(TypeParamBoundsNode *node) {
 }
 
-void SemanticChecker::visit(QualifiedPathInExpressionNode *node) {
+void ConstEvaluator::visit(QualifiedPathInExpressionNode *node) {
 }
 
 /****************  Supportive Function  ****************/
-std::vector<std::shared_ptr<Type> > SemanticChecker::cap(const std::vector<std::shared_ptr<Type> > &a,
+std::vector<std::shared_ptr<Type> > ConstEvaluator::cap(const std::vector<std::shared_ptr<Type> > &a,
                                                          const std::vector<std::shared_ptr<Type> > &b) {
     std::vector<std::shared_ptr<Type> > ret;
     for (const auto &it: a) {
