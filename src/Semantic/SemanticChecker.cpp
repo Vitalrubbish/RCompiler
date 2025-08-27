@@ -229,6 +229,9 @@ void SemanticChecker::visit(StatementNode *node) {
 void SemanticChecker::visit(StatementsNode *node) {
     for (const auto &stmt: node->statements_) {
         if (stmt) stmt->accept(this);
+        if (interrupt) {
+            return;
+        }
     }
     if (node->expression_) node->expression_->accept(this);
 }
@@ -373,12 +376,14 @@ void SemanticChecker::visit(ContinueExpressionNode *node) {
     if (!in_loop_) {
         throw SemanticError("Semantic Error: Continue outside of loop", node->pos_);
     }
+    interrupt = true;
 }
 
 void SemanticChecker::visit(UnderscoreExpressionNode *node) {
 }
 
 void SemanticChecker::visit(JumpExpressionNode *node) {
+    interrupt = true;
     if (node->expression_) {
         node->expression_->accept(this);
         if (node -> type_ == TokenType::Break) {
@@ -826,6 +831,12 @@ void SemanticChecker::visit(BlockExpressionNode *node) {
     scope_manager_.current_scope -> index = 0;
     if (node->statements_) {
         node->statements_->accept(this);
+        if (interrupt) {
+            node -> types.emplace_back(scope_manager_.lookup("never").type_);
+            scope_manager_.PopScope();
+            interrupt = false;
+            return;
+        }
         if (node -> statements_ -> expression_) {
             node -> types = node -> statements_ -> expression_ -> types;
         } else {
@@ -1244,8 +1255,15 @@ void SemanticChecker::visit(QualifiedPathInExpressionNode *node) {
 std::vector<std::shared_ptr<Type> > SemanticChecker::cap(const std::vector<std::shared_ptr<Type> > &a,
                                                          const std::vector<std::shared_ptr<Type> > &b) {
     std::vector<std::shared_ptr<Type> > ret;
+    std::shared_ptr<Type> never = scope_manager_.lookup("never").type_;
     for (const auto &it: a) {
         for (const auto &itp: b) {
+            if (it -> equal(never)) {
+                return b;
+            }
+            if (itp -> equal(never)) {
+                return a;
+            }
             if (it -> equal(itp)) {
                 ret.emplace_back(it);
                 break;

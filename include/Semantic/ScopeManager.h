@@ -25,6 +25,7 @@ public:
         std::shared_ptr<Type> char_type = std::make_shared<PrimitiveType>("char");
         std::shared_ptr<Type> string_type = std::make_shared<PrimitiveType>("string");
         std::shared_ptr<Type> cstring_type = std::make_shared<PrimitiveType>("cstring");
+        std::shared_ptr<Type> never_type = std::make_shared<PrimitiveType>("never");
         std::shared_ptr<Type> void_type = std::make_shared<PrimitiveType>("void");
         Symbol i32(pos, "i32", i32_type, SymbolType::Type);
         Symbol u32(pos, "u32", u32_type, SymbolType::Type);
@@ -35,6 +36,7 @@ public:
         Symbol string_(pos, "string", string_type, SymbolType::Type);
         Symbol cstring_(pos, "cstring", cstring_type, SymbolType::Type);
         Symbol void_(pos, "void", void_type, SymbolType::Type);
+        Symbol never_(pos, "never", never_type, SymbolType::Type);
         declare(i32);
         declare(u32);
         declare(isize);
@@ -44,6 +46,7 @@ public:
         declare(string_);
         declare(cstring_);
         declare(void_);
+        declare(never_);
 
         std::shared_ptr<Type> print = std::make_shared<FunctionType>(
             std::vector{string_type},

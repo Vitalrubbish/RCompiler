@@ -23,7 +23,7 @@ SymbolManager *symbol_manager = new SymbolManager{scope_manager};
 int main() {
     // freopen("../stdin.txt", "r", stdin);
     // freopen("../testcases_official/semantic-1/return2/return2.rx", "r", stdin);
-    // freopen("../testcases/Semantic/in28.rx", "r", stdin);
+    // freopen("../testcases/Semantic/in03.rx", "r", stdin);
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::string text((std::istreambuf_iterator(std::cin)),
@@ -60,9 +60,9 @@ int main() {
         root->accept(const_evaluator);
         root->accept(symbol_manager);
         root->accept(semantic_checker);
-        std::cout << 0 << '\n';
+        std::cout << 0 << '\r';
     } catch (std::exception &error) {
         // std::cout << error.what() << '\n';
-        std::cout << -1 << '\n';
+        std::cout << -1 << '\r';
     }
 }

@@ -9,6 +9,8 @@ class SemanticChecker : public ASTVisitor {
     bool in_for_loop_ = false;
     std::vector<std::shared_ptr<Type>> loop_return_type_;
     std::vector<std::shared_ptr<Type>> function_return_type_;
+
+    bool interrupt = false;
 public:
     explicit SemanticChecker(ScopeManager & scope_manager):
         scope_manager_(scope_manager) {}
@@ -113,7 +115,7 @@ public:
     void visit(SliceTypeNode *node) override;
     void visit(ReferenceTypeNode *node) override;
 
-    static std::vector<std::shared_ptr<Type>> cap(const std::vector<std::shared_ptr<Type>>& a,
+    std::vector<std::shared_ptr<Type>> cap(const std::vector<std::shared_ptr<Type>>& a,
     const std::vector<std::shared_ptr<Type>>& b);
 };
 #endif //SEMANTICCHECKER_H
