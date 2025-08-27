@@ -6,4 +6,5 @@ fn main() {
             break 100;
         }
     }
+    exit(0);
 }

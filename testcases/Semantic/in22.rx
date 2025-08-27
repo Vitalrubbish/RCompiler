@@ -8,4 +8,5 @@ fn main() {
             break 100; // 返回 i32
         }
     };
+    exit(0);
 }

@@ -156,8 +156,6 @@ void SemanticChecker::visit(InherentImplNode *node) {
     scope_manager_.current_scope->index = 0;
     if (node->type_node_) node->type_node_->accept(this);
     auto type = scope_manager_.lookup(node->type_node_->toString()).type_;
-    Symbol self_symbol(node->pos_, "Self", type, SymbolType::Struct, false);
-    scope_manager_.declare(self_symbol);
     for (const auto &item: node->associated_item_nodes_) {
         if (item) {
             if (item ->function_node_) {

@@ -6,4 +6,5 @@ fn main() {
             break counter * 2;
         }
     };
+    exit(0);
 }

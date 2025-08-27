@@ -1,4 +1,5 @@
 fn main() {
     let a = 1;
     a = 2;
+    exit(0);
 } // Mutable Check: Single Variable - 1

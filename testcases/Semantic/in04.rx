@@ -1,4 +1,5 @@
 fn main() {
     let a: i32 = 10;
     let b: i32 = true;
+    exit(0);
 } // Test Type Check of Let Statement

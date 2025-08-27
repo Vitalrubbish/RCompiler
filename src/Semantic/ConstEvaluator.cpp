@@ -65,8 +65,27 @@ void ConstEvaluator::visit(InherentImplNode *node) {
             ->next_level_scopes_[scope_manager_.current_scope->index++];
     scope_manager_.current_scope->index = 0;
     if (node->type_node_) node->type_node_->accept(this);
+    std::string name = node->type_node_->toString();
+    Symbol symbol = scope_manager_.lookup(name);
+    Symbol self_symbol(node->pos_, "Self", symbol.type_, SymbolType::Struct, false);
+    scope_manager_.declare(self_symbol);
+    auto& name_set = symbol.type_->name_set;
     for (auto& item : node->associated_item_nodes_) {
-        if (item) {item->accept(this);}
+        if (item) {
+            item->accept(this);
+            if (item->constant_item_node_) {
+                auto constant_item = item->constant_item_node_;
+                auto sym = scope_manager_.lookupType(constant_item->type_node_);
+                Method method{constant_item->identifier_, sym};
+                if (name_set.find(constant_item->identifier_) != name_set.end()) {
+                    throw SemanticError("Semantic Error: Duplicate Definition of " + constant_item->identifier_,
+                        node->pos_);
+                }
+                name_set[constant_item->identifier_] = true;
+                symbol.type_->constants_.emplace_back(method);
+                scope_manager_.RemoteModifyType(name, symbol.type_);
+            }
+        }
     }
     scope_manager_.PopScope();
 }

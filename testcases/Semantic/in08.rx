@@ -7,4 +7,5 @@ fn main() {
     let result = add(3, 4);
 
     let arity_error = add(3);
+    exit(0);
 } // Type Check: Parameter Count

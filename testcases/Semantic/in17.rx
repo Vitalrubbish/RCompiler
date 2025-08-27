@@ -11,4 +11,5 @@ fn main() {
             break;
         }
     }
+    exit(0);
 } // Test Basic while expression.

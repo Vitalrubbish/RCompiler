@@ -4,4 +4,5 @@ fn main() {
         let z = 10;
         y + z
     };
+    exit(0);
 } // Test Type of BlockExpression

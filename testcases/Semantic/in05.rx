@@ -4,4 +4,5 @@ fn main() {
 
     // 错误：i32 和 bool 不能相加
     let y = 5 + false;
+    exit(0);
 } // Test Type Check of Basic Expression

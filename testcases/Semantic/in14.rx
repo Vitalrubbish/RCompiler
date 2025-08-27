@@ -11,4 +11,5 @@ fn main() {
     let result1 = calculate(20);
     let result2 = calculate(4);
     let should_fail = param;
+    exit(0);
 } // Scope Tree Test - 2

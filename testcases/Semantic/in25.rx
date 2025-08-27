@@ -19,4 +19,5 @@ impl Player {
 }
 
 fn main() {
+    exit(0);
 } // InherentImpl Test: Multiple Implement for 1 struct type.

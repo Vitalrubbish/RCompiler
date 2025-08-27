@@ -78,7 +78,7 @@ void SymbolCollector::visit(AssociatedItemNode *node) {
 
 void SymbolCollector::visit(InherentImplNode *node) {
     scope_manager_.AddScope();
-    if (node->type_node_) node->type_node_->accept(this);
+    if (node->type_node_) node->type_node_->accept(this);\
     for (const auto &item: node->associated_item_nodes_) {
         if (item) item->accept(this);
     }

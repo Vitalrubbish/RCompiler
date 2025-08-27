@@ -7,5 +7,7 @@ impl Greeter {
     fn say_hello(&self) {}
 }
 
-fn main() {}
+fn main() {
+    exit(0);
+}
 // InherentImpl Test: Duplicate definition of AssociatedItem

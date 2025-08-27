@@ -9,4 +9,5 @@ fn main() {
     }
     printlnInt(x);
     let should_fail = z;
+    exit(0);
 } // Scope Tree Test - 1

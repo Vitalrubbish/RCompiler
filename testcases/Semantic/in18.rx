@@ -3,4 +3,5 @@ fn main() {
     while (n) {
         n = n - 1;
     }
+    exit(0);
 } // Test the type check of while condition

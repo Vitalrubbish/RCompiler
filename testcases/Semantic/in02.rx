@@ -13,6 +13,7 @@ fn main() {
     println("Origin: ({}, {})");
     printlnInt(origin.x);
     printlnInt(origin.y);
+    exit(0);
 }
 
 // Check Set Relation of items in a scope.

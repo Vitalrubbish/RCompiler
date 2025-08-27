@@ -9,4 +9,5 @@ fn print_point(p: &Point) {
 fn main() {
     let p : Point = Point {x: 0, y: 0};
     print_point(&p);
+    exit(0);
 }

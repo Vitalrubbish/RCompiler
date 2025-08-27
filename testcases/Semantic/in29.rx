@@ -1,4 +1,5 @@
 fn main() {
     const N : i32 = 114_514;
     const M : i32 = N;
+    exit(0);
 }

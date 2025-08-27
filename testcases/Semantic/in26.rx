@@ -2,6 +2,8 @@ impl NonExistentStruct {
     fn do_something(&self) {}
 }
 
-fn main() {}
+fn main() {
+    exit(0);
+}
 
 // InherentImpl Test: Implement for type-not-exist.

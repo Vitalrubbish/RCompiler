@@ -2,4 +2,5 @@ fn main() {
     const N : i32 = 100 + 10;
     const M : i32 = N + 100;
     const K : i32 = M * N;
+    exit(0);
 }

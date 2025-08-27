@@ -14,6 +14,8 @@ void SymbolManager::visit(CrateNode *node) {
         if (item) item->accept(this);
         auto structItem = std::dynamic_pointer_cast<StructNode>(item);
         if (structItem) {
+            auto tmp = scope_manager_.lookup(structItem->identifier_).type_;
+            auto struct_ = std::dynamic_pointer_cast<StructType>(tmp);
             std::vector<StructMember> members;
             for (const auto &field: structItem->struct_field_nodes_) {
                 auto type_node = field -> type_node_;
@@ -22,7 +24,7 @@ void SymbolManager::visit(CrateNode *node) {
                 StructMember member{field->identifier_, member_type};
                 members.emplace_back(member);
             }
-            auto struct_ = std::make_shared<StructType>(structItem->identifier_, members);
+            struct_->members_ = members;
             scope_manager_.ModifyType(structItem->identifier_, struct_);
             continue;
         }
@@ -93,18 +95,6 @@ void SymbolManager::visit(InherentImplNode *node) {
     auto& name_set = symbol.type_->name_set;
     for (const auto &item: node->associated_item_nodes_) {
         if (item) item->accept(this);
-        if (item->constant_item_node_) {
-            auto constant_item = item->constant_item_node_;
-            auto sym = scope_manager_.lookupType(constant_item->type_node_);
-            Method method{constant_item->identifier_, sym};
-            if (name_set.find(constant_item->identifier_) != name_set.end()) {
-                throw SemanticError("Semantic Error: Duplicate Definition of " + constant_item->identifier_,
-                    node->pos_);
-            }
-            name_set[constant_item->identifier_] = true;
-            symbol.type_->constants_.emplace_back(method);
-            scope_manager_.RemoteModifyType(name, symbol.type_);
-        }
         if (item->function_node_) {
             auto funcItem = item->function_node_;
             bool have_and = false, is_mut = false, have_self = false;
