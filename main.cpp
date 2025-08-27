@@ -62,7 +62,7 @@ int main() {
         root->accept(semantic_checker);
         std::cout << 0 << '\r';
     } catch (std::exception &error) {
-        std::cout << error.what() << '\n';
+        // std::cout << error.what() << '\n';
         std::cout << -1 << '\r';
     }
 }
