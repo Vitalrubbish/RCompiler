@@ -1,6 +1,0 @@
-fn main() {
-    let x = true;
-    if (x) {
-        // Empty branch
-    }
-}

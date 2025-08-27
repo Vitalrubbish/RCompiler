@@ -1,0 +1,10 @@
+const WIDTH: usize = 640;
+const HEIGHT: usize = 480;
+fn process_screen_buffer(buffer: [u32; WIDTH * HEIGHT]) {
+    // ...
+}
+
+fn main() {
+    let arr : [[u32; 640]; 240] = [[0u32;640];240];
+    process_screen_buffer(arr);
+}

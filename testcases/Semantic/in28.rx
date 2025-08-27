@@ -1,0 +1,21 @@
+struct Circle {
+    radius : i32,
+}
+
+impl Circle {
+    const pi : i32 = 3;
+
+    fn new(r: i32) -> Circle {
+        Circle{radius : r}
+    }
+
+    fn area(&self) -> i32 {
+        return Self::pi * self.radius * self.radius;
+    }
+}
+
+fn main() {
+    let cir : Circle = Circle::new(10);
+    printInt(cir.area());
+    exit(0);
+} // Test Inherent Implementation: Self Keyword

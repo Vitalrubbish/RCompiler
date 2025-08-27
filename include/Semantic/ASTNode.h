@@ -103,7 +103,6 @@ class PathPatternNode;
 class TypeNoBoundsNode;
 class ParenthesizedTypeNode;
 class TypePathSegmentNode;
-class TupleTypeNode;
 class ArrayTypeNode;
 class SliceTypeNode;
 class ReferenceTypeNode;
@@ -1445,8 +1444,6 @@ public:
 
         auto tmp = std::dynamic_pointer_cast<IntLiteralNode>(expression_node_);
         if (!tmp) {
-            // This should be handled by a proper semantic error mechanism
-            // For now, just indicate an unknown size.
             str += "_";
         } else {
             str += std::to_string(tmp->int_literal_);

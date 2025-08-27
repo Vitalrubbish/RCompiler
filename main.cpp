@@ -5,6 +5,7 @@
 #include "Parser/Parser.h"
 #include "Semantic/ASTNode.h"
 #include "Semantic/ASTVisitor.h"
+#include "Semantic/ConstEvaluator.h"
 #include "Semantic/SemanticChecker.h"
 #include "Semantic/SymbolCollector.h"
 #include "Semantic/SymbolManager.h"
@@ -15,13 +16,14 @@ std::vector<Token> tokens;
 std::shared_ptr<ASTNode> root = nullptr;
 ScopeManager scope_manager;
 SymbolCollector *symbol_collector = new SymbolCollector{scope_manager};
+ConstEvaluator *const_evaluator = new ConstEvaluator{scope_manager};
 SemanticChecker *semantic_checker = new SemanticChecker{scope_manager};
 SymbolManager *symbol_manager = new SymbolManager{scope_manager};
 
 int main() {
     // freopen("../stdin.txt", "r", stdin);
-    // freopen("../testcases_official/semantic-1/misc2/misc2.rx", "r", stdin);
-    // freopen("../testcases/Semantic/in28.rx", "r", stdin);
+    // freopen("../testcases_official/semantic-1/return2/return2.rx", "r", stdin);
+    // freopen("../testcases/Semantic/in03.rx", "r", stdin);
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::string text((std::istreambuf_iterator(std::cin)),
@@ -55,11 +57,12 @@ int main() {
         root = parser.ParseCrate(); // Parser
 
         root->accept(symbol_collector);
+        root->accept(const_evaluator);
         root->accept(symbol_manager);
         root->accept(semantic_checker);
         std::cout << 0 << '\r';
     } catch (std::exception &error) {
-        // std::cout << error.what() << '\n';
+        std::cout << error.what() << '\n';
         std::cout << -1 << '\r';
     }
 }

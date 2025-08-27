@@ -319,9 +319,11 @@ public:
 class ReferenceType: public Type {
 public:
     std::shared_ptr<Type> type_;
+    bool is_mut_ = false;
 
-    explicit ReferenceType(const std::shared_ptr<Type> &type) {
+    explicit ReferenceType(const std::shared_ptr<Type> &type, bool is_mut = false) {
         type_ = type;
+        is_mut_ = is_mut;
     }
 
     ReferenceType &operator= (const Type& other) override {
@@ -332,8 +334,9 @@ public:
         constants_ = other.constants_;
         if (const auto *ptr = dynamic_cast<const ReferenceType *>(&other)) {
             type_ = ptr -> type_;
+            is_mut_ = ptr -> is_mut_;
         } else {
-            throw std::runtime_error("Cannot assign non-ArrayType to ArrayType");
+            throw std::runtime_error("Cannot assign non-ReferenceType to ReferenceType");
         }
         return *this;
     }
@@ -351,6 +354,7 @@ public:
             return false;
         }
         auto ptr = std::dynamic_pointer_cast<ReferenceType>(other);
+        if (is_mut_ != ptr->is_mut_ && is_mut_) { return false; }
         return type_->equal(ptr->type_);
     }
 };

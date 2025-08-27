@@ -1,0 +1,11 @@
+struct Greeter;
+impl Greeter {
+    fn say_hello(&self) {}
+}
+impl Greeter {
+    // ERROR: Duplicate definition of `say_hello`.
+    fn say_hello(&self) {}
+}
+
+fn main() {}
+// InherentImpl Test: Duplicate definition of AssociatedItem

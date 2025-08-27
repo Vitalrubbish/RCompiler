@@ -1,10 +1,7 @@
 #include "Semantic/SemanticChecker.h"
 #include "Semantic/ASTNode.h"
-#include "Semantic/SymbolCollector.h"
 #include "Semantic/Type.h"
 #include "Semantic/Symbol.h"
-
-extern SymbolCollector *symbol_collector;
 
 void SemanticChecker::visit(ASTNode *node) {
 }
@@ -22,7 +19,13 @@ void SemanticChecker::visit(VisItemNode *node) {
 
 void SemanticChecker::visit(FunctionNode *node) {
     if (node->function_parameters_) node->function_parameters_->accept(this);
-    if (node->type_) node->type_->accept(this);
+    std::shared_ptr<Type> ret;
+    if (node->type_) {
+        node->type_->accept(this);
+        ret = node->type_->type;
+    } else {
+        ret = scope_manager_.lookup("void").type_;
+    }
     if (node -> function_parameters_) {
         scope_manager_.current_scope = scope_manager_.current_scope
             -> next_level_scopes_[scope_manager_.current_scope -> index];
@@ -33,16 +36,18 @@ void SemanticChecker::visit(FunctionNode *node) {
                 std::string identifier = pattern_node -> identifier_;
                 bool is_mut = pattern_node -> is_mut_;
                 std::shared_ptr<Type> type = it->type_->type;
+
+                auto ref_type = std::dynamic_pointer_cast<ReferenceTypeNode>(it->type_);
+                if (ref_type && ref_type->is_mut_) { is_mut = true;}
+
                 Symbol symbol(node->pos_, identifier, type, SymbolType::Variable, is_mut);
                 scope_manager_.declare(symbol);
                 continue;
             }
-            auto path_pattern = std::dynamic_pointer_cast<PathPatternNode>(it -> pattern_no_top_alt_node_);
-            if (path_pattern) {
+            if (auto path_pattern = std::dynamic_pointer_cast<PathPatternNode>(it -> pattern_no_top_alt_node_)) {
                 bool is_mut;
                 std::string identifier;
-                auto expression = std::dynamic_pointer_cast<PathInExpressionNode>(path_pattern->expression_);
-                if (expression) {
+                if (auto expression = std::dynamic_pointer_cast<PathInExpressionNode>(path_pattern->expression_)) {
                     uint32_t len = expression -> path_indent_segments_.size();
                     if (len == 0) {
                         throw SemanticError("Semantic Error: Path Pattern Error", node->pos_);
@@ -51,6 +56,8 @@ void SemanticChecker::visit(FunctionNode *node) {
                     is_mut = false;
                 }
                 std::shared_ptr<Type> type = it->type_->type;
+                auto ref_type = std::dynamic_pointer_cast<ReferenceTypeNode>(it->type_);
+                if (ref_type && ref_type->is_mut_) { is_mut = true;}
                 Symbol symbol(node->pos_, identifier, type, SymbolType::Variable, is_mut);
                 scope_manager_.declare(symbol);
             }
@@ -59,6 +66,48 @@ void SemanticChecker::visit(FunctionNode *node) {
     }
     if (node->block_expression_) {
         node->block_expression_->accept(this);
+        if (node->block_expression_->statements_) {
+            auto statements = node->block_expression_->statements_;
+            if (statements->expression_) {
+                if (function_return_type_.empty()) {
+                    function_return_type_ = statements->expression_->types;
+                } else {
+                    function_return_type_ = cap(function_return_type_,statements->expression_->types);
+                    if (function_return_type_.empty()) {
+                        throw SemanticError("Semantic Error: Return Type is not consistent in function",
+                            node -> pos_);
+                    }
+                }
+            }
+        }
+        if (function_return_type_.empty()) {
+            function_return_type_.emplace_back(scope_manager_.lookup("void").type_);
+        }
+        auto check = cap(function_return_type_, std::vector{ret});
+        if (check.empty()) {
+            throw SemanticError("Semantic Error: Function Return Type not match", node->pos_);
+        }
+        function_return_type_.clear();
+    }
+    if (node->identifier_ == "main") {
+        if (node->block_expression_) {
+            auto statements = node->block_expression_->statements_;
+            uint32_t len = statements->statements_.size();
+            bool valid = false;
+            if (len > 0) {
+                auto last = statements->statements_[len - 1];
+                auto exprStmt = std::dynamic_pointer_cast<ExpressionStatementNode>(last);
+                auto expr = exprStmt->expression_;
+                auto func_call= std::dynamic_pointer_cast<FunctionCallExpressionNode>(expr);
+                auto id = std::dynamic_pointer_cast<PathInExpressionNode>(func_call->callee_);
+                if (id && id->path_indent_segments_[0]->identifier_ == "exit") {
+                    valid = true;
+                }
+            }
+            if (!valid) {
+                throw SemanticError("Semantic Error: There is no exit at the end of main", node->pos_);
+            }
+        }
     }
 }
 
@@ -75,16 +124,19 @@ void SemanticChecker::visit(EnumerationNode *node) {
 }
 
 void SemanticChecker::visit(ConstantItemNode *node) {
-    if (node->type_node_) node->type_node_->accept(this);
-    if (node->expression_node_) node->expression_node_->accept(this);
-    if (!node->expression_node_->is_compiler_known_) {
-        throw SemanticError("Semantic Error: The RHS is not a Compiler-known expression", node->pos_);
+    std::string type_name;
+    if (node->type_node_) {
+        node->type_node_->accept(this);
+        type_name = node->type_node_->toString();
     }
-    scope_manager_.AddConstant(node->identifier_, node->expression_node_->value);
-    Symbol symbol(node -> pos_, node -> identifier_,
-        node -> type_node_ -> type, SymbolType::Variable, false);
-    symbol.SetConst(true);
-    scope_manager_.declare(symbol);
+    if (node->expression_node_) node->expression_node_->accept(this);
+    if (type_name != "i32" && type_name != "u32" &&
+        type_name != "isize" && type_name != "usize") {
+        Symbol symbol(node -> pos_, node -> identifier_, node -> type_node_ -> type,
+            SymbolType::Variable, false);
+        symbol.SetConst(true);
+        scope_manager_.declare(symbol);
+    }
 }
 
 void SemanticChecker::visit(TraitNode *node) {
@@ -330,14 +382,14 @@ void SemanticChecker::visit(UnderscoreExpressionNode *node) {
 
 void SemanticChecker::visit(JumpExpressionNode *node) {
     if (node->expression_) {
-        if (in_loop_ && in_while_loop_) {
-            throw SemanticError("Semantic Error: Expression is not allowed after break in while loop",
-                node -> pos_);
-        }
         node->expression_->accept(this);
         if (node -> type_ == TokenType::Break) {
             if (!in_loop_) {
                 throw SemanticError("Semantic Error: Break outside of loop", node->pos_);
+            }
+            if (in_while_loop_) {
+                throw SemanticError("Semantic Error: Expression is not allowed after break in while loop",
+                    node -> pos_);
             }
             if (loop_return_type_.empty()) {
                 loop_return_type_ = node -> expression_ -> types;
@@ -345,6 +397,16 @@ void SemanticChecker::visit(JumpExpressionNode *node) {
                 loop_return_type_ = cap(loop_return_type_, node -> expression_ -> types);
                 if (loop_return_type_.empty()) {
                     throw SemanticError("Semantic Error: Break type is not consistent in loop", node -> pos_);
+                }
+            }
+        } else if (node -> type_ == TokenType::Return) {
+            if (function_return_type_.empty()) {
+                function_return_type_ = node -> expression_ -> types;
+            } else {
+                function_return_type_ = cap(function_return_type_, node -> expression_ -> types);
+                if (function_return_type_.empty()) {
+                    throw SemanticError("Semantic Error: Return type is not consistent in function",
+                        node -> pos_);
                 }
             }
         }
@@ -360,6 +422,17 @@ void SemanticChecker::visit(JumpExpressionNode *node) {
             loop_return_type_ = cap(loop_return_type_, {scope_manager_.lookup("void").type_});
             if (loop_return_type_.empty()) {
                 throw SemanticError("Semantic Error: Break Type is not consistent in function", node -> pos_);
+            }
+        }
+    } else {
+        auto void_ = std::vector{scope_manager_.lookup("void").type_};
+        if (function_return_type_.empty()) {
+            function_return_type_ = void_;
+        } else {
+            function_return_type_ = cap(function_return_type_, void_);
+            if (function_return_type_.empty()) {
+                throw SemanticError("Semantic Error: Return type is not consistent in function",
+                    node -> pos_);
             }
         }
     }
@@ -619,7 +692,35 @@ void SemanticChecker::visit(UnaryExpressionNode *node) {
             }
             return;
         }
-        // TODO Handle *, &, &mut, &&, &&mut
+        if (node -> type_ == TokenType::And) {
+            for (const auto& it: node -> expression_ -> types) {
+                auto type = std::make_shared<ReferenceType>(it);
+                node -> types.emplace_back(type);
+            }
+        }
+        if (node -> type_ == TokenType::AndMut) {
+            for (const auto& it: node -> expression_ -> types) {
+                auto type = std::make_shared<ReferenceType>(it, true);
+                node -> types.emplace_back(type);
+            }
+        }
+        if (node -> type_ == TokenType::Mul) {
+            bool valid = false;
+            for (const auto& it: node -> expression_ -> types) {
+                auto type = std::dynamic_pointer_cast<ReferenceType>(it);
+                if (type) {
+                    node->types.emplace_back(type->type_);
+                    valid = true;
+                }
+            }
+            node->is_assignable_ = true;
+            node->is_mutable_ = node->expression_->is_mutable_;
+            if (!valid) {
+                throw SemanticError("Semantic Error: The Type in Dereference Expression is not a pointer type",
+                    node->pos_);
+            }
+        }
+        // TODO Handle &&, &&mut
     }
 }
 
@@ -664,10 +765,15 @@ void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
         node->base_->accept(this);
         auto tmp = node -> base_ -> types[0];
         node -> is_mutable_ = node -> base_ -> is_mutable_;
-        type = std::dynamic_pointer_cast<ArrayType>(tmp);
-        if (!type) {
-            throw SemanticError("Semantic Error: Not an array type before the arrayIndexExpression",
-                node -> pos_);
+        while (true) {
+            type = std::dynamic_pointer_cast<ArrayType>(tmp);
+            if (type) { break; }
+            auto ref_type = std::dynamic_pointer_cast<ReferenceType>(tmp);
+            if (!ref_type) {
+                throw SemanticError("Semantic Error: Not an array type before the arrayIndexExpression",
+                    node -> pos_);
+            }
+            tmp = ref_type->type_;
         }
     }
     if (node->index_) {
@@ -690,22 +796,27 @@ void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
 void SemanticChecker::visit(MemberAccessExpressionNode *node) {
     if (node->base_) {
         node->base_->accept(this);
-        std::shared_ptr<Type> type = node -> base_ -> types[0];
         node -> is_mutable_ = node -> base_ -> is_mutable_;
-        auto tmp = std::dynamic_pointer_cast<StructType>(type);
-        if (tmp) {
-            for (const auto& it: tmp -> members_) {
+        std::shared_ptr<Type> type = node -> base_ -> types[0];
+        while (true) {
+            auto tmp = std::dynamic_pointer_cast<StructType>(type);
+            if (tmp) {
+                for (const auto& it: tmp -> members_) {
+                    if (it.name_ == node -> member_.token) {
+                        node -> types.emplace_back(it.type_);
+                        return;
+                    }
+                }
+            }
+            for (const auto& it: type -> methods_) {
                 if (it.name_ == node -> member_.token) {
                     node -> types.emplace_back(it.type_);
                     return;
                 }
             }
-        }
-        for (const auto& it: type -> methods_) {
-            if (it.name_ == node -> member_.token) {
-                node -> types.emplace_back(it.type_);
-                return;
-            }
+            auto ref_type = std::dynamic_pointer_cast<ReferenceType>(type);
+            if (!ref_type) {break;}
+            type = ref_type->type_;
         }
         throw SemanticError("Semantic Error: Invalid Member Access Expression", node -> pos_);
     }
@@ -1112,6 +1223,10 @@ void SemanticChecker::visit(SliceTypeNode *node) {
 }
 
 void SemanticChecker::visit(ReferenceTypeNode *node) {
+    if (node->type_node_) {
+        node->type_node_->accept(this);
+        node->type = std::make_shared<ReferenceType>(node->type_node_->type, node->is_mut_);
+    }
 }
 
 

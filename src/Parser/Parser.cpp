@@ -98,8 +98,8 @@ std::shared_ptr<FunctionParametersNode> Parser::ParseFunctionParameters() {
     std::vector<std::shared_ptr<FunctionParamNode>> function_param_nodes;
     std::shared_ptr<SelfParamNode> self_param_node;
     try {
-        if (tokens[parseIndex].type == TokenType::And || tokens[parseIndex].type == TokenType::Mut ||
-            tokens[parseIndex].type == TokenType::Self) {
+        if (tokens[parseIndex].type == TokenType::Self || tokens[parseIndex + 1].type == TokenType::Self ||
+            tokens[parseIndex + 2].type == TokenType::Self) {
             self_param_node = ParseSelfParamNode();
             if (tokens[parseIndex].type == TokenType::RParen) {
                 return std::make_shared<FunctionParametersNode>(pos, self_param_node, function_param_nodes);
@@ -932,8 +932,10 @@ std::shared_ptr<ExpressionNode> Parser::ParsePrimaryExpression() {
     }
 
     try {
-        if (tokens[parseIndex].type == TokenType::LBrace) {
-            return ParseBlockExpression();
+        if (tokens[parseIndex].type == TokenType::LBrace || tokens[parseIndex].type == TokenType::If ||
+            tokens[parseIndex].type == TokenType::Const || tokens[parseIndex].type == TokenType::Loop ||
+            tokens[parseIndex].type == TokenType::While) {
+            return ParseExpressionWithBlock();
         }
         if (tokens[parseIndex].type == TokenType::Identifier ||
             tokens[parseIndex].type == TokenType::Self ||
@@ -1268,12 +1270,14 @@ std::shared_ptr<LetStatementNode> Parser::ParseLetStatement() {
             ConsumeString(":");
             type_node = ParseType();
         }
-        ConsumeString("=");
-        expression_node = ParseExpression();
-        if (tokens[parseIndex].type == TokenType::Else) {
-            ConsumeString("else");
-            block_expression_node = ParseBlockExpression();
-            // TODO Check Whether the expression node is lazyBooleanExpression Or end with a '}'
+        if (tokens[parseIndex].type == TokenType::Eq) {
+            ConsumeString("=");
+            expression_node = ParseExpression();
+            if (tokens[parseIndex].type == TokenType::Else) {
+                ConsumeString("else");
+                block_expression_node = ParseBlockExpression();
+                // TODO Check Whether the expression node is lazyBooleanExpression Or end with a '}'
+            }
         }
         ConsumeString(";");
         return std::make_shared<LetStatementNode>(pos, pattern_no_top_alt_node, type_node,

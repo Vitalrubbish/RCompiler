@@ -1,0 +1,4 @@
+fn main() {
+    let N : i32 = 114_514;
+    const M : i32 = N;
+}

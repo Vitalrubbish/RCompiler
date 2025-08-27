@@ -11,12 +11,15 @@ void SymbolManager::visit(CrateNode *node) {
     scope_manager_.current_scope = scope_manager_.root;
     scope_manager_.current_scope->index = 0;
     for (const auto &item: node->items_) {
+        if (item) item->accept(this);
         auto structItem = std::dynamic_pointer_cast<StructNode>(item);
         if (structItem) {
             std::vector<StructMember> members;
             for (const auto &field: structItem->struct_field_nodes_) {
-                Symbol symbol = scope_manager_.lookup(field->type_node_->toString());
-                StructMember member{field->identifier_, symbol.type_};
+                auto type_node = field -> type_node_;
+                std::shared_ptr<Type> member_type = scope_manager_.lookupType(type_node);
+                type_node->type = member_type;
+                StructMember member{field->identifier_, member_type};
                 members.emplace_back(member);
             }
             auto struct_ = std::make_shared<StructType>(structItem->identifier_, members);
@@ -29,20 +32,18 @@ void SymbolManager::visit(CrateNode *node) {
             std::shared_ptr<Type> ret = std::make_shared<PrimitiveType>("void");
             if (funcItem->function_parameters_) {
                 for (const auto &param: funcItem->function_parameters_->function_params_) {
-                    Symbol symbol = scope_manager_.lookup(param->type_->toString());
-                    params.emplace_back(symbol.type_);
+                    std::shared_ptr<Type> type = scope_manager_.lookupType(param->type_);
+                    param->type_->type = type;
+                    params.emplace_back(type);
                 }
             }
             if (funcItem->type_) {
-                Symbol symbol = scope_manager_.lookup(funcItem->type_->toString());
-                ret = symbol.type_;
+                ret = scope_manager_.lookupType(funcItem->type_);
+                funcItem->type_->type = ret;
             }
             auto func_ = std::make_shared<FunctionType>(params, ret);
             scope_manager_.ModifyType(funcItem->identifier_, func_);
         }
-    }
-    for (const auto &item: node->items_) {
-        if (item) item->accept(this);
     }
 }
 
@@ -50,6 +51,8 @@ void SymbolManager::visit(VisItemNode *node) {
 }
 
 void SymbolManager::visit(FunctionNode *node) {
+    if (node->type_) node->type_->accept(this);
+    if (node->function_parameters_) node->function_parameters_->accept(this);
     if (node->block_expression_) {
         node->block_expression_->accept(this);
     }
@@ -92,8 +95,8 @@ void SymbolManager::visit(InherentImplNode *node) {
         if (item) item->accept(this);
         if (item->constant_item_node_) {
             auto constant_item = item->constant_item_node_;
-            Symbol sym = scope_manager_.lookup(constant_item->type_node_->toString());
-            Method method{constant_item->identifier_, sym.type_};
+            auto sym = scope_manager_.lookupType(constant_item->type_node_);
+            Method method{constant_item->identifier_, sym};
             if (name_set.find(constant_item->identifier_) != name_set.end()) {
                 throw SemanticError("Semantic Error: Duplicate Definition of " + constant_item->identifier_,
                     node->pos_);
@@ -115,13 +118,13 @@ void SymbolManager::visit(InherentImplNode *node) {
                     is_mut = short_hand_self->is_mut_;
                 }
                 for (const auto &param: funcItem->function_parameters_->function_params_) {
-                    Symbol type_symbol = scope_manager_.lookup(param->type_->toString());
-                    params.emplace_back(type_symbol.type_);
+                    auto type = scope_manager_.lookupType(param->type_);
+                    params.emplace_back(type);
                 }
             }
             if (funcItem->type_) {
-                Symbol type_symbol = scope_manager_.lookup(funcItem->type_->toString());
-                ret = type_symbol.type_;
+                auto type = scope_manager_.lookupType(funcItem->type_);
+                ret = type;
             }
             auto func_ = std::make_shared<FunctionType>(params, ret);
             func_->SetParam(have_self, have_and, is_mut);
@@ -324,31 +327,34 @@ void SymbolManager::visit(BlockExpressionNode *node) {
                 continue;
             }
 
-            auto structItem = std::dynamic_pointer_cast<StructNode>(visItemStmt->vis_item_node_);
+            auto structItem = std::dynamic_pointer_cast<StructNode>(visItemStmt -> vis_item_node_);
             if (structItem) {
                 std::vector<StructMember> members;
                 for (const auto &field: structItem->struct_field_nodes_) {
-                    Symbol symbol = scope_manager_.lookup(field->type_node_->toString());
-                    StructMember member{field->identifier_, symbol.type_};
+                    auto type_node = field -> type_node_;
+                    std::shared_ptr<Type> member_type = scope_manager_.lookupType(type_node);
+                    type_node->type = member_type;
+                    StructMember member{field->identifier_, member_type};
                     members.emplace_back(member);
                 }
                 auto struct_ = std::make_shared<StructType>(structItem->identifier_, members);
                 scope_manager_.ModifyType(structItem->identifier_, struct_);
                 continue;
             }
-            auto funcItem = std::dynamic_pointer_cast<FunctionNode>(visItemStmt->vis_item_node_);
+            auto funcItem = std::dynamic_pointer_cast<FunctionNode>(visItemStmt -> vis_item_node_);
             if (funcItem) {
                 std::vector<std::shared_ptr<Type> > params;
                 std::shared_ptr<Type> ret = std::make_shared<PrimitiveType>("void");
                 if (funcItem->function_parameters_) {
                     for (const auto &param: funcItem->function_parameters_->function_params_) {
-                        Symbol symbol = scope_manager_.lookup(param->type_->toString());
-                        params.emplace_back(symbol.type_);
+                        std::shared_ptr<Type> type = scope_manager_.lookupType(param->type_);
+                        param->type_->type = type;
+                        params.emplace_back(type);
                     }
                 }
                 if (funcItem->type_) {
-                    Symbol symbol = scope_manager_.lookup(funcItem->type_->toString());
-                    ret = symbol.type_;
+                    ret = scope_manager_.lookupType(funcItem->type_);
+                    funcItem->type_->type = ret;
                 }
                 auto func_ = std::make_shared<FunctionType>(params, ret);
                 scope_manager_.ModifyType(funcItem->identifier_, func_);
@@ -554,4 +560,8 @@ void SymbolManager::visit(SliceTypeNode *node) {
 }
 
 void SymbolManager::visit(ReferenceTypeNode *node) {
+    if (node->type_node_) {
+        node->type_node_->accept(this);
+        node->type = std::make_shared<ReferenceType>(node->type_node_->type, node->is_mut_);
+    }
 }

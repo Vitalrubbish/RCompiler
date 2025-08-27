@@ -3,6 +3,9 @@
 #include <vector>
 #include "Scope.h"
 
+class TypeNode;
+class ReferenceTypeNode;
+class ArrayTypeNode;
 using ConstValue = std::variant<int64_t, std::string>;
 
 class ScopeManager {
@@ -66,6 +69,10 @@ public:
             std::vector<std::shared_ptr<Type>>{},
             i32_type
         );
+        std::shared_ptr<Type> readInt = std::make_shared<FunctionType>(
+            std::vector<std::shared_ptr<Type>>{},
+            i32_type
+        );
         std::shared_ptr<Type> exit = std::make_shared<FunctionType>(
             std::vector{i32_type},
             void_type
@@ -76,6 +83,7 @@ public:
         Symbol printlnInt_(pos, "printlnInt", printlnInt, SymbolType::Function);
         Symbol getString_(pos, "getString", getString, SymbolType::Function);
         Symbol getInt_(pos, "getInt", getInt, SymbolType::Function);
+        Symbol readInt_(pos, "readInt", readInt, SymbolType::Function);
         Symbol exit_(pos, "exit", exit, SymbolType::Function);
         declare(print_);
         declare(println_);
@@ -83,6 +91,7 @@ public:
         declare(printlnInt_);
         declare(getString_);
         declare(getInt_);
+        declare(readInt_);
         declare(exit_);
 
         i32_type->methods_.emplace_back(
@@ -132,9 +141,11 @@ public:
         throw SemanticError("Semantic Error: Symbol not found - " + name);
     }
 
-    Symbol lookupArray(const std::string& name) {
+    std::shared_ptr<Type> lookupType(const std::shared_ptr<TypeNode> &type);
 
-    }
+    std::shared_ptr<ArrayType> lookupArray(const std::shared_ptr<ArrayTypeNode> &type);
+
+    std::shared_ptr<ReferenceType> lookupRef(const std::shared_ptr<ReferenceTypeNode> &type);
 
     void AddConstant(const std::string &name, const ConstValue& val) const {
         current_scope->value_map_[name] = val;

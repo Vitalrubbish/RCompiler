@@ -1,8 +1,0 @@
-fn main() {
-    let ch = 'a';
-    if (ch == 'a' || ch == 'e' || ch == 'i' || ch == 'o' || ch == 'u') {
-        let vowel = true;
-    } else {
-        let vowel = false;
-    }
-}

@@ -50,8 +50,19 @@ void SymbolCollector::visit(EnumerationNode *node) {
 }
 
 void SymbolCollector::visit(ConstantItemNode *node) {
-    if (node->type_node_) node->type_node_->accept(this);
+    std::string type_name;
+    if (node->type_node_) {
+        node->type_node_->accept(this);
+        type_name = node->type_node_->toString();
+    }
     if (node->expression_node_) node->expression_node_->accept(this);
+    if (type_name == "i32" || type_name == "u32" ||
+        type_name == "isize" || type_name == "usize") {
+        auto type = scope_manager_.lookup(type_name).type_;
+        Symbol symbol(node -> pos_, node -> identifier_, type, SymbolType::Variable, false);
+        symbol.SetConst(true);
+        scope_manager_.declare(symbol);
+    }
 }
 
 void SymbolCollector::visit(TraitNode *node) {
@@ -84,7 +95,7 @@ void SymbolCollector::visit(FunctionParametersNode *node) {
 }
 
 void SymbolCollector::visit(FunctionParamNode *node) {
-    if (node->pattern_no_top_alt_node_) node->pattern_no_top_alt_node_->accept(this);
+    // if (node->pattern_no_top_alt_node_) node->pattern_no_top_alt_node_->accept(this);
     if (node->type_) node->type_->accept(this);
 }
 

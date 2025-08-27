@@ -1,4 +1,4 @@
-#include <vector>
+#include <regex>
 #include "Error.h"
 #include "Lexer/Lexer.h"
 
@@ -180,9 +180,10 @@ Token Lexer::GetNextToken(std::string &str) const {
         throw LexError("Comments do not match");
     } // Judge whether it is a comment.
 
+    std::string string_str = str.substr(0, 512);
     for (const auto &it: string_rules) {
         std::smatch match;
-        if (std::regex_search(str, match, it.second) && match.position(0) == 0) {
+        if (std::regex_search(string_str, match, it.second) && match.position(0) == 0) {
             len = match.length(0);
             if (len > bestMatchLength) {
                 bestMatchLength = len;
