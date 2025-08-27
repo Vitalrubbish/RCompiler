@@ -60,9 +60,9 @@ int main() {
         root->accept(const_evaluator);
         root->accept(symbol_manager);
         root->accept(semantic_checker);
-        std::cout << 0 << '\r';
+        std::cout << 0 << '\n';
     } catch (std::exception &error) {
         // std::cout << error.what() << '\n';
-        std::cout << -1 << '\r';
+        std::cout << -1 << '\n';
     }
 }
