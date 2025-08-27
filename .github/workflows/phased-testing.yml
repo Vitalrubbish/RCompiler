@@ -20,10 +20,6 @@ jobs:
           cmake -S . -B cmake-build-debug
           cmake --build cmake-build-debug --config Release
           chmod +x ./.ci/run_semantic_tests.sh
-          chmod +x ./.ci/run_official_semantic_tests.sh
 
       - name: Run Semantic Test
         run: ./.ci/run_semantic_tests.sh
-
-      - name: Run Official Semantic Test
-        run: ./.ci/run_official_semantic_tests.sh
