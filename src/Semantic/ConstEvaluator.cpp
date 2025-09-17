@@ -12,6 +12,12 @@ void ConstEvaluator::visit(ASTNode *node) {
 void ConstEvaluator::visit(CrateNode *node) {
     scope_manager_.current_scope = scope_manager_.root;
     scope_manager_.current_scope -> index = 0;
+    for (const auto& item: node->items_) {
+        auto const_item = std::dynamic_pointer_cast<ConstantItemNode>(item);
+        if (const_item) {
+            item->accept(this);
+        }
+    }
     for (const auto &item: node->items_) {
         if (item) item->accept(this);
     }
@@ -229,37 +235,18 @@ void ConstEvaluator::visit(BitwiseAndExpressionNode *node) {
 }
 
 void ConstEvaluator::visit(ShiftExpressionNode *node) {
-    if (node->lhs_) {
-        node->lhs_->accept(this);
-        bool match = false;
-        for (const auto& it: node -> lhs_ -> types) {
-            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
-            if (tmp) {
-                if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
-                    tmp -> name_ == "isize" || tmp -> name_ == "usize") {
-                    match = true;
-                    node -> types.emplace_back(it);
-                }
+    if (node->lhs_) { node->lhs_->accept(this); }
+    if (node->rhs_) { node->rhs_->accept(this); }
+    if (node -> lhs_ ->is_compiler_known_ && node -> rhs_ -> is_compiler_known_) {
+        node -> is_compiler_known_ = true;
+        auto* l = std::get_if<int64_t>(&node -> lhs_ -> value);
+        auto* r = std::get_if<int64_t>(&node -> rhs_ -> value);
+        if (l && r) {
+            if (node -> type_ == TokenType::SL) {
+                node -> value = (*l) << (*r);
+            } else {
+                node -> value = (*l) >> (*r);
             }
-        }
-        if (!match) {
-            throw SemanticError("Semantic Error: Invalid ShiftExpressionNode", node -> pos_);
-        }
-    }
-    if (node->rhs_) {
-        node->rhs_->accept(this);
-        bool match = false;
-        for (const auto& it: node -> rhs_ -> types) {
-            auto tmp = std::dynamic_pointer_cast<PrimitiveType>(it);
-            if (tmp) {
-                if (tmp -> name_ == "i32" || tmp -> name_ == "u32" ||
-                    tmp -> name_ == "isize" || tmp -> name_ == "usize") {
-                    match = true;
-                }
-            }
-        }
-        if (!match) {
-            throw SemanticError("Semantic Error: Invalid ShiftExpressionNode", node -> pos_);
         }
     }
 }
@@ -477,6 +464,7 @@ void ConstEvaluator::visit(GroupedExpressionNode *node) {
     if (node->expression_) {
         node->expression_->accept(this);
         node -> types = node -> expression_ -> types;
+        node->is_compiler_known_ = node->expression_->is_compiler_known_;
     }
 }
 

@@ -15,6 +15,7 @@ struct Symbol {
     SymbolType symbol_type_ = SymbolType::None;
     bool is_mutable_ = false;
     bool is_const_ = false;
+    bool is_assigned_ = true;
     Position pos_;
 
     Symbol() = default;
@@ -29,7 +30,11 @@ struct Symbol {
     }
 
     void SetConst(bool is_const = false) {
-        is_const_ = true;
+        is_const_ = is_const;
+    }
+
+    void SetAssign(bool is_assigned = false) {
+        is_assigned_ = is_assigned;
     }
 };
 #endif //SYMBOL_H

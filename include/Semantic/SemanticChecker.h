@@ -11,6 +11,7 @@ class SemanticChecker : public ASTVisitor {
     std::vector<std::shared_ptr<Type>> function_return_type_;
 
     bool interrupt = false;
+    bool has_exit = false;
 public:
     explicit SemanticChecker(ScopeManager & scope_manager):
         scope_manager_(scope_manager) {}

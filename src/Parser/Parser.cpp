@@ -1300,11 +1300,13 @@ std::shared_ptr<ExpressionStatementNode> Parser::ParseExpressionStatement() {
     }
 
     try {
+        bool has_semicolon = false;
         expression_node = ParseExpressionWithBlock();
         if (tokens[parseIndex].type == TokenType::Semicolon) {
             ConsumeString(";");
+            has_semicolon = true;
         }
-        return std::make_shared<ExpressionStatementNode>(pos, expression_node);
+        return std::make_shared<ExpressionStatementNode>(pos, expression_node, has_semicolon);
     } catch (const ParseError &) {
         throw ParseError("Parse Error: Failed to match ExpressionStatement", pos);
     }

@@ -1195,9 +1195,12 @@ public:
 class ExpressionStatementNode : public StatementNode {
 public:
     std::shared_ptr<ExpressionNode> expression_;
+    bool has_semicolon_ = true;
 
-    ExpressionStatementNode(Position pos, std::shared_ptr<ExpressionNode> expression)
+    ExpressionStatementNode(Position pos, std::shared_ptr<ExpressionNode> expression,
+        bool has_semicolon = true)
         : StatementNode(pos), expression_(std::move(expression)) {
+        has_semicolon_ = has_semicolon;
     }
 
     ~ExpressionStatementNode() override = default;

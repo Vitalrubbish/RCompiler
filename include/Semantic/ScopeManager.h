@@ -23,7 +23,9 @@ public:
         std::shared_ptr<Type> usize_type = std::make_shared<PrimitiveType>("usize");
         std::shared_ptr<Type> bool_type = std::make_shared<PrimitiveType>("bool");
         std::shared_ptr<Type> char_type = std::make_shared<PrimitiveType>("char");
-        std::shared_ptr<Type> string_type = std::make_shared<PrimitiveType>("string");
+        std::shared_ptr<Type> str_type = std::make_shared<PrimitiveType>("str");
+        std::shared_ptr<Type> andStr_type = std::make_shared<ReferenceType>(str_type);
+        std::shared_ptr<Type> string_type = std::make_shared<PrimitiveType>("String");
         std::shared_ptr<Type> cstring_type = std::make_shared<PrimitiveType>("cstring");
         std::shared_ptr<Type> never_type = std::make_shared<PrimitiveType>("never");
         std::shared_ptr<Type> void_type = std::make_shared<PrimitiveType>("void");
@@ -33,9 +35,11 @@ public:
         Symbol usize(pos, "usize", usize_type, SymbolType::Type);
         Symbol bool_(pos, "bool", bool_type, SymbolType::Type);
         Symbol char_(pos, "char", char_type, SymbolType::Type);
-        Symbol string_(pos, "string", string_type, SymbolType::Type);
+        Symbol string_(pos, "str", str_type, SymbolType::Type);
+        Symbol String_(pos, "String", string_type, SymbolType::Type);
         Symbol cstring_(pos, "cstring", cstring_type, SymbolType::Type);
         Symbol void_(pos, "void", void_type, SymbolType::Type);
+        Symbol Void_(pos, "()", void_type, SymbolType::Type);
         Symbol never_(pos, "never", never_type, SymbolType::Type);
         declare(i32);
         declare(u32);
@@ -44,16 +48,18 @@ public:
         declare(bool_);
         declare(char_);
         declare(string_);
+        declare(String_);
         declare(cstring_);
         declare(void_);
+        declare(Void_);
         declare(never_);
 
         std::shared_ptr<Type> print = std::make_shared<FunctionType>(
-            std::vector{string_type},
+            std::vector{andStr_type},
             void_type
         );
         std::shared_ptr<Type> println = std::make_shared<FunctionType>(
-            std::vector{string_type},
+            std::vector{andStr_type},
             void_type
         );
         std::shared_ptr<Type> printInt = std::make_shared<FunctionType>(
@@ -72,10 +78,6 @@ public:
             std::vector<std::shared_ptr<Type>>{},
             i32_type
         );
-        std::shared_ptr<Type> readInt = std::make_shared<FunctionType>(
-            std::vector<std::shared_ptr<Type>>{},
-            i32_type
-        );
         std::shared_ptr<Type> exit = std::make_shared<FunctionType>(
             std::vector{i32_type},
             void_type
@@ -86,7 +88,6 @@ public:
         Symbol printlnInt_(pos, "printlnInt", printlnInt, SymbolType::Function);
         Symbol getString_(pos, "getString", getString, SymbolType::Function);
         Symbol getInt_(pos, "getInt", getInt, SymbolType::Function);
-        Symbol readInt_(pos, "readInt", readInt, SymbolType::Function);
         Symbol exit_(pos, "exit", exit, SymbolType::Function);
         declare(print_);
         declare(println_);
@@ -94,11 +95,10 @@ public:
         declare(printlnInt_);
         declare(getString_);
         declare(getInt_);
-        declare(readInt_);
         declare(exit_);
 
         i32_type->methods_.emplace_back(
-            Method{"toString", std::make_shared<FunctionType>(
+            Method{"to_string", std::make_shared<FunctionType>(
                 std::vector<std::shared_ptr<Type>>{}, string_type)});
         string_type->methods_.emplace_back(
             Method{"len", std::make_shared<FunctionType>(
