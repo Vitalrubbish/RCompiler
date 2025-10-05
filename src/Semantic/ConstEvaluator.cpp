@@ -189,6 +189,11 @@ void ConstEvaluator::visit(TypeCastExpressionNode *node) {
         node->type_->accept(this);
     }
     if (node->expression_) node->expression_->accept(this);
+    node->is_compiler_known_ = node->expression_->is_compiler_known_;
+    auto* val = std::get_if<int64_t>(&node -> expression_ -> value);
+    if (val) {
+        node->value = *val;
+    }
 }
 
 void ConstEvaluator::visit(AssignmentExpressionNode *node) {
@@ -294,6 +299,11 @@ void ConstEvaluator::visit(MulDivModExpressionNode *node) {
 void ConstEvaluator::visit(UnaryExpressionNode *node) {
     if (node->expression_) {
         node->expression_->accept(this);
+        if (node->type_ == TokenType::Minus) {
+            node->is_compiler_known_ = node->expression_->is_compiler_known_;
+            auto* val = std::get_if<int64_t>(&node -> expression_ -> value);
+            node->value = -*val;
+        }
     }
 }
 

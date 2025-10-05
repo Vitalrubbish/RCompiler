@@ -124,9 +124,9 @@ public:
         }
     }
 
-    void declare(const Symbol& symbol) const {
+    void declare(const Symbol& symbol, bool multi_name_check = true) const {
         try {
-            current_scope -> declare(symbol);
+            current_scope -> declare(symbol, multi_name_check);
         } catch (std::exception &) {
             throw;
         }

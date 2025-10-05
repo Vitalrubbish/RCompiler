@@ -21,8 +21,8 @@ public:
 
     Scope() = default;
 
-    void declare(const Symbol &symbol) {
-        if (symbols_.find(symbol.name_) != symbols_.end()) {
+    void declare(const Symbol &symbol, bool multi_name_check = true) {
+        if (symbols_.find(symbol.name_) != symbols_.end() && multi_name_check) {
             throw SemanticError("Semantic Error: Variable MultiDeclaration", symbol.pos_);
         }
         symbols_[symbol.name_] = symbol;

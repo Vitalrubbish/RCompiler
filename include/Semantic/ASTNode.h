@@ -806,8 +806,8 @@ public:
     std::shared_ptr<ExpressionNode> expression_;
 
     UnaryExpressionNode(Position pos, TokenType type,
-                        std::shared_ptr<ExpressionNode> expression)
-        : ExpressionWithoutBlockNode(pos, false), type_(type), expression_(std::move(expression)) {
+                        std::shared_ptr<ExpressionNode> expression, bool is_assignable)
+        : ExpressionWithoutBlockNode(pos, is_assignable), type_(type), expression_(std::move(expression)) {
     }
 
     ~UnaryExpressionNode() override = default;

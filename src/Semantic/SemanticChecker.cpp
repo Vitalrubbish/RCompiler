@@ -319,7 +319,7 @@ void SemanticChecker::visit(LetStatementNode *node) {
     if (!node->expression_) {
         symbol.SetAssign(false);
     }
-    scope_manager_.declare(symbol);
+    scope_manager_.declare(symbol, false);
 }
 
 void SemanticChecker::visit(VisItemStatementNode *node) {
@@ -353,7 +353,7 @@ void SemanticChecker::visit(ComparisonExpressionNode *node) {
                 if (tmp->name_ == "i32" || tmp->name_ == "u32" ||
                     tmp->name_ == "isize" || tmp->name_ == "usize" ||
                     tmp->name_ == "char" || tmp->name_ == "string" ||
-                    tmp->name_ == "cstring") {
+                    tmp->name_ == "cstring" || tmp->name_ == "bool") {
                     valid = true;
                     break;
                 }
@@ -377,6 +377,11 @@ void SemanticChecker::visit(TypeCastExpressionNode *node) {
         node->types.emplace_back(node->type_->type);
     }
     if (node->expression_) node->expression_->accept(this);
+    node->is_compiler_known_ = node->expression_->is_compiler_known_;
+    auto* val = std::get_if<int64_t>(&node -> expression_ -> value);
+    if (val) {
+        node->value = *val;
+    }
 }
 
 void SemanticChecker::visit(AssignmentExpressionNode *node) {
@@ -753,7 +758,6 @@ void SemanticChecker::visit(UnaryExpressionNode *node) {
                                     node->pos_);
             }
         }
-        // TODO Handle &&, &&mut
     }
 }
 
@@ -764,6 +768,9 @@ void SemanticChecker::visit(FunctionCallExpressionNode *node) {
         type = std::dynamic_pointer_cast<FunctionType>(node->callee_->types[0]);
         if (!type) {
             throw SemanticError("Semantic Error: Invalid Function Type", node->pos_);
+        }
+        if (type->is_mut_ && !node->callee_->is_mutable_) {
+            throw SemanticError("Semantic Error: Invalid conversion from immutable callee to mutable self", node->pos_);
         }
     }
     if (node->params_.size() != type->params_.size()) {
@@ -880,6 +887,8 @@ void SemanticChecker::visit(BlockExpressionNode *node) {
                 node->types = expr_stmt->expression_->types;
             }
         }
+    } else {
+        node->types.emplace_back(scope_manager_.lookup("void").type_);
     }
     scope_manager_.PopScope();
 }

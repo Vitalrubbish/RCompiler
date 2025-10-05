@@ -7,6 +7,9 @@ void Parser::ConsumeString(const std::string &str) {
     if (parseIndex < tokens.size() && tokens[parseIndex].token == str) {
         parseIndex++;
     } else {
+        if (parseIndex > 3250) {
+            int a = 1;
+        }
         throw ParseError("Parse Error: Cannot Match :" + str, tokens[parseIndex].pos);
     }
 }
@@ -679,6 +682,9 @@ std::shared_ptr<ExpressionNode> Parser::ParseAssignmentExpression() {
             tokens[parseIndex].type == TokenType::AndEq || tokens[parseIndex].type == TokenType::OrEq ||
             tokens[parseIndex].type == TokenType::XorEq || tokens[parseIndex].type == TokenType::SLEq ||
             tokens[parseIndex].type == TokenType::SREq) {
+            if (!lhs_ -> is_assignable_) {
+                throw ParseError("Semantic Error: Left Value Error", pos);
+            }
             TokenType type = tokens[parseIndex].type;
             parseIndex++;
             auto rhs_ = ParseAssignmentExpression();
@@ -850,11 +856,15 @@ std::shared_ptr<ExpressionNode> Parser::ParseTypeCastExpression() {
 std::shared_ptr<ExpressionNode> Parser::ParseUnaryExpression() {
     Position pos = tokens[parseIndex].pos;
     try {
+        bool is_assignable = false;
         while (tokens[parseIndex].type == TokenType::Minus ||
             tokens[parseIndex].type == TokenType::Not ||
             tokens[parseIndex].type == TokenType::And ||
             tokens[parseIndex].type == TokenType::AndAnd ||
             tokens[parseIndex].type == TokenType::Mul) {
+            if (tokens[parseIndex].type == TokenType::Mul) {
+                is_assignable = true;
+            }
             TokenType type = tokens[parseIndex++].type;
             if (type == TokenType::And && tokens[parseIndex].type == TokenType::Mut) {
                 ConsumeString("mut");
@@ -865,7 +875,7 @@ std::shared_ptr<ExpressionNode> Parser::ParseUnaryExpression() {
                 type = TokenType::AndAndMut;
             }
             auto rhs_ = ParseUnaryExpression();
-            return std::make_shared<UnaryExpressionNode>(pos, type, rhs_);
+            return std::make_shared<UnaryExpressionNode>(pos, type, rhs_, is_assignable);
         }
         return ParseCallExpression();
     } catch (const ParseError &) {
