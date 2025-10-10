@@ -19,15 +19,19 @@ file(GLOB_RECURSE SOURCES
         "main.cpp"
 )
 
-# 收集头文件（通常不需要将头文件添加到可执行文件中）
+# 收集头文件
 file(GLOB_RECURSE HEADERS
         "include/*.h"
+        "include/*/*.h"
         "error/*.h"
         "util/*.h"
 )
 
 # 添加可执行文件
 add_executable(RCompiler ${SOURCES})
+
+# 将头文件关联到目标，以便 IDE 识别
+target_sources(RCompiler PRIVATE ${HEADERS})
 
 # 使用现代 CMake 方式设置包含目录
 target_include_directories(RCompiler PRIVATE

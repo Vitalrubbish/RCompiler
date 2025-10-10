@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include "util/Position.h"
 #include "Error.h"
 #include "Lexer/Lexer.h"
 #include "Parser/Parser.h"
@@ -23,8 +24,8 @@ SymbolManager *symbol_manager = new SymbolManager{scope_manager};
 int main() {
     // freopen("../stdin.txt", "r", stdin);
     // freopen("../testcases_official/semantic-1/array2/array2.rx", "r", stdin);
-    // freopen("../testcases_official/semantic-2/comprehensive26/comprehensive26.rx", "r", stdin);
-    // freopen("../testcases/Semantic/in03.rx", "r", stdin);
+    // freopen("../testcases_official/semantic-2/comprehensive38/comprehensive38.rx", "r", stdin);
+    // freopen("../testcases/Semantic/in35.rx", "r", stdin);
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::string text((std::istreambuf_iterator(std::cin)),
@@ -63,7 +64,7 @@ int main() {
         root->accept(semantic_checker);
         std::cout << 0 << '\r';
     } catch (std::exception &error) {
-        std::cout << error.what() << '\n';
+        // std::cout << error.what() << '\n';
         std::cout << -1 << '\r';
     }
 }

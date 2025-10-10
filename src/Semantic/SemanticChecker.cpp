@@ -782,6 +782,10 @@ void SemanticChecker::visit(FunctionCallExpressionNode *node) {
             param->accept(this);
             bool match = false;
             for (const auto &it: param->types) {
+                auto val = std::get_if<int64_t>(&param->value);
+                if (val && *val > 2147483647) {
+                    throw SemanticError("Semantic Error: Integer Overflow", node->pos_);
+                }
                 if (type->params_[index]->equal(it)) {
                     match = true;
                     break;

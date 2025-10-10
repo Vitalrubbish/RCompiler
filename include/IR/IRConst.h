@@ -1,48 +1,49 @@
 #ifndef IRCONSTANT_H
 #define IRCONSTANT_H
-#include "IRUser.h"
+#include "IRNode.h"
+#include "IRType.h"
 
-class IRConst : public IRUser {
-public:
-    explicit IRConst(const std::shared_ptr<IRType> &type, const uint32_t &numOfOperands = 0)
-        : IRUser(type, numOfOperands) {}
+enum class ConstType {
+    Boolean, Integer, Nullptr
 };
 
-class IRConstInt : public IRConst {
+class IRConst : public IRNode {
+protected:
+    std::shared_ptr<IRType> type;
+    ConstType const_type{};
+public:
+    explicit IRConst(const std::shared_ptr<IRType> &type_) {
+        type = type_;
+    }
+};
+
+class ConstInt : public IRConst {
     int64_t value = 0;
 public:
-    IRConstInt(const std::shared_ptr<IRType> &type, const int64_t value)
-        : IRConst(type, 0) { this->value = value; }
+    ConstInt(const std::shared_ptr<IRType> &type, const int64_t value)
+        : IRConst(type) {
+        this->value = value;
+        const_type = ConstType::Integer;
+    }
 
     [[nodiscard]] int64_t getValue() const { return value; }
 
     void setValue(const int64_t value) { this->value = value; }
 };
 
-class IRConstArray : public IRConst {
-    std::vector<std::shared_ptr<IRConst>> elements;
+class ConstBool : public IRConst {
+    bool value = false;
 public:
-    IRConstArray(const std::shared_ptr<IRType> &type, const std::vector<std::shared_ptr<IRConst>> &elements)
-        : IRConst(type, elements.size()) {
-        for (uint32_t i = 0; i < elements.size(); i++) {
-            setOperand(i, elements[i]);
-        }
+    ConstBool(const std::shared_ptr<IRType> &type, bool value) : IRConst(type) {
+        this->value = value;
+        const_type = ConstType::Boolean;
     }
 };
 
-class IRConstStruct : public IRConst {
-    std::vector<std::shared_ptr<IRConst>> elements;
+class Nullptr : public IRConst {
 public:
-    IRConstStruct(const std::shared_ptr<IRType> &type, const std::vector<std::shared_ptr<IRConst>> &elements)
-        : IRConst(type, elements.size()) {
-        for (uint32_t i = 0; i < elements.size(); i++) {
-            setOperand(i, elements[i]);
-        }
+    explicit Nullptr(const std::shared_ptr<IRType> &type) : IRConst(type) {
+        const_type = ConstType::Nullptr;
     }
-};
-
-class IRUndef : public IRConst {
-public:
-    explicit IRUndef(const std::shared_ptr<IRType> &type) : IRConst(type, 0) {}
 };
 #endif //IRCONSTANT_H
