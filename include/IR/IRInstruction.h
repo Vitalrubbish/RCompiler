@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <utility>
 
@@ -17,7 +18,7 @@ enum class OpType {
     Ret, CondBr, UncondBr,
     Add, Sub, Mul, SDiv, Srem, Shl, AShr, And, Or, Xor,
     Alloca, Load, Store, GetElementPtr,
-    ICmp, Call, Phi, Select
+    ICmp, CallWithRet, CallWithoutRet, Phi, Select
 };
 
 /**************** BASE CLASS ****************/
@@ -204,8 +205,90 @@ public:
               types(types), indexes(indexes) {}
 };
 
+enum class ConditionType {
+    eq, ne, ugt, uge, ult, ule, sgt, sge, slt, sle
+};
+
 class ICmpInstruction : public IRInstruction {
 public:
-    
+    ConditionType condition_type{};
+    std::shared_ptr<IRVar> result;
+    std::shared_ptr<IRVar> op1;
+    std::shared_ptr<IRVar> op2;
+    std::shared_ptr<IRType> type;
+
+    ICmpInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
+                   const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2,
+                   ConditionType condition_type)
+            : result(result), type(type), op1(op1), op2(op2), condition_type(condition_type) {
+        op_type = OpType::ICmp;
+    }
+};
+
+class CallExpression : public IRInstruction {
+public:
+    CallExpression() = default;
+};
+
+class CallWithRetInstruction : public CallExpression {
+public:
+    std::shared_ptr<IRVar> result;
+    std::shared_ptr<IRType> return_type;
+    std::string func_name;
+    std::vector<std::shared_ptr<IRVar>> args;
+    std::vector<std::shared_ptr<IRType>> arg_types;
+
+    CallWithRetInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &return_type,
+        std::string func_name, const std::vector<std::shared_ptr<IRVar>> &args,
+        const std::vector<std::shared_ptr<IRType>> &arg_types)
+            : result(result), return_type(return_type), func_name(std::move(func_name)),
+              args(args), arg_types(arg_types) {
+        op_type = OpType::CallWithRet;
+    }
+};
+
+class CallWithoutRetInstruction : public CallExpression {
+public:
+    std::string func_name;
+    std::vector<std::shared_ptr<IRVar>> args;
+    std::vector<std::shared_ptr<IRType>> arg_types;
+
+    CallWithoutRetInstruction(std::string func_name, const std::vector<std::shared_ptr<IRVar>> &args,
+        const std::vector<std::shared_ptr<IRType>> &arg_types)
+            : func_name(std::move(func_name)), args(args), arg_types(arg_types) {
+        op_type = OpType::CallWithoutRet;
+    }
+};
+
+class PhiInstruction : public IRInstruction {
+public:
+    std::shared_ptr<IRVar> result;
+    std::shared_ptr<IRType> type;
+    std::vector<std::shared_ptr<IRVar>> values;
+    std::vector<std::string> labels;
+
+    PhiInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
+                   const std::vector<std::shared_ptr<IRVar>> &values, const std::vector<std::string> &labels)
+            : result(result), type(type), values(values), labels(labels) {
+        op_type = OpType::Phi;
+    }
+};
+
+class SelectInstruction : public IRInstruction {
+public:
+    std::shared_ptr<IRVar> result;
+    std::shared_ptr<IRType> type;
+    std::shared_ptr<IRVar> condition;
+    std::shared_ptr<IRType> var_type;
+    std::shared_ptr<IRVar> true_value;
+    std::shared_ptr<IRVar> false_value;
+
+    SelectInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
+                      const std::shared_ptr<IRVar> &condition, const std::shared_ptr<IRType> &var_type,
+                      const std::shared_ptr<IRVar> &true_value, const std::shared_ptr<IRVar> &false_value)
+            : result(result), type(type), condition(condition), var_type(var_type),
+              true_value(true_value), false_value(false_value) {
+        op_type = OpType::Select;
+    }
 };
 #endif //IRINSTRUCTION_H

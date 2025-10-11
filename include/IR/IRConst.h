@@ -1,18 +1,18 @@
 #ifndef IRCONSTANT_H
 #define IRCONSTANT_H
-#include "IRNode.h"
+#include "IRVar.h"
 #include "IRType.h"
 
 enum class ConstType {
     Boolean, Integer, Nullptr
 };
 
-class IRConst : public IRNode {
+class IRConst : public IRVar {
 protected:
     std::shared_ptr<IRType> type;
     ConstType const_type{};
 public:
-    explicit IRConst(const std::shared_ptr<IRType> &type_) {
+    explicit IRConst(const std::shared_ptr<IRType> &type_): IRVar("", VarType::Constant) {
         type = type_;
     }
 };

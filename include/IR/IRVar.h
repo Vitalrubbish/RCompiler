@@ -4,7 +4,7 @@
 #include "IRNode.h"
 
 enum class VarType {
-    Global, Local
+    Global, Local, Constant
 };
 
 class IRVar : public IRNode {
