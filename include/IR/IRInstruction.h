@@ -5,13 +5,15 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <utility>
 
 #include "IRNode.h"
+#include "IRType.h"
+#include "IRVar.h"
 
 class IRVar;
 class IRType;
 class IRVisitor;
+class IRLiteral;
 
 /**************** ENUM TYPES ****************/
 enum class OpType {
@@ -290,5 +292,32 @@ public:
               true_value(true_value), false_value(false_value) {
         op_type = OpType::Select;
     }
+};
+
+class StructDefInstruction : public IRInstruction {
+public:
+    std::shared_ptr<IRStructType> struct_type;
+    std::vector<std::shared_ptr<IRType>> args;
+
+    StructDefInstruction(const std::shared_ptr<IRStructType>& struct_type, const std::vector<std::shared_ptr<IRType>> &args) :
+        struct_type(struct_type), args(args) {}
+};
+
+class GlobalVarDefInstruction : public IRInstruction {
+public:
+    std::shared_ptr<GlobalVar> global_var;
+    std::shared_ptr<IRLiteral> value;
+
+    GlobalVarDefInstruction(const std::shared_ptr<GlobalVar>& global_var, const std::shared_ptr<IRLiteral>& value) :
+        global_var(global_var), value(value) {}
+};
+
+class ConstVarDefInstruction : public IRInstruction {
+public:
+    std::shared_ptr<ConstVar> const_var;
+    std::shared_ptr<IRLiteral> value;
+
+    ConstVarDefInstruction(const std::shared_ptr<ConstVar>& const_var, const std::shared_ptr<IRLiteral>& value) :
+        const_var(const_var), value(value) {}
 };
 #endif //IRINSTRUCTION_H

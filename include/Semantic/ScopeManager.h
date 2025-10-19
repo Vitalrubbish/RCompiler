@@ -146,7 +146,7 @@ public:
 
     std::shared_ptr<Type> lookupType(const std::shared_ptr<TypeNode> &type);
 
-    std::shared_ptr<ArrayType> lookupArray(const std::shared_ptr<ArrayTypeNode> &type);
+    std::shared_ptr<IRArrayType> lookupArray(const std::shared_ptr<ArrayTypeNode> &type);
 
     std::shared_ptr<ReferenceType> lookupRef(const std::shared_ptr<ReferenceTypeNode> &type);
 

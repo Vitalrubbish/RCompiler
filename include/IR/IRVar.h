@@ -19,10 +19,17 @@ public:
 };
 
 class GlobalVar : public IRVar {
+public:
     explicit GlobalVar(const std::string& name) : IRVar(name, VarType::Global) {}
 };
 
 class LocalVar : public IRVar {
+public:
     explicit LocalVar(const std::string& name) : IRVar(name, VarType::Local) {}
+};
+
+class ConstVar : public IRVar {
+public:
+    explicit ConstVar(const std::string& name) : IRVar(name, VarType::Constant) {}
 };
 #endif //IRVAR_H

@@ -2,8 +2,9 @@
 #define IRBUILDER_H
 #include "Semantic/ASTVisitor.h"
 class IRBuilder: public ASTVisitor {
+    ScopeManager& scope_manager_;
 public:
-    IRBuilder() = default;
+    explicit IRBuilder(ScopeManager& sm) : scope_manager_(sm) {};
 
     ~IRBuilder() override = default;
 

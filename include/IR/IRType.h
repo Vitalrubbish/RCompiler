@@ -33,19 +33,19 @@ public:
     [[nodiscard]] bool isFunctionType() const { return id == TypeID::functionType; }
 };
 
-class VoidType: public IRType {
+class IRVoidType: public IRType {
 public:
-    VoidType() : IRType(TypeID::voidType) {}
+    IRVoidType() : IRType(TypeID::voidType) {}
 
     [[nodiscard]] std::string toString() const override {
        return "void";
     }
 };
 
-class IntegerType: public IRType {
+class IRIntegerType: public IRType {
     uint32_t length = 0;
 public:
-    explicit IntegerType(const uint32_t &length) : IRType(TypeID::integerType) {
+    explicit IRIntegerType(const uint32_t &length) : IRType(TypeID::integerType) {
         this->length = length;
     }
 
@@ -54,10 +54,10 @@ public:
     }
 };
 
-class PointerType: public IRType {
+class IRPointerType: public IRType {
     std::shared_ptr<IRType> baseType;
 public:
-    explicit PointerType(const std::shared_ptr<IRType> &base) : IRType(TypeID::pointerType) {
+    explicit IRPointerType(const std::shared_ptr<IRType> &base) : IRType(TypeID::pointerType) {
         baseType = base;
     }
 
@@ -66,11 +66,11 @@ public:
     }
 };
 
-class ArrayType: public IRType {
+class IRArrayType: public IRType {
     std::shared_ptr<IRType> baseType;
     uint32_t length = 0;
 public:
-    ArrayType(const std::shared_ptr<IRType> &base, const uint32_t& len) :
+    IRArrayType(const std::shared_ptr<IRType> &base, const uint32_t& len) :
     IRType(TypeID::pointerType) {
         baseType = base;
         length = len;
@@ -81,11 +81,11 @@ public:
     }
 };
 
-class StructType: public IRType {
+class IRStructType: public IRType {
     std::string name;
     std::vector<std::shared_ptr<IRType>> members;
 public:
-    StructType(const std::string& name, const std::vector<std::shared_ptr<IRType>>& members):
+    IRStructType(const std::string& name, const std::vector<std::shared_ptr<IRType>>& members):
         IRType(TypeID::structType) {
         this->name = name;
         this->members = members;
@@ -96,12 +96,12 @@ public:
     }
 };
 
-class FunctionType: public IRType {
+class IRFunctionType: public IRType {
     std::string name;
     std::shared_ptr<IRType> returnType;
     std::vector<std::shared_ptr<IRType>> parameters;
 public:
-    FunctionType(const std::string& name, const std::shared_ptr<IRType>& returnType,
+    IRFunctionType(const std::string& name, const std::shared_ptr<IRType>& returnType,
         const std::vector<std::shared_ptr<IRType>>& parameters): IRType(TypeID::functionType) {
         this->name = name;
         this->returnType = returnType;
