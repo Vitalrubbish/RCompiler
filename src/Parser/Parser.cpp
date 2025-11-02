@@ -7,9 +7,6 @@ void Parser::ConsumeString(const std::string &str) {
     if (parseIndex < tokens.size() && tokens[parseIndex].token == str) {
         parseIndex++;
     } else {
-        if (parseIndex > 3250) {
-            int a = 1;
-        }
         throw ParseError("Parse Error: Cannot Match :" + str, tokens[parseIndex].pos);
     }
 }
@@ -1355,7 +1352,7 @@ std::shared_ptr<PatternWithoutRangeNode> Parser::ParsePatternWithoutRange() {
     uint32_t start = parseIndex;
 
     try { return ParseLiteralPattern(); } catch (const ParseError &) { parseIndex = start; }
-    try { return ParsePathPattern(); } catch (const ParseError &) { parseIndex = start; }
+    // try { return ParsePathPattern(); } catch (const ParseError &) { parseIndex = start; }
     try { return ParseIdentifierPattern(); } catch (const ParseError &) { parseIndex = start; }
 
     try {

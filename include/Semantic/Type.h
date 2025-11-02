@@ -248,20 +248,20 @@ public:
     }
 };
 
-class IRArrayType : public Type {
+class ArrayType : public Type {
 public:
     std::shared_ptr<Type> base_;
     uint32_t length_;
 
-    IRArrayType(const std::shared_ptr<Type> &base, uint32_t length);
+    ArrayType(const std::shared_ptr<Type> &base, uint32_t length);
 
-    IRArrayType &operator=(const Type &other) override {
+    ArrayType &operator=(const Type &other) override {
         value_map = other.value_map;
         name_set = other.name_set;
         methods_ = other.methods_;
         inline_functions_ = other.inline_functions_;
         constants_ = other.constants_;
-        if (const auto *ptr = dynamic_cast<const IRArrayType *>(&other)) {
+        if (const auto *ptr = dynamic_cast<const ArrayType *>(&other)) {
             base_ = ptr->base_;
             length_ = ptr->length_;
         } else {
@@ -278,7 +278,7 @@ public:
 
     [[nodiscard]] bool equal(const std::shared_ptr<Type> &other) const override {
         if (!other || other->getKind() != TypeKind::Array) return false;
-        auto ptr = std::dynamic_pointer_cast<IRArrayType>(other);
+        auto ptr = std::dynamic_pointer_cast<ArrayType>(other);
         return length_ == ptr->length_ && base_->equal(ptr->base_);
     }
 };

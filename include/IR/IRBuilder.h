@@ -1,10 +1,27 @@
 #ifndef IRBUILDER_H
 #define IRBUILDER_H
+#include "IRManager.h"
 #include "Semantic/ASTVisitor.h"
+#include "IR/IRFunction.h"
+
 class IRBuilder: public ASTVisitor {
     ScopeManager& scope_manager_;
+	IRManager& ir_manager_;
+
+	std::shared_ptr<IRFunction> current_function;
+	std::shared_ptr<IRBasicBlock> current_block;
+
 public:
-    explicit IRBuilder(ScopeManager& sm) : scope_manager_(sm) {};
+    explicit IRBuilder(ScopeManager& sm, IRManager& im) : scope_manager_(sm), ir_manager_(im) {
+    	auto i32_type = scope_manager_.lookup("i32").type_;
+    	auto u32_type = scope_manager_.lookup("u32").type_;
+    	auto isize_type = scope_manager_.lookup("isize").type_;
+    	auto usize_type = scope_manager_.lookup("usize").type_;
+    	ir_manager_.type_map_[i32_type] = std::make_shared<IRIntegerType>(32);
+    	ir_manager_.type_map_[u32_type] = std::make_shared<IRIntegerType>(32);
+    	ir_manager_.type_map_[isize_type] = std::make_shared<IRIntegerType>(32);
+    	ir_manager_.type_map_[usize_type] = std::make_shared<IRIntegerType>(32);
+    };
 
     ~IRBuilder() override = default;
 

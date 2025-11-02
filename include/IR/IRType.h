@@ -3,18 +3,24 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <iostream>
+
+#include "IRNode.h"
+
 enum class TypeID {
     voidType, integerType, pointerType,
     arrayType, structType, functionType
 };
 
-class IRType {
+class IRType : public IRNode {
     TypeID id;
 
 public:
     explicit IRType(const TypeID id) { this->id = id; }
 
-    virtual ~IRType() = default;
+    ~IRType() override = default;
+
+	void print() override {};
 
     [[nodiscard]] virtual std::string toString() const = 0;
 
@@ -40,6 +46,10 @@ public:
     [[nodiscard]] std::string toString() const override {
        return "void";
     }
+
+	void print() override {
+	    std::cout << "void";
+    }
 };
 
 class IRIntegerType: public IRType {
@@ -51,6 +61,10 @@ public:
 
     [[nodiscard]] std::string toString() const override {
         return "integer";
+    }
+
+	void print() override {
+	    std::cout << "i" << length;
     }
 };
 
@@ -71,7 +85,7 @@ class IRArrayType: public IRType {
     uint32_t length = 0;
 public:
     IRArrayType(const std::shared_ptr<IRType> &base, const uint32_t& len) :
-    IRType(TypeID::pointerType) {
+    IRType(TypeID::arrayType) {
         baseType = base;
         length = len;
     }
@@ -82,19 +96,25 @@ public:
 };
 
 class IRStructType: public IRType {
-    std::string name;
-    std::vector<std::shared_ptr<IRType>> members;
 public:
+	std::string name;
+	std::vector<std::shared_ptr<IRType>> members;
+
     IRStructType(const std::string& name, const std::vector<std::shared_ptr<IRType>>& members):
         IRType(TypeID::structType) {
         this->name = name;
         this->members = members;
     }
 
+    void print() override {
+	    std::cout << "%struct." << name;
+    }
+
     [[nodiscard]] std::string toString() const override {
-        return name;
+        return "%struct." + name;
     }
 };
+
 
 class IRFunctionType: public IRType {
     std::string name;

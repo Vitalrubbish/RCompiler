@@ -1,0 +1,6 @@
+const N : i32 = 10;
+const M : i32 = N * 10;
+
+fn main() {
+    exit(0);
+}

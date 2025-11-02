@@ -804,7 +804,7 @@ void SemanticChecker::visit(FunctionCallExpressionNode *node) {
 }
 
 void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
-    std::shared_ptr<IRArrayType> type;
+    std::shared_ptr<ArrayType> type;
     if (node->base_) {
         node->base_->accept(this);
         if (!node->base_->is_assignable_) {
@@ -813,7 +813,7 @@ void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
         auto tmp = node->base_->types[0];
         node->is_mutable_ = node->base_->is_mutable_;
         while (true) {
-            type = std::dynamic_pointer_cast<IRArrayType>(tmp);
+            type = std::dynamic_pointer_cast<ArrayType>(tmp);
             if (type) { break; }
             auto ref_type = std::dynamic_pointer_cast<ReferenceType>(tmp);
             if (!ref_type) {
@@ -1045,7 +1045,7 @@ void SemanticChecker::visit(ArrayLiteralNode *node) {
                                 node->pos_);
         }
         for (const auto &it: element_types) {
-            node->types.emplace_back(std::make_shared<IRArrayType>(it,
+            node->types.emplace_back(std::make_shared<ArrayType>(it,
                                                                  node->expressions_.size()));
         }
         return;
@@ -1065,7 +1065,7 @@ void SemanticChecker::visit(ArrayLiteralNode *node) {
         size = *tmp;
     }
     for (const auto &it: element_types) {
-        node->types.emplace_back(std::make_shared<IRArrayType>(it, size));
+        node->types.emplace_back(std::make_shared<ArrayType>(it, size));
     }
 }
 
@@ -1314,7 +1314,7 @@ void SemanticChecker::visit(ArrayTypeNode *node) {
         const auto *tmp = std::get_if<int64_t>(&node->expression_node_->value);
         size = *tmp;
     }
-    node->type = std::make_shared<IRArrayType>(base_type, size);
+    node->type = std::make_shared<ArrayType>(base_type, size);
 }
 
 void SemanticChecker::visit(SliceTypeNode *node) {

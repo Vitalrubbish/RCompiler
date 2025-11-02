@@ -10,7 +10,8 @@
 #include "Semantic/SemanticChecker.h"
 #include "Semantic/SymbolCollector.h"
 #include "Semantic/SymbolManager.h"
-
+#include "IR/IRBuilder.h"
+#include "IR/IRProgram.h"
 
 Lexer lexer;
 std::vector<Token> tokens;
@@ -20,12 +21,13 @@ SymbolCollector *symbol_collector = new SymbolCollector{scope_manager};
 ConstEvaluator *const_evaluator = new ConstEvaluator{scope_manager};
 SemanticChecker *semantic_checker = new SemanticChecker{scope_manager};
 SymbolManager *symbol_manager = new SymbolManager{scope_manager};
+IRManager ir_manager;
+IRBuilder *ir_builder = new IRBuilder{scope_manager, ir_manager};
+std::shared_ptr<IRProgram> ir_program;
 
 int main() {
-    // freopen("../stdin.txt", "r", stdin);
-    // freopen("../testcases_official/semantic-1/array2/array2.rx", "r", stdin);
-    // freopen("../testcases_official/semantic-2/comprehensive38/comprehensive38.rx", "r", stdin);
-    // freopen("../testcases/Semantic/in35.rx", "r", stdin);
+	// freopen("../testcases/IR/assign03.rx", "r", stdin);
+	// freopen("../stdout.ll", "w", stdout);
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::string text((std::istreambuf_iterator(std::cin)),
@@ -62,9 +64,14 @@ int main() {
         root->accept(const_evaluator);
         root->accept(symbol_manager);
         root->accept(semantic_checker);
-        std::cout << 0 << '\r';
+
+        ir_program = std::make_shared<IRProgram>();
+        root->accept(ir_builder);
+    	ir_program->print();
+
+        // std::cout << 0 << '\r';
     } catch (std::exception &error) {
         // std::cout << error.what() << '\n';
-        std::cout << -1 << '\r';
+        // std::cout << -1 << '\r';
     }
 }

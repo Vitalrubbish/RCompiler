@@ -319,7 +319,7 @@ void ConstEvaluator::visit(FunctionCallExpressionNode *node) {
 }
 
 void ConstEvaluator::visit(ArrayIndexExpressionNode *node) {
-    std::shared_ptr<IRArrayType> type;
+    std::shared_ptr<ArrayType> type;
     if (node->base_) {
         node->base_->accept(this);
     }
@@ -587,7 +587,7 @@ void ConstEvaluator::visit(ArrayTypeNode *node) {
     if (node->expression_node_) {
         node->expression_node_->accept(this);
     }
-    node -> type = std::make_shared<IRArrayType>(base_type, size);
+    node -> type = std::make_shared<ArrayType>(base_type, size);
 }
 
 void ConstEvaluator::visit(SliceTypeNode *node) {

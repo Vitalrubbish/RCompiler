@@ -9,6 +9,7 @@
 #include "Lexer/TokenType.h"
 #include "Lexer/Token.h"
 #include "Semantic/ASTVisitor.h"
+#include "IR/IRVar.h"
 
 using ConstValue = std::variant<int64_t,std::string>;
 
@@ -466,8 +467,8 @@ public:
     bool is_assignable_;
     bool is_mutable_;
     bool is_compiler_known_ = false;
+	std::shared_ptr<LocalVar> result_var = nullptr;
     ConstValue value = 0;
-
     ExpressionNode(Position pos, bool is_assignable)
         : ASTNode(pos), is_assignable_(is_assignable), is_mutable_(false) {
     }

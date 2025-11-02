@@ -3,7 +3,7 @@
 
 extern ScopeManager scope_manager;
 
-IRArrayType::IRArrayType(const std::shared_ptr<Type> &base, uint32_t length) {
+ArrayType::ArrayType(const std::shared_ptr<Type> &base, uint32_t length) {
     base_ = base;
     length_ = length;
     auto usize_type = scope_manager.lookup("usize").type_;

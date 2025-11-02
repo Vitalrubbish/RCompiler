@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 
+#include "IRLiteral.h"
 #include "IRNode.h"
 #include "IRType.h"
 #include "IRVar.h"
@@ -29,6 +30,8 @@ protected:
     OpType op_type{};
 public:
     IRInstruction() = default;
+
+	void print() override {}
 };
 
 class BinaryOpInstruction : public IRInstruction {
@@ -61,10 +64,38 @@ public:
 
 /**************** DERIVED CLASS ****************/
 class AddInstruction : public BinaryOpInstruction {
+	int imm1 = 0;
+	int imm2 = 0;
 public:
     AddInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
         const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::Add) {}
+
+	AddInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
+			const int &imm1_, const int &imm2_)
+				: BinaryOpInstruction(result, type, nullptr, nullptr, OpType::Add) {
+	    imm1 = imm1_;
+    	imm2 = imm2_;
+    }
+
+	void print() override {
+    	std::cout << '\t';
+	    result->print();
+    	std::cout << " = add ";
+    	type->print();
+    	std::cout << ' ';
+    	if (op1) {
+    		op1->print();
+    	} else {
+    		std::cout << imm1;
+    	}
+    	std::cout << ", ";
+    	if (op2) {
+    		op2->print();
+    	} else {
+    		std::cout << imm2;
+    	}
+    }
 };
 
 class SubInstruction : public BinaryOpInstruction {
@@ -72,6 +103,17 @@ public:
     SubInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                    const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::Sub) {}
+
+	void print() override {
+    	std::cout << '\t';
+    	result->print();
+    	std::cout << " = sub ";
+    	type->print();
+    	std::cout << ' ';
+    	op1->print();
+    	std::cout << ", ";
+    	op2->print();
+    }
 };
 
 class MulInstruction : public BinaryOpInstruction {
@@ -167,6 +209,13 @@ public:
 
     AllocaInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type)
             : MemoryInstruction(OpType::Alloca), result(result), type(type) {}
+
+	void print() override {
+    	std::cout << '\t';
+	    result->print();
+    	std::cout << " = alloca ";
+    	type->print();
+    }
 };
 
 class LoadInstruction : public MemoryInstruction {
@@ -178,17 +227,45 @@ public:
     LoadInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                     const std::shared_ptr<IRVar> &ptr)
             : MemoryInstruction(OpType::Load), result(result), type(type), ptr(ptr) {}
+
+	void print() override {
+    	std::cout << '\t';
+    	result->print();
+	    std::cout << " = load ";
+    	type->print();
+    	std::cout << ", ptr ";
+    	ptr->print();
+    }
 };
 
 class StoreInstruction : public MemoryInstruction {
 public:
     std::shared_ptr<IRType> type;
-    std::shared_ptr<IRVar> var;
+    std::shared_ptr<IRLiteral> literal;
+	std::shared_ptr<IRVar> var;
     std::shared_ptr<IRVar> ptr;
 
-    StoreInstruction(const std::shared_ptr<IRType> &type, const std::shared_ptr<IRVar> &var,
+    StoreInstruction(const std::shared_ptr<IRType> &type, const std::shared_ptr<IRLiteral> &literal,
                      const std::shared_ptr<IRVar> &ptr)
-            : MemoryInstruction(OpType::Store), type(type), var(var), ptr(ptr) {}
+            : MemoryInstruction(OpType::Store), type(type), literal(literal), ptr(ptr) {}
+
+	StoreInstruction(const std::shared_ptr<IRType> &type, const std::shared_ptr<IRVar> &var,
+					 const std::shared_ptr<IRVar> ptr)
+	        : MemoryInstruction(OpType::Store), type(type), var(var), ptr(ptr) {}
+
+	void print() override {
+	    std::cout << "\tstore ";
+    	if (literal) {
+    		literal->print();
+    	}
+    	if (var) {
+    		type->print();
+    		std::cout << " ";
+    		var->print();
+    	}
+    	std::cout << ", ptr ";
+    	ptr->print();
+    }
 };
 
 class GetElementPtrInstruction : public MemoryInstruction {
@@ -301,6 +378,16 @@ public:
 
     StructDefInstruction(const std::shared_ptr<IRStructType>& struct_type, const std::vector<std::shared_ptr<IRType>> &args) :
         struct_type(struct_type), args(args) {}
+
+	void print() override {
+	    struct_type->print();
+    	std::cout << " = type { ";
+    	for (auto& it: args) {
+    		it->print();
+    		std::cout << " ";
+    	}
+    	std::cout << "}";
+    }
 };
 
 class GlobalVarDefInstruction : public IRInstruction {
@@ -319,5 +406,11 @@ public:
 
     ConstVarDefInstruction(const std::shared_ptr<ConstVar>& const_var, const std::shared_ptr<IRLiteral>& value) :
         const_var(const_var), value(value) {}
+
+	void print() override {
+	    const_var->print();
+    	std::cout << " = constant ";
+    	value->print();
+    }
 };
 #endif //IRINSTRUCTION_H

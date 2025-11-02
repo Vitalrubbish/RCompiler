@@ -9,32 +9,36 @@ enum class LiteralType {
 
 class IRLiteral : public IRNode {
 protected:
-    std::shared_ptr<IRType> type;
     LiteralType literal_type{};
 public:
-    explicit IRLiteral(const std::shared_ptr<IRType> &type_): IRNode() {
-        type = type_;
-    }
+    explicit IRLiteral() = default;
+
+	~IRLiteral() override = default;
+
+	void print() override {}
 };
 
 class LiteralInt : public IRLiteral {
     int64_t value = 0;
 public:
-    LiteralInt(const std::shared_ptr<IRType> &type, const int64_t value)
-        : IRLiteral(type) {
-        this->value = value;
+    explicit LiteralInt(const int64_t &value) {
         literal_type = LiteralType::Integer;
+    	this->value = value;
     }
 
     [[nodiscard]] int64_t getValue() const { return value; }
 
     void setValue(const int64_t &value) { this->value = value; }
+
+	void print() override {
+	    std::cout << "i32 " << value;
+    }
 };
 
 class LiteralBool : public IRLiteral {
     bool value = false;
 public:
-    LiteralBool(const std::shared_ptr<IRType> &type, bool value) : IRLiteral(type) {
+    explicit LiteralBool(const bool value) {
         this->value = value;
         literal_type = LiteralType::Boolean;
     }
@@ -42,7 +46,7 @@ public:
 
 class Nullptr : public IRLiteral {
 public:
-    explicit Nullptr(const std::shared_ptr<IRType> &type) : IRLiteral(type) {
+    explicit Nullptr() {
         literal_type = LiteralType::Nullptr;
     }
 };

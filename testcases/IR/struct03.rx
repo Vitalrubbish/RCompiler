@@ -1,0 +1,12 @@
+struct Point {
+    a : i32,
+    b : i32,
+}
+
+fn main() {
+    struct Cube {
+        z : i32,
+        p : Point
+    }
+    exit(0);
+}

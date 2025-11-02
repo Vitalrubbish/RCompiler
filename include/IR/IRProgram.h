@@ -14,14 +14,23 @@ public:
     std::vector<std::shared_ptr<GlobalVarDefInstruction>> globals;
     std::vector<std::shared_ptr<IRFunction>> functions;
 
-    IRProgram(const std::vector<std::shared_ptr<StructDefInstruction>>& structs,
-              const std::vector<std::shared_ptr<ConstVarDefInstruction>>& constants,
-              const std::vector<std::shared_ptr<GlobalVarDefInstruction>>& globals,
-              const std::vector<std::shared_ptr<IRFunction>>& functions) {
-        this->structs = structs;
-        this->constants = constants;
-        this->globals = globals;
-        this->functions = functions;
+    IRProgram() = default;
+
+	void print() override {
+	    for (auto& it: constants) {
+		    it->print();
+	    	std::cout << '\n';
+	    }
+
+    	for (auto& it: structs) {
+    		it->print();
+    		std::cout << '\n';
+    	}
+
+    	for (auto& it: functions) {
+    		it->print();
+    		std::cout << '\n';
+    	}
     }
 };
 #endif //RCOMPILER_IRPROGRAM_H

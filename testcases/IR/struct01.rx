@@ -1,0 +1,8 @@
+struct Point {
+    a : i32,
+    b : i32,
+}
+
+fn main() {
+    exit(0);
+}

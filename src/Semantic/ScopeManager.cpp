@@ -16,7 +16,7 @@ std::shared_ptr<Type> ScopeManager::lookupType(const std::shared_ptr<TypeNode> &
 }
 
 
-std::shared_ptr<IRArrayType> ScopeManager::lookupArray(const std::shared_ptr<ArrayTypeNode> &type) {
+std::shared_ptr<ArrayType> ScopeManager::lookupArray(const std::shared_ptr<ArrayTypeNode> &type) {
     auto base = type -> type_;
     auto value = type -> expression_node_ -> value;
     auto* tmp = std::get_if<int64_t>(&value);
@@ -25,7 +25,7 @@ std::shared_ptr<IRArrayType> ScopeManager::lookupArray(const std::shared_ptr<Arr
         size = *tmp;
     }
     std::shared_ptr<Type> base_ = lookupType(base);
-    return std::make_shared<IRArrayType>(base_, size);
+    return std::make_shared<ArrayType>(base_, size);
 }
 
 
