@@ -300,9 +300,9 @@ public:
     	ptr->print();
     	for (size_t i = 0; i < types.size(); i++) {
     		std::cout << ", ";
-    		types[i]->print();
-    		std::cout << " ";
     		if (!indexes.empty()) {
+    			types[i]->print();
+    			std::cout << " ";
     			indexes[i]->print();
     		} else {
     			literals[i]->print();

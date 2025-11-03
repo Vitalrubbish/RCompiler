@@ -447,13 +447,19 @@ void IRBuilder::visit(FunctionCallExpressionNode *node) {
 }
 
 void IRBuilder::visit(ArrayIndexExpressionNode *node) {
+	if (node->base_) {
+		node->base_->accept(this);
+	}
+	if (node->index_) {
+		node->index_->accept(this);
+	}
     std::shared_ptr<IRArrayType> type;
-    if (node->base_) {
-        node->base_->accept(this);
-    }
-    if (node->index_) {
-        node->index_->accept(this);
-    }
+	auto ir_type = ir_manager_.GetIRType(node->types[0]);
+	node->result_var = std::make_shared<LocalVar>("", std::make_shared<IRPointerType>(ir_type));
+	auto ir_i32_type = std::make_shared<IRIntegerType>(32);
+	std::vector<std::shared_ptr<IRType>> index_type({ir_i32_type});
+	std::vector<std::shared_ptr<IRVar>> index_value({node->index_->result_var});
+	current_block->instructions.emplace_back(std::make_shared<GetElementPtrInstruction>(node->result_var, ir_type, node->base_->result_var, index_type, index_value));
 }
 
 void IRBuilder::visit(MemberAccessExpressionNode *node) {
