@@ -122,5 +122,8 @@ public:
     void visit(ArrayTypeNode *node) override;
     void visit(SliceTypeNode *node) override;
     void visit(ReferenceTypeNode *node) override;
+
+	void StoreArrayLiteral(const std::shared_ptr<ExpressionNode>& expr_node, const std::shared_ptr<LocalVar>& array_var,
+								 const std::shared_ptr<IRArrayType>& array_type);
 };
 #endif //IRBUILDER_H

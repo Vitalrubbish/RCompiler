@@ -275,6 +275,7 @@ public:
     std::shared_ptr<IRVar> ptr;
     std::vector<std::shared_ptr<IRType>> types;
     std::vector<std::shared_ptr<IRVar>> indexes;
+	std::vector<std::shared_ptr<IRLiteral>> literals;
 
     GetElementPtrInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                              const std::shared_ptr<IRVar> &ptr,
@@ -282,6 +283,32 @@ public:
                              const std::vector<std::shared_ptr<IRVar>> &indexes)
             : MemoryInstruction(OpType::GetElementPtr), result(result), type(type), ptr(ptr),
               types(types), indexes(indexes) {}
+
+	GetElementPtrInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
+							 const std::shared_ptr<IRVar> &ptr,
+							 const std::vector<std::shared_ptr<IRType>> &types,
+							 const std::vector<std::shared_ptr<IRLiteral>> &literals)
+			: MemoryInstruction(OpType::GetElementPtr), result(result), type(type), ptr(ptr),
+			  types(types), literals(literals) {}
+
+	void print() override {
+    	std::cout << '\t';
+        result->print();
+    	std::cout << " = getelementptr ";
+    	type->print();
+    	std::cout << ", ptr ";
+    	ptr->print();
+    	for (size_t i = 0; i < types.size(); i++) {
+    		std::cout << ", ";
+    		types[i]->print();
+    		std::cout << " ";
+    		if (!indexes.empty()) {
+    			indexes[i]->print();
+    		} else {
+    			literals[i]->print();
+    		}
+    	}
+    }
 };
 
 enum class ConditionType {

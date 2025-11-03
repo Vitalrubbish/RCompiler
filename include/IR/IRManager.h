@@ -17,6 +17,11 @@ public:
 	std::map<std::string, std::shared_ptr<IRFunction>> function_map_;
 
 	std::shared_ptr<IRType> GetIRType(const std::shared_ptr<Type>& type) {
+		auto array_type = std::dynamic_pointer_cast<ArrayType>(type);
+		if (array_type) {
+			auto ir_base_type = GetIRType(array_type->base_);
+			return std::make_shared<IRArrayType>(ir_base_type, array_type->length_);
+		}
 		for (auto& it: type_map_) {
 			if (it.first -> equal(type)) {
 				return it.second;
@@ -29,10 +34,6 @@ public:
 		auto struct_type = std::dynamic_pointer_cast<StructType>(type);
 		if (struct_type) {
 			AddStructType(struct_type);
-		}
-		auto array_type = std::dynamic_pointer_cast<ArrayType>(type);
-		if (array_type) {
-			AddArrayType(array_type);
 		}
 		// TODO: handle other kinds of types (array/pointer/function/primitive) if needed
 	}
@@ -50,10 +51,6 @@ public:
 		}
 		auto struct_type = std::make_shared<IRStructType>(type->name_, member_types);
 		type_map_[type] = struct_type;
-	}
-
-	void AddArrayType(const std::shared_ptr<ArrayType>& type) {
-
 	}
 
 };

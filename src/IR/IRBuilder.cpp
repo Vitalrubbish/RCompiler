@@ -64,7 +64,8 @@ void IRBuilder::visit(CrateNode *node) {
 	}
 
     for (const auto &item: node->items_) {
-        if (item) item->accept(this);
+    	auto func_item = std::dynamic_pointer_cast<FunctionNode>(item);
+        if (func_item) item->accept(this);
     }
 }
 
@@ -200,12 +201,12 @@ void IRBuilder::visit(LetStatementNode *node) {
     if (node->type_) {
         node->type_->accept(this);
     }
-    if (node->expression_) {
-        node->expression_->accept(this);
-    }
-    if (node->block_expression_) {
-        node->block_expression_->accept(this);
-    }
+	if (node->expression_) {
+		node->expression_->accept(this);
+	}
+	if (node->block_expression_) {
+		node->block_expression_->accept(this);
+	}
 	std::string identifier;
 	auto identifier_pattern = std::dynamic_pointer_cast<IdentifierPatternNode>(node->pattern_no_top_alt_);
 	if (identifier_pattern) {
@@ -214,6 +215,15 @@ void IRBuilder::visit(LetStatementNode *node) {
 	auto ir_type = ir_manager_.GetIRType(node->type_->type);
 	auto ir_var = std::make_shared<LocalVar>(identifier, ir_type);
 	current_block->instructions.emplace_back(std::make_shared<AllocaInstruction>(ir_var, ir_type));
+
+	/**** Handle Array Type ****/
+	auto array_type = std::dynamic_pointer_cast<IRArrayType>(ir_type);
+	if (array_type) {
+		StoreArrayLiteral(node->expression_, ir_var, array_type);
+		return;
+	}
+
+	/**** Handle Basic Types ****/
 	auto value = std::make_shared<LocalVar>("", ir_type);
 	if (node->expression_) {
 		if (node->expression_->is_assignable_) {
@@ -575,6 +585,9 @@ void IRBuilder::visit(ArrayLiteralNode *node) {
             expr->accept(this);
         }
     }
+	if (node->lhs_) {
+		node->lhs_->accept(this);
+	}
 }
 
 void IRBuilder::visit(PathExpressionNode *node) {
@@ -744,16 +757,6 @@ void IRBuilder::visit(UnitTypeNode *node) {
 }
 
 void IRBuilder::visit(ArrayTypeNode *node) {
-    std::shared_ptr<Type> base_type;
-    uint32_t size = 0;
-    if (node->type_) {
-        node->type_->accept(this);
-        base_type = node -> type_ -> type;
-    }
-    if (node->expression_node_) {
-        node->expression_node_->accept(this);
-    }
-    node -> type = std::make_shared<ArrayType>(base_type, size);
 }
 
 void IRBuilder::visit(SliceTypeNode *node) {
@@ -781,4 +784,47 @@ void IRBuilder::visit(TypeParamBoundsNode *node) {
 }
 
 void IRBuilder::visit(QualifiedPathInExpressionNode *node) {
+}
+
+/**************** Supporting Functions ****************/
+void IRBuilder::StoreArrayLiteral(const std::shared_ptr<ExpressionNode>& expr_node, const std::shared_ptr<LocalVar>& array_var,
+                                  const std::shared_ptr<IRArrayType>& array_type) {
+	auto array_literal = std::dynamic_pointer_cast<ArrayLiteralNode>(expr_node);
+	if (array_literal) {
+		if (!array_literal->expressions_.empty()) {
+			uint32_t cnt = 0;
+			for (const auto& expr : array_literal->expressions_) {
+				auto ir_element_type = array_type->baseType;
+				auto element_var = std::make_shared<LocalVar>("", ir_element_type);
+				std::vector index_types({ir_element_type});
+				std::vector<std::shared_ptr<IRLiteral>> index_values({std::make_shared<LiteralInt>(cnt)});
+				auto get_element_ptr_inst = std::make_shared<GetElementPtrInstruction>(element_var, ir_element_type, array_var, index_types, index_values);
+				current_block->instructions.emplace_back(get_element_ptr_inst);
+				auto possible_array_type = std::dynamic_pointer_cast<IRArrayType>(ir_element_type);
+				if (possible_array_type) {
+					StoreArrayLiteral(expr, element_var, possible_array_type);
+				} else {
+					current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_element_type, expr->result_var, element_var));
+				}
+				cnt++;
+			}
+		}
+		if (array_literal->lhs_ && array_literal->rhs_) {
+			auto value = *std::get_if<int64_t>(&array_literal->rhs_->value);
+			for (uint32_t i = 0; i < value; i++) {
+				auto ir_element_type = array_type->baseType;
+				auto element_var = std::make_shared<LocalVar>("", ir_element_type);
+				std::vector index_types({ir_element_type});
+				std::vector<std::shared_ptr<IRLiteral>> index_values({std::make_shared<LiteralInt>(i)});
+				auto get_element_ptr_inst = std::make_shared<GetElementPtrInstruction>(element_var, ir_element_type, array_var, index_types, index_values);
+				current_block->instructions.emplace_back(get_element_ptr_inst);
+				auto possible_array_type = std::dynamic_pointer_cast<IRArrayType>(ir_element_type);
+				if (possible_array_type) {
+					StoreArrayLiteral(array_literal->lhs_, element_var, possible_array_type);
+				} else {
+					current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_element_type, array_literal->lhs_->result_var, element_var));
+				}
+			}
+		}
+	}
 }

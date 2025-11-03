@@ -81,13 +81,20 @@ public:
 };
 
 class IRArrayType: public IRType {
-    std::shared_ptr<IRType> baseType;
-    uint32_t length = 0;
 public:
+	std::shared_ptr<IRType> baseType;
+    uint32_t length = 0;
+
     IRArrayType(const std::shared_ptr<IRType> &base, const uint32_t& len) :
     IRType(TypeID::arrayType) {
         baseType = base;
         length = len;
+    }
+
+	void print() override {
+	    std::cout << "[" << length << " x ";
+    	baseType->print();
+    	std::cout << "]";
     }
 
     [[nodiscard]] std::string toString() const override {
