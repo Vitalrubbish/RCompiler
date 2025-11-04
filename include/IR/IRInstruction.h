@@ -250,7 +250,7 @@ public:
             : MemoryInstruction(OpType::Store), type(type), literal(literal), ptr(ptr) {}
 
 	StoreInstruction(const std::shared_ptr<IRType> &type, const std::shared_ptr<IRVar> &var,
-					 const std::shared_ptr<IRVar> ptr)
+					 const std::shared_ptr<IRVar>& ptr)
 	        : MemoryInstruction(OpType::Store), type(type), var(var), ptr(ptr) {}
 
 	void print() override {
@@ -290,6 +290,7 @@ public:
 							 const std::vector<std::shared_ptr<IRLiteral>> &literals)
 			: MemoryInstruction(OpType::GetElementPtr), result(result), type(type), ptr(ptr),
 			  types(types), literals(literals) {}
+
 
 	void print() override {
     	std::cout << '\t';

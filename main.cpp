@@ -26,7 +26,7 @@ IRBuilder *ir_builder = new IRBuilder{scope_manager, ir_manager};
 std::shared_ptr<IRProgram> ir_program;
 
 int main() {
-	// freopen("../testcases/IR/array05.rx", "r", stdin);
+	// freopen("../testcases/IR/struct05.rx", "r", stdin);
 	// freopen("../stdout.ll", "w", stdout);
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);

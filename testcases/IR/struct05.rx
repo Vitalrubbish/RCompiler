@@ -1,0 +1,10 @@
+struct Point {
+    a : i32,
+    b : i32,
+}
+
+fn main() {
+    let mut p : Point = Point{a : 1, b : 2};
+    p.a = p.a + 1;
+    exit(0);
+}

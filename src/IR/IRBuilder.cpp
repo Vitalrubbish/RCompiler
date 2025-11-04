@@ -198,9 +198,9 @@ void IRBuilder::visit(EmptyStatementNode *node) {
 }
 
 void IRBuilder::visit(LetStatementNode *node) {
-    if (node->type_) {
-        node->type_->accept(this);
-    }
+	if (node->type_) {
+		node->type_->accept(this);
+	}
 	if (node->expression_) {
 		node->expression_->accept(this);
 	}
@@ -223,7 +223,7 @@ void IRBuilder::visit(LetStatementNode *node) {
 		return;
 	}
 
-	/**** Handle Basic Types ****/
+	/**** Handle Basic And Sturct Types ****/
 	auto value = std::make_shared<LocalVar>("", ir_type);
 	if (node->expression_) {
 		if (node->expression_->is_assignable_) {
@@ -458,14 +458,36 @@ void IRBuilder::visit(ArrayIndexExpressionNode *node) {
 	node->result_var = std::make_shared<LocalVar>("", std::make_shared<IRPointerType>(ir_type));
 	auto ir_i32_type = std::make_shared<IRIntegerType>(32);
 	std::vector<std::shared_ptr<IRType>> index_type({ir_i32_type});
+	auto index_var = std::make_shared<LocalVar>("", ir_i32_type);
+	if (node->index_->is_assignable_) {
+		current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(index_var, ir_i32_type, node->index_->result_var));
+	} else {
+		index_var = node->index_->result_var;
+	}
 	std::vector<std::shared_ptr<IRVar>> index_value({node->index_->result_var});
-	current_block->instructions.emplace_back(std::make_shared<GetElementPtrInstruction>(node->result_var, ir_type, node->base_->result_var, index_type, index_value));
+	current_block->instructions.emplace_back(std::make_shared<GetElementPtrInstruction>(node->result_var, ir_type, index_var, index_type, index_value));
 }
 
 void IRBuilder::visit(MemberAccessExpressionNode *node) {
     if (node->base_) {
         node->base_->accept(this);
     }
+	auto type = node->base_->types[0];
+	std::string identifier = node->member_.token;
+	auto struct_type = std::dynamic_pointer_cast<StructType>(type);
+	if (struct_type) {
+		for (uint32_t i = 0; i < struct_type->members_.size(); i++) {
+			if (struct_type->members_[i].name_ == identifier) {
+				auto ir_i32_type = std::make_shared<IRIntegerType>(32);
+				auto ir_type = ir_manager_.GetIRType(struct_type->members_[i].type_);
+				std::vector<std::shared_ptr<IRType>> index_type({ir_i32_type});
+				std::vector<std::shared_ptr<IRLiteral>> index_value({std::make_shared<LiteralInt>(i)});
+				node->result_var = std::make_shared<LocalVar>("", std::make_shared<IRPointerType>(ir_type));
+				current_block->instructions.emplace_back(std::make_shared<GetElementPtrInstruction>(node->result_var,
+					ir_type, node->base_->result_var, index_type, index_value));
+			}
+		}
+	}
 }
 
 void IRBuilder::visit(BlockExpressionNode *node) {
@@ -633,10 +655,34 @@ void IRBuilder::visit(PathIndentSegmentNode *node) {
 }
 
 void IRBuilder::visit(StructExpressionNode *node) {
+	node->is_assignable_ = true;
     if (node->path_in_expression_node_) {
         node->path_in_expression_node_->accept(this);
     }
-    if (node->struct_expr_fields_node_) node->struct_expr_fields_node_->accept(this);
+	auto struct_type = std::dynamic_pointer_cast<IRStructType>(ir_manager_.GetIRType(node->types[0]));
+	node->result_var = std::make_shared<LocalVar>("", std::make_shared<IRPointerType>(struct_type));
+	current_block->instructions.emplace_back(std::make_shared<AllocaInstruction>(node->result_var, struct_type));
+	if (node->struct_expr_fields_node_) {
+	    node->struct_expr_fields_node_->accept(this);
+    	auto struct_expr_field_nodes = node->struct_expr_fields_node_->struct_expr_field_nodes_;
+    	uint32_t index = 0;
+    	for (const auto& field: struct_expr_field_nodes) {
+    		std::shared_ptr<IRType> index_type = std::make_shared<IRIntegerType>(32);
+    		std::shared_ptr<IRLiteral> index_value = std::make_shared<LiteralInt>(index);
+    		auto element_type = struct_type->members[index];
+    		auto local_ptr = std::make_shared<LocalVar>("", std::make_shared<IRPointerType>(element_type));
+    		current_block->instructions.emplace_back(std::make_shared<GetElementPtrInstruction>
+    			(local_ptr, element_type, node->result_var, std::vector{index_type}, std::vector{index_value}));
+    		auto element_value = std::make_shared<LocalVar>("", element_type);
+    		if (field->expression_node_->is_assignable_) {
+    			current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(element_value, element_type, field->expression_node_->result_var));
+    		} else {
+    			element_value = field->expression_node_->result_var;
+    		}
+    		current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(element_type, element_value, local_ptr));
+    		index++;
+    	}
+    }
     if (node->struct_base_node_) node->struct_base_node_->accept(this);
 }
 
