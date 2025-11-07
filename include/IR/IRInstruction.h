@@ -192,6 +192,12 @@ public:
                              std::string if_true, std::string if_false)
             : ControlInstruction(OpType::CondBr), condition(condition),
               if_true(std::move(if_true)), if_false(std::move(if_false)) {}
+
+	void print() override {
+	    std::cout << "\tbr i1 ";
+    	condition->print();
+    	std::cout << " label " << if_true << ", label " << if_false;
+    }
 };
 
 class UnconditionalBrInstruction : public ControlInstruction {
@@ -200,6 +206,10 @@ public:
 
     explicit UnconditionalBrInstruction(std::string label)
             : ControlInstruction(OpType::UncondBr), label(std::move(label)) {}
+
+	void print() override {
+	    std::cout << "\tbr label " << label;
+    }
 };
 
 class AllocaInstruction : public MemoryInstruction {
@@ -329,6 +339,25 @@ public:
                    ConditionType condition_type)
             : result(result), type(type), op1(op1), op2(op2), condition_type(condition_type) {
         op_type = OpType::ICmp;
+    }
+
+	void print() override {
+    	std::cout << "\t";
+    	result->print();
+	    std::cout << " = icmp ";
+    	std::string condition;
+    	if (condition_type == ConditionType::eq) {
+    		condition = "eq";
+    	} else if (condition_type == ConditionType::ne) {
+    		condition = "ne";
+    	}
+    	std::cout << condition << " ";
+    	type->print();
+    	std::cout << " ";
+    	op1->print();
+    	std::cout << ", ";
+    	op2->print();
+
     }
 };
 

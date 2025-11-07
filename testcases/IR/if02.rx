@@ -1,0 +1,9 @@
+fn main() {
+    let mut a : i32 = 12;
+    if (a == 12) {
+        a = a + 1;
+    } else {
+        a = a + 2;
+    }
+    exit(0);
+}

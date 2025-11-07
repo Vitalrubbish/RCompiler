@@ -1,0 +1,16 @@
+fn add(a : i32, b : i32) -> i32 {
+    let ans : i32 = a + b;
+    return ans;
+}
+
+fn main() {
+    fn minus(a : i32, b : i32) -> i32 {
+        let ans : i32 = a - b;
+        return ans;
+    }
+    let mut a : i32 = 12;
+    let mut b : i32 = 11;
+    let c : i32 = add(a, b);
+    let d : i32 = minus(a, b);
+    exit(0);
+}

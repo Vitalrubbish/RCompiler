@@ -14,6 +14,7 @@ class Scope {
     std::unordered_map<std::string, std::shared_ptr<Type> > types_;
 
 public:
+	uint32_t scope_index;
     std::vector<std::shared_ptr<Scope> > next_level_scopes_;
     std::shared_ptr<Scope> parent_scope_;
     std::unordered_map<std::string, ConstValue> value_map_;

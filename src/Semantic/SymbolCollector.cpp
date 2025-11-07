@@ -8,6 +8,7 @@ void SymbolCollector::visit(ASTNode *node) {
 }
 
 void SymbolCollector::visit(CrateNode *node) {
+	node->scope_index = scope_manager_.current_scope->scope_index;
     for (const auto &item: node->items_) {
         if (item) item->accept(this);
     }
@@ -258,6 +259,7 @@ void SymbolCollector::visit(MemberAccessExpressionNode *node) {
 void SymbolCollector::visit(BlockExpressionNode *node) {
     scope_manager_.AddScope();
     if (node->statements_) node->statements_->accept(this);
+	node->scope_index = scope_manager_.current_scope->scope_index;
     scope_manager_.PopScope();
 }
 

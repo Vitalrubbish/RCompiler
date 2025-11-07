@@ -143,6 +143,7 @@ public:
 /****************  Items  ****************/
 class CrateNode : public ASTNode {
 public:
+	uint32_t scope_index = 0;
     std::vector<std::shared_ptr<VisItemNode> > items_;
 
     CrateNode(Position pos, std::vector<std::shared_ptr<VisItemNode> > items)
@@ -490,6 +491,7 @@ public:
 
 class BlockExpressionNode : public ExpressionWithBlockNode {
 public:
+	uint32_t scope_index = 0;
     bool is_const_;
     std::shared_ptr<StatementsNode> statements_;
 

@@ -26,7 +26,8 @@ IRBuilder *ir_builder = new IRBuilder{scope_manager, ir_manager};
 std::shared_ptr<IRProgram> ir_program;
 
 int main() {
-	// freopen("../testcases/IR/struct05.rx", "r", stdin);
+	// freopen("../testcases/IR/function03.rx", "r", stdin);
+	// freopen("../testcases_official/semantic-2/comprehensive1/comprehensive1.rx", "r", stdin);
 	// freopen("../stdout.ll", "w", stdout);
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
@@ -45,7 +46,6 @@ int main() {
                 current_token.type != TokenType::LineComment) {
                 current_token.putPosValue(Position{rowIndex});
                 tokens.push_back(current_token);
-                // std::cout << current_token.pos.GetRow() << " : " << current_token.token << '\n';
             }
             if (current_token.type == TokenType::ReservedIntegerLiteral) {
                 throw LexError("Lex Error: Invalid Integer");
@@ -63,7 +63,7 @@ int main() {
         root->accept(symbol_collector);
         root->accept(const_evaluator);
         root->accept(symbol_manager);
-        root->accept(semantic_checker);
+        root->accept(semantic_checker); // Semantic Check
 
         ir_program = std::make_shared<IRProgram>();
         root->accept(ir_builder);
@@ -71,7 +71,7 @@ int main() {
 
         // std::cout << 0 << '\r';
     } catch (std::exception &error) {
-        // std::cout << error.what() << '\n';
+        std::cout << error.what() << '\n';
         // std::cout << -1 << '\r';
     }
 }

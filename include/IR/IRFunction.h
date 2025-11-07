@@ -11,13 +11,14 @@ class IRBasicBlock;
 class IRFunctionParam : public IRNode {
 public:
     std::shared_ptr<IRType> type;
-    std::string name;
+    std::shared_ptr<IRVar> var;
 
-	IRFunctionParam(const std::shared_ptr<IRType>& type, std::string  name) : type(type), name(std::move(name)) {}
+	IRFunctionParam(const std::shared_ptr<IRType>& type, const std::shared_ptr<IRVar>& name) : type(type), var(name) {}
 
 	void print() override {
 		type->print();
-		std::cout << " " << name;
+		std::cout << " ";
+		var->print();
 	}
 };
 

@@ -15,6 +15,7 @@ public:
 	std::map<std::shared_ptr<Type>, std::shared_ptr<IRType>, std::owner_less<std::shared_ptr<Type>>> type_map_;
 	std::map<std::string, uint32_t> variable_use_count;
 	std::map<std::string, std::shared_ptr<IRFunction>> function_map_;
+	std::map<std::string, uint32_t> label_count;
 
 	std::shared_ptr<IRType> GetIRType(const std::shared_ptr<Type>& type) {
 		auto array_type = std::dynamic_pointer_cast<ArrayType>(type);

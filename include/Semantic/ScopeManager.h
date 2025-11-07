@@ -10,13 +10,17 @@ using ConstValue = std::variant<int64_t, std::string>;
 
 class ScopeManager {
 public:
+	std::vector<std::shared_ptr<Scope>> scope_set_;
     std::shared_ptr<Scope> root;
     std::shared_ptr<Scope> current_scope;
+	uint32_t scope_count = 0;
 
     ScopeManager() {
         Position pos(0);
         root = std::make_shared<Scope>();
         current_scope = root;
+    	scope_set_.push_back(current_scope);
+    	current_scope->scope_index = scope_count++;
         std::shared_ptr<Type> i32_type = std::make_shared<PrimitiveType>("i32");
         std::shared_ptr<Type> u32_type = std::make_shared<PrimitiveType>("u32");
         std::shared_ptr<Type> isize_type = std::make_shared<PrimitiveType>("isize");
@@ -109,6 +113,8 @@ public:
 
     void AddScope(){
         std::shared_ptr<Scope> new_scope = std::make_shared<Scope>();
+    	new_scope->scope_index = scope_count++;
+    	scope_set_.push_back(new_scope);
         if (current_scope) {
             current_scope->AddNextLevelScope(new_scope);
             new_scope->parent_scope_ = current_scope;

@@ -17,8 +17,7 @@ void IRBuilder::visit(ASTNode *node) {
 }
 
 void IRBuilder::visit(CrateNode *node) {
-    scope_manager_.current_scope = scope_manager_.root;
-    scope_manager_.current_scope -> index = 0;
+    scope_manager_.current_scope = scope_manager_.scope_set_[0];
     for (const auto& item: node->items_) {
         auto const_item = std::dynamic_pointer_cast<ConstantItemNode>(item);
         if (const_item) {
@@ -54,7 +53,8 @@ void IRBuilder::visit(CrateNode *node) {
 				for (auto& param : parameters->function_params_) {
 					auto ir_type = ir_manager_.GetIRType(param->type_->type);
 					auto identifier_pattern = std::dynamic_pointer_cast<IdentifierPatternNode>(param->pattern_no_top_alt_node_);
-					ir_function_params.emplace_back(ir_type, identifier_pattern->identifier_);
+					auto ir_var = std::make_shared<LocalVar>(identifier_pattern->identifier_, ir_type);
+					ir_function_params.emplace_back(ir_type, ir_var);
 				}
 			}
 			auto ir_function = std::make_shared<IRFunction>(func_item->identifier_, ir_ret_type, ir_function_params);
@@ -73,14 +73,25 @@ void IRBuilder::visit(VisItemNode *node) {
 }
 
 void IRBuilder::visit(FunctionNode *node) {
+	auto saved_current_function = current_function;
+	auto saved_current_block = current_block;
 	current_function = ir_manager_.function_map_[node->identifier_];
 	current_block = std::make_shared<IRBasicBlock>("entry");
 	current_function->blocks.emplace_back(current_block);
-    if (node->function_parameters_) node->function_parameters_->accept(this);
+    if (node->function_parameters_) {
+	    node->function_parameters_->accept(this);
+    	for (auto& param: current_function->function_params) {
+    		auto param_var = std::make_shared<LocalVar>("", std::make_shared<IRPointerType>(param.type));
+    		current_block->instructions.emplace_back(std::make_shared<AllocaInstruction>(param_var, param.type));
+    		current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(param.type, param.var, param_var));
+    	}
+    }
     if (node->type_) node->type_->accept(this);
     if (node->block_expression_) {
         node->block_expression_->accept(this);
     }
+	current_function = saved_current_function;
+	current_block = saved_current_block;
 }
 
 void IRBuilder::visit(StructNode *node) {
@@ -491,9 +502,7 @@ void IRBuilder::visit(MemberAccessExpressionNode *node) {
 }
 
 void IRBuilder::visit(BlockExpressionNode *node) {
-    scope_manager_.current_scope = scope_manager_.current_scope
-        ->next_level_scopes_[scope_manager_.current_scope->index++];
-    scope_manager_.current_scope -> index = 0;
+    scope_manager_.current_scope = scope_manager_.scope_set_[node->scope_index];
 
 	for (const auto& item: node->statements_->statements_) {
 		auto vis_item_stmt = std::dynamic_pointer_cast<VisItemStatementNode>(item);
@@ -536,10 +545,13 @@ void IRBuilder::visit(BlockExpressionNode *node) {
 				for (auto& param : parameters->function_params_) {
 					auto ir_type = ir_manager_.GetIRType(param->type_->type);
 					auto identifier_pattern = std::dynamic_pointer_cast<IdentifierPatternNode>(param->pattern_no_top_alt_node_);
-					ir_function_params.emplace_back(ir_type, identifier_pattern->identifier_);
+					auto ir_var = std::make_shared<LocalVar>(identifier_pattern->identifier_, ir_type);
+					ir_function_params.emplace_back(ir_type, ir_var);
 				}
 			}
-			ir_program->functions.emplace_back(std::make_shared<IRFunction>(func_item->identifier_, ir_ret_type, ir_function_params));
+			auto ir_function = std::make_shared<IRFunction>(func_item->identifier_, ir_ret_type, ir_function_params);
+			ir_program->functions.emplace_back(ir_function);
+			ir_manager_.function_map_[func_item->identifier_] = ir_function;
 		}
 	}
 
@@ -566,10 +578,46 @@ void IRBuilder::visit(PredicateLoopExpressionNode *node) {
 }
 
 void IRBuilder::visit(IfExpressionNode *node) {
-    if (node->conditions_) node->conditions_->accept(this);
+	auto if_true_block = std::make_shared<IRBasicBlock>("if_true");
+	auto if_false_block = std::make_shared<IRBasicBlock>("if_false");
+	auto combine_block = std::make_shared<IRBasicBlock>("combine");
+    if (node->conditions_) {
+	    node->conditions_->accept(this);
+    	auto cmp_expr = std::dynamic_pointer_cast<ComparisonExpressionNode>(node->conditions_->expression_);
+    	if (cmp_expr) {
+    		if (cmp_expr->type_ == TokenType::EqEq) {
+    			auto ir_bool_type = std::make_shared<IRIntegerType>(1);
+    			auto compare_type = ir_manager_.GetIRType(cmp_expr->rhs_->types[0]);
+    			cmp_expr->result_var = std::make_shared<LocalVar>("", ir_bool_type);
+    			auto lhs_value = std::make_shared<LocalVar>("", compare_type);
+    			if (cmp_expr->lhs_->is_assignable_) {
+    				current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(lhs_value, compare_type, cmp_expr->lhs_->result_var));
+    			} else {
+    				lhs_value = cmp_expr->lhs_->result_var;
+    			}
+    			auto rhs_value = std::make_shared<LocalVar>("", compare_type);
+    			if (cmp_expr->rhs_->is_assignable_) {
+    				current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(rhs_value, compare_type, cmp_expr->rhs_->result_var));
+    			} else {
+    				rhs_value = cmp_expr->rhs_->result_var;
+    			}
+    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::eq));
+    			current_function->blocks.emplace_back(if_true_block);
+    			current_function->blocks.emplace_back(if_false_block);
+    			current_function->blocks.emplace_back(combine_block);
+    			current_block->instructions.emplace_back(std::make_shared<ConditionalBrInstruction>(cmp_expr->result_var, if_true_block->true_label, if_false_block->true_label));
+    		}
+    	}
+    }
+
+	current_block = if_true_block;
     if (node->true_block_expression_) node->true_block_expression_->accept(this);
-    if (node->false_block_expression_) node->false_block_expression_->accept(this);
+	current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(combine_block->true_label));
+	current_block = if_false_block;
+	if (node->false_block_expression_) node->false_block_expression_->accept(this);
+	current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(combine_block->true_label));
     if (node->if_expression_) node->if_expression_->accept(this);
+	current_block = combine_block;
 }
 
 void IRBuilder::visit(MatchExpressionNode *node) {
