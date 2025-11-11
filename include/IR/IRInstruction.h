@@ -104,13 +104,21 @@ public:
                    const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::Sub) {}
 
+	SubInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
+			const std::shared_ptr<IRVar> op)
+				: BinaryOpInstruction(result, type, nullptr, op, OpType::Sub) {}
+
 	void print() override {
     	std::cout << '\t';
     	result->print();
     	std::cout << " = sub ";
     	type->print();
     	std::cout << ' ';
-    	op1->print();
+    	if (op1) {
+    		op1->print();
+    	} else {
+    		std::cout << 0;
+    	}
     	std::cout << ", ";
     	op2->print();
     }
@@ -121,6 +129,17 @@ public:
     MulInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                    const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::Mul) {}
+
+	void print() override {
+    	std::cout << '\t';
+    	result->print();
+    	std::cout << " = mul ";
+    	type->print();
+    	std::cout << ' ';
+    	op1->print();
+    	std::cout << ", ";
+    	op2->print();
+    }
 };
 
 class SDivInstruction : public BinaryOpInstruction {
@@ -128,6 +147,17 @@ public:
     SDivInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                    const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::SDiv) {}
+
+	void print() override {
+    	std::cout << '\t';
+    	result->print();
+    	std::cout << " = sdiv ";
+    	type->print();
+    	std::cout << ' ';
+    	op1->print();
+    	std::cout << ", ";
+    	op2->print();
+    }
 };
 
 class SremInstruction : public BinaryOpInstruction {

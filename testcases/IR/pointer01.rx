@@ -1,0 +1,7 @@
+fn test_pointer(a : &mut i32) {
+    *a = 10;
+}
+
+fn main() {
+    exit(0);
+}

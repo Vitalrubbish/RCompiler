@@ -17,10 +17,12 @@ public:
     	auto u32_type = scope_manager_.lookup("u32").type_;
     	auto isize_type = scope_manager_.lookup("isize").type_;
     	auto usize_type = scope_manager_.lookup("usize").type_;
+    	auto void_type = scope_manager_.lookup("void").type_;
     	ir_manager_.type_map_[i32_type] = std::make_shared<IRIntegerType>(32);
     	ir_manager_.type_map_[u32_type] = std::make_shared<IRIntegerType>(32);
     	ir_manager_.type_map_[isize_type] = std::make_shared<IRIntegerType>(32);
     	ir_manager_.type_map_[usize_type] = std::make_shared<IRIntegerType>(32);
+    	ir_manager_.type_map_[void_type] = std::make_shared<IRVoidType>();
     };
 
     ~IRBuilder() override = default;

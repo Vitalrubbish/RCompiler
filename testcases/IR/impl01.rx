@@ -1,0 +1,17 @@
+struct Point {
+    x : i32,
+    y : i32,
+}
+
+impl Point {
+    fn do_nothing(&mut self, delta : i32) {
+    }
+
+    fn also_do_nothing(&mut self, delta1 : i32, delta2 : i32) {
+    }
+}
+
+fn main() {
+    let p : Point = Point{x : 1, y : 2};
+    exit(0);
+}

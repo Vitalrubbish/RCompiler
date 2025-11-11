@@ -23,6 +23,12 @@ public:
 			auto ir_base_type = GetIRType(array_type->base_);
 			return std::make_shared<IRArrayType>(ir_base_type, array_type->length_);
 		}
+		auto reference_type = std::dynamic_pointer_cast<ReferenceType>(type);
+		if (reference_type) {
+			auto ir_base_type = GetIRType(reference_type->type_);
+			return std::make_shared<IRPointerType>(ir_base_type);
+		}
+
 		for (auto& it: type_map_) {
 			if (it.first -> equal(type)) {
 				return it.second;

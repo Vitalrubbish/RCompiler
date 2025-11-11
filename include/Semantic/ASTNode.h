@@ -430,6 +430,7 @@ public:
 
 class InherentImplNode : public ImplementationNode {
 public:
+	uint32_t scope_index = 0;
     std::shared_ptr<TypeNode> type_node_;
     std::vector<std::shared_ptr<AssociatedItemNode> > associated_item_nodes_;
 

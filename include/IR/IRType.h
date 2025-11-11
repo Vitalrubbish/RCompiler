@@ -78,6 +78,10 @@ public:
     [[nodiscard]] std::string toString() const override {
         return baseType->toString() + "*";
     }
+
+	void print() override {
+	    std::cout << "ptr";
+    }
 };
 
 class IRArrayType: public IRType {
