@@ -11,6 +11,8 @@ class IRBuilder: public ASTVisitor {
 	std::shared_ptr<IRFunction> current_function;
 	std::shared_ptr<IRBasicBlock> current_block;
 
+	bool interrupt = false;
+
 public:
     explicit IRBuilder(ScopeManager& sm, IRManager& im) : scope_manager_(sm), ir_manager_(im) {
     	auto i32_type = scope_manager_.lookup("i32").type_;

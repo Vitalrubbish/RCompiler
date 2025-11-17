@@ -119,6 +119,7 @@ void SymbolManager::visit(InherentImplNode *node) {
             auto func_ = std::make_shared<FunctionType>(params, ret);
             func_->SetParam(have_self, have_and, is_mut);
             Method method{funcItem->identifier_, func_};
+        	method.function_node_ = funcItem;
             if (name_set.find(funcItem->identifier_) != name_set.end()) {
                 throw SemanticError("Semantic Error: Duplicate Definition of " + funcItem->identifier_,
                     node->pos_);

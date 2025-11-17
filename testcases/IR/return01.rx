@@ -1,0 +1,14 @@
+fn AbsMinus(a : i32, b : i32) -> i32 {
+    if (a < b) {
+        return b - a;
+    };
+    a - b
+}
+
+fn main() {
+    let a : i32 = getInt();
+    let b : i32 = getInt();
+    let mut c : i32 = 0;
+    c = AbsMinus(a, b);
+    exit(0);
+}

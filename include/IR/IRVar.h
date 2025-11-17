@@ -14,12 +14,12 @@ enum class VarType {
 };
 
 class IRVar : public IRNode {
-protected:
+public:
 	std::string name;
 	std::string true_name;
 	std::shared_ptr<IRType> type;
 	VarType var_type;
-public:
+
 	IRVar(const std::string& name_, VarType var_type_, const std::shared_ptr<IRType> &type_, bool change_name = true) {
 		name = name_;
 		if (change_name) {
@@ -57,7 +57,7 @@ public:
     explicit ConstVar(const std::string& name, const std::shared_ptr<IRType>& type) : IRVar(name, VarType::Constant, type) {}
 
 	void print() override {
-    	std::cout << "%" << true_name;
+    	std::cout << "@" << true_name;
     }
 };
 #endif //IRVAR_H

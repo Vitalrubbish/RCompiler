@@ -1,0 +1,21 @@
+fn add(a : i32, b : i32) -> i32 {
+    a + b
+}
+
+fn main() {
+    let a : i32 = getInt();
+    let b : i32 = getInt();
+    let mut c : i32 = getInt();
+    if (c <= 0) {
+        if (c == -1) {
+            c = add(a, b);
+        } else if (c == -2) {
+            c = a - b;
+        } else {
+            c = a * b;
+        }
+    } else {
+        c = add(a, b);
+    }
+    exit(0);
+}

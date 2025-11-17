@@ -11,10 +11,12 @@
 
 class Type;
 class FunctionType;
+class FunctionNode;
 
 struct Method {
     std::string name_;
     std::shared_ptr<Type> type_;
+	std::shared_ptr<FunctionNode> function_node_;
 };
 
 enum class TypeKind {

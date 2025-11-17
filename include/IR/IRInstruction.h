@@ -209,6 +209,15 @@ public:
 
     RetInstruction(const std::shared_ptr<IRType> &type, const std::shared_ptr<IRVar> &var)
             : ControlInstruction(OpType::Ret), type(type), var(var) {}
+
+	void print() override {
+	    std::cout << "\tret ";
+    	type->print();
+    	std::cout << " ";
+    	if (var) {
+    		var->print();
+    	}
+    }
 };
 
 
@@ -380,6 +389,14 @@ public:
     		condition = "eq";
     	} else if (condition_type == ConditionType::ne) {
     		condition = "ne";
+    	} else if (condition_type == ConditionType::sge) {
+    		condition = "sge";
+    	} else if (condition_type == ConditionType::sgt) {
+    		condition = "sgt";
+    	} else if (condition_type == ConditionType::sle) {
+    		condition = "sle";
+    	} else if (condition_type == ConditionType::slt) {
+    		condition = "slt";
     	}
     	std::cout << condition << " ";
     	type->print();
@@ -411,6 +428,23 @@ public:
               args(args), arg_types(arg_types) {
         op_type = OpType::CallWithRet;
     }
+
+	void print() override {
+    	std::cout << "\t";
+	    result->print();
+    	std::cout << " = call ";
+    	return_type->print();
+    	std::cout << " @" << func_name << "(";
+    	for (uint32_t i = 0; i < args.size(); i++) {
+    		arg_types[i]->print();
+    		std::cout << " ";
+    		args[i]->print();
+    		if (i != args.size() - 1) {
+    			std::cout << ", ";
+    		}
+    	}
+    	std::cout << ")";
+    }
 };
 
 class CallWithoutRetInstruction : public CallExpression {
@@ -423,6 +457,20 @@ public:
         const std::vector<std::shared_ptr<IRType>> &arg_types)
             : func_name(std::move(func_name)), args(args), arg_types(arg_types) {
         op_type = OpType::CallWithoutRet;
+    }
+
+	void print() override {
+    	std::cout << "\t";
+    	std::cout << "call void @" << func_name << "(";
+    	for (uint32_t i = 0; i < args.size(); i++) {
+    		arg_types[i]->print();
+    		std::cout << " ";
+    		args[i]->print();
+    		if (i != args.size() - 1) {
+    			std::cout << ", ";
+    		}
+    	}
+    	std::cout << ")";
     }
 };
 
@@ -437,6 +485,21 @@ public:
                    const std::vector<std::shared_ptr<IRVar>> &values, const std::vector<std::string> &labels)
             : result(result), type(type), values(values), labels(labels) {
         op_type = OpType::Phi;
+    }
+
+	void print() override {
+	    std::cout << "\t";
+    	result->print();
+    	std::cout << " = phi ";
+    	type->print();
+    	for (uint32_t i = 0; i < values.size(); i++) {
+    		std::cout << "[";
+    		values[i]->print();
+    		std::cout << ", " << labels[i] << "]";
+    		if (i != values.size() - 1) {
+    			std::cout << ", ";
+    		}
+    	}
     }
 };
 

@@ -494,6 +494,7 @@ class BlockExpressionNode : public ExpressionWithBlockNode {
 public:
 	uint32_t scope_index = 0;
     bool is_const_;
+	bool is_function_direct_block = false;
     std::shared_ptr<StatementsNode> statements_;
 
     BlockExpressionNode(Position pos, bool is_const, std::shared_ptr<StatementsNode> statements)

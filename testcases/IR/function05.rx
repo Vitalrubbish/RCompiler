@@ -1,0 +1,9 @@
+fn do_nothing() {
+    return;
+}
+
+fn also_do_nothing() {}
+
+fn main() {
+    exit(0);
+}

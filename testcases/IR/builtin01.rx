@@ -1,0 +1,7 @@
+fn main() {
+    let mut a : i32 = 0;
+    let b : i32 = 0;
+    a = getInt();
+    printInt(a);
+    exit(0);
+}
