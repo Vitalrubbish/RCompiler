@@ -53,9 +53,14 @@ void IRBuilder::visit(CrateNode *node) {
 					}
 					uint32_t index = 0; // 开始为 semantic_function_type 没有存 identifier 买单了
 					for (auto& param: function_type->params_) {
+						auto semantic_param = method.function_node_->function_parameters_->function_params_[index];
 						auto ir_type = ir_manager_.GetIRType(param);
-						auto ir_var = std::make_shared<LocalVar>("member" + std::to_string(index), ir_type);
-						ir_function_params.emplace_back(ir_type, ir_var);
+						auto identifier_pattern = std::dynamic_pointer_cast<IdentifierPatternNode>(semantic_param->pattern_no_top_alt_node_);
+						if (identifier_pattern) {
+							std::string identifier = identifier_pattern->identifier_;
+							auto ir_var = std::make_shared<LocalVar>(identifier, ir_type);
+							ir_function_params.emplace_back(ir_type, ir_var);
+						}
 						++index;
 					}
 					std::string ir_identifier = struct_item->identifier_ + "." + method.name_;
@@ -100,15 +105,19 @@ void IRBuilder::visit(VisItemNode *node) {
 void IRBuilder::visit(FunctionNode *node) {
 	auto saved_current_function = current_function;
 	auto saved_current_block = current_block;
+	auto saved_entry_block = entry_block;
 	current_function = ir_manager_.function_map_[node->identifier_];
 	current_block = std::make_shared<IRBasicBlock>("entry");
+	entry_block = current_block;
 	current_function->blocks.emplace_back(current_block);
     if (node->function_parameters_) {
 	    node->function_parameters_->accept(this);
     	for (auto& param: current_function->function_params) {
-    		auto param_var = std::make_shared<LocalVar>(param.var->name, std::make_shared<IRPointerType>(param.type));
-    		current_block->instructions.emplace_back(std::make_shared<AllocaInstruction>(param_var, param.type));
-    		current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(param.type, param.var, param_var));
+    		if (param.var->name != "self") {
+    			auto param_var = std::make_shared<LocalVar>(param.var->name, std::make_shared<IRPointerType>(param.type));
+    			current_block->instructions.emplace_back(std::make_shared<AllocaInstruction>(param_var, param.type));
+    			current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(param.type, param.var, param_var));
+    		}
     	}
     }
     if (node->type_) node->type_->accept(this);
@@ -118,6 +127,7 @@ void IRBuilder::visit(FunctionNode *node) {
     }
 	current_function = saved_current_function;
 	current_block = saved_current_block;
+	entry_block = saved_entry_block;
 }
 
 void IRBuilder::visit(StructNode *node) {
@@ -237,7 +247,7 @@ void IRBuilder::visit(LetStatementNode *node) {
 	}
 	auto ir_type = ir_manager_.GetIRType(node->type_->type);
 	auto ir_var = std::make_shared<LocalVar>(identifier, ir_type);
-	current_block->instructions.emplace_back(std::make_shared<AllocaInstruction>(ir_var, ir_type));
+	entry_block->instructions.insert(entry_block->instructions.begin(), std::make_shared<AllocaInstruction>(ir_var, ir_type));
 
 	/**** Handle Array Type ****/
 	auto array_type = std::dynamic_pointer_cast<IRArrayType>(ir_type);
@@ -280,6 +290,34 @@ void IRBuilder::visit(ExpressionWithBlockNode *node) {
 void IRBuilder::visit(ComparisonExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+	auto ir_bool_type = std::make_shared<IRIntegerType>(1);
+    auto compare_type = ir_manager_.GetIRType(node->rhs_->types[0]);
+    node->result_var = std::make_shared<LocalVar>("", ir_bool_type);
+    auto lhs_value = std::make_shared<LocalVar>("", compare_type);
+    if (node->lhs_->is_assignable_) {
+    	current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(lhs_value, compare_type, node->lhs_->result_var));
+    } else {
+    	lhs_value = node->lhs_->result_var;
+    }
+    auto rhs_value = std::make_shared<LocalVar>("", compare_type);
+    if (node->rhs_->is_assignable_) {
+    	current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(rhs_value, compare_type, node->rhs_->result_var));
+    } else {
+    	rhs_value = node->rhs_->result_var;
+    }
+    if (node->type_ == TokenType::EqEq) {
+    	current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(node->result_var, compare_type, lhs_value, rhs_value, ConditionType::eq));
+    } else if (node->type_ == TokenType::LEq) {
+    	current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(node->result_var, compare_type, lhs_value, rhs_value, ConditionType::sle));
+    } else if (node->type_ == TokenType::Lt) {
+    	current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(node->result_var, compare_type, lhs_value, rhs_value, ConditionType::slt));
+    } else if (node->type_ == TokenType::GEq) {
+    	current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(node->result_var, compare_type, lhs_value, rhs_value, ConditionType::sge));
+    } else if (node->type_ == TokenType::Gt) {
+    	current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(node->result_var, compare_type, lhs_value, rhs_value, ConditionType::sgt));
+    } else if (node->type_ == TokenType::NEq) {
+    	current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(node->result_var, compare_type, lhs_value, rhs_value, ConditionType::ne));
+    }
 }
 
 void IRBuilder::visit(TypeCastExpressionNode *node) {
@@ -319,6 +357,7 @@ void IRBuilder::visit(AssignmentExpressionNode *node) {
 			left_value = node->lhs_->result_var;
 		}
 		current_block->instructions.emplace_back(std::make_shared<AddInstruction>(result_value, ir_type, left_value, ir_var));
+		ir_var = result_value;
 	}
 	if (node->type_ == TokenType::MinusEq) {
 		auto left_value = std::make_shared<LocalVar>("", ir_type);
@@ -329,6 +368,7 @@ void IRBuilder::visit(AssignmentExpressionNode *node) {
 			left_value = node->lhs_->result_var;
 		}
 		current_block->instructions.emplace_back(std::make_shared<SubInstruction>(result_value, ir_type, left_value, ir_var));
+		ir_var = result_value;
 	}
 	if (node->type_ == TokenType::MulEq) {
 		auto left_value = std::make_shared<LocalVar>("", ir_type);
@@ -339,6 +379,7 @@ void IRBuilder::visit(AssignmentExpressionNode *node) {
 			left_value = node->lhs_->result_var;
 		}
 		current_block->instructions.emplace_back(std::make_shared<MulInstruction>(result_value, ir_type, left_value, ir_var));
+		ir_var = result_value;
 	}
 	if (node->type_ == TokenType::DivEq) {
 		auto left_value = std::make_shared<LocalVar>("", ir_type);
@@ -349,11 +390,14 @@ void IRBuilder::visit(AssignmentExpressionNode *node) {
 			left_value = node->lhs_->result_var;
 		}
 		current_block->instructions.emplace_back(std::make_shared<SDivInstruction>(result_value, ir_type, left_value, ir_var));
+		ir_var = result_value;
 	}
 	current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_type, ir_var, node->lhs_->result_var));
 }
 
 void IRBuilder::visit(ContinueExpressionNode *node) {
+	interrupt = true;
+	current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(ir_manager_.current_loop_condition->true_label));
 }
 
 void IRBuilder::visit(UnderscoreExpressionNode *node) {
@@ -384,11 +428,17 @@ void IRBuilder::visit(JumpExpressionNode *node) {
 void IRBuilder::visit(LogicOrExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+	auto ir_bool_type = std::make_shared<IRIntegerType>(1);
+	node->result_var = std::make_shared<LocalVar>("", ir_bool_type);
+	current_block->instructions.emplace_back(std::make_shared<OrInstruction>(node->result_var, ir_bool_type, node->lhs_->result_var, node->rhs_->result_var));
 }
 
 void IRBuilder::visit(LogicAndExpressionNode *node) {
     if (node->lhs_) node->lhs_->accept(this);
     if (node->rhs_) node->rhs_->accept(this);
+	auto ir_bool_type = std::make_shared<IRIntegerType>(1);
+	node->result_var = std::make_shared<LocalVar>("", ir_bool_type);
+	current_block->instructions.emplace_back(std::make_shared<AndInstruction>(node->result_var, ir_bool_type, node->lhs_->result_var, node->rhs_->result_var));
 }
 
 void IRBuilder::visit(BitwiseOrExpressionNode *node) {
@@ -502,6 +552,21 @@ void IRBuilder::visit(MulDivModExpressionNode *node) {
 		}
 		auto sdiv_instruction = std::make_shared<SDivInstruction>(node->result_var, ir_type, l_value, r_value);
 		current_block->instructions.emplace_back(sdiv_instruction);
+	} else if (node->type_ == TokenType::MOD) {
+		if (node->lhs_->is_assignable_) {
+			auto load_instruction_l = std::make_shared<LoadInstruction>(l_value, ir_type, node->lhs_->result_var);
+			current_block->instructions.emplace_back(load_instruction_l);
+		} else {
+			l_value = node->lhs_->result_var;
+		}
+		if (node->rhs_->is_assignable_) {
+			auto load_instruction_r = std::make_shared<LoadInstruction>(r_value, ir_type, node->rhs_->result_var);
+			current_block->instructions.emplace_back(load_instruction_r);
+		} else {
+			r_value = node->rhs_->result_var;
+		}
+		auto srem_instruction = std::make_shared<SremInstruction>(node->result_var, ir_type, l_value, r_value);
+		current_block->instructions.emplace_back(srem_instruction);
 	}
 }
 
@@ -532,16 +597,35 @@ void IRBuilder::visit(UnaryExpressionNode *node) {
 void IRBuilder::visit(FunctionCallExpressionNode *node) {
 	std::shared_ptr<FunctionType> function_type = nullptr;
 	std::string function_name; // We now only consider basic function call.
+	std::vector<std::shared_ptr<IRVar>> args;
+	std::vector<std::shared_ptr<IRType>> arg_types;
     if (node->callee_) {
         node->callee_->accept(this);
     	function_type = std::dynamic_pointer_cast<FunctionType>(node->callee_->types[0]);
-    	auto identifier_pattern = std::dynamic_pointer_cast<PathInExpressionNode>(node->callee_);
-    	if (identifier_pattern) {
+        if (auto identifier_pattern = std::dynamic_pointer_cast<PathInExpressionNode>(node->callee_)) {
     		function_name = identifier_pattern->path_indent_segments_[0]->identifier_;
     	}
+        if (auto method_expression = std::dynamic_pointer_cast<MemberAccessExpressionNode>(node->callee_)) {
+    		auto semantic_base_type = method_expression->base_->types[0];
+    		auto ir_base_type = ir_manager_.GetIRType(method_expression->base_->types[0]);
+    		if (ir_base_type) {
+    			auto ir_struct_type = std::dynamic_pointer_cast<IRStructType>(ir_base_type);
+    			function_name = ir_struct_type->name + "." + method_expression->member_.token;
+    		}
+        	if (function_type->have_self_) {
+        		auto self_type = std::make_shared<IRPointerType>(ir_base_type);
+        		auto self_var = std::make_shared<LocalVar>("", self_type);
+        		if (!method_expression->base_->is_assignable_) {
+        			current_block->instructions.emplace_back(std::make_shared<AllocaInstruction>(self_var, ir_base_type));
+        			current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_base_type, method_expression->base_->result_var, self_var));
+        		} else {
+        			self_var = method_expression->base_->result_var;
+        		}
+        		args.emplace_back(self_var);
+        		arg_types.emplace_back(self_type);
+        	}
+    	}
     }
-	std::vector<std::shared_ptr<IRVar>> args;
-	std::vector<std::shared_ptr<IRType>> arg_types;
 	uint32_t index = 0;
     for (const auto &param: node->params_) {
     	auto ir_type = ir_manager_.GetIRType(function_type->params_[index]);
@@ -579,6 +663,17 @@ void IRBuilder::visit(ArrayIndexExpressionNode *node) {
 	}
     std::shared_ptr<IRArrayType> type;
 	auto ir_type = ir_manager_.GetIRType(node->types[0]);
+
+	// Consider auto_deref
+	std::shared_ptr<LocalVar> prev_var = node->base_->result_var;
+	std::shared_ptr<LocalVar> re_var = node->base_->result_var;
+	for (uint32_t i = 0; i < node->auto_deref_count; i++) {
+		auto base_type = std::dynamic_pointer_cast<IRPointerType>(node->base_->result_var->type);
+		re_var = std::make_shared<LocalVar>("", base_type->baseType);
+		current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(re_var, base_type->baseType, prev_var));
+		prev_var = re_var;
+	}
+
 	node->result_var = std::make_shared<LocalVar>("", std::make_shared<IRPointerType>(ir_type));
 	auto ir_i32_type = std::make_shared<IRIntegerType>(32);
 	std::vector<std::shared_ptr<IRType>> index_type({ir_i32_type});
@@ -588,8 +683,8 @@ void IRBuilder::visit(ArrayIndexExpressionNode *node) {
 	} else {
 		index_var = node->index_->result_var;
 	}
-	std::vector<std::shared_ptr<IRVar>> index_value({node->index_->result_var});
-	current_block->instructions.emplace_back(std::make_shared<GetElementPtrInstruction>(node->result_var, ir_type, index_var, index_type, index_value));
+	std::vector<std::shared_ptr<IRVar>> index_value({index_var});
+	current_block->instructions.emplace_back(std::make_shared<GetElementPtrInstruction>(node->result_var, ir_type, re_var, index_type, index_value));
 }
 
 void IRBuilder::visit(MemberAccessExpressionNode *node) {
@@ -604,11 +699,14 @@ void IRBuilder::visit(MemberAccessExpressionNode *node) {
 			if (struct_type->members_[i].name_ == identifier) {
 				auto ir_i32_type = std::make_shared<IRIntegerType>(32);
 				auto ir_type = ir_manager_.GetIRType(struct_type->members_[i].type_);
-				std::vector<std::shared_ptr<IRType>> index_type({ir_i32_type});
-				std::vector<std::shared_ptr<IRLiteral>> index_value({std::make_shared<LiteralInt>(i)});
+				// Fix: use two indices [0, field_index] for correct struct field access
+				std::vector<std::shared_ptr<IRType>> index_type({ir_i32_type, ir_i32_type});
+				std::vector<std::shared_ptr<IRLiteral>> index_value({std::make_shared<LiteralInt>(0), std::make_shared<LiteralInt>(i)});
 				node->result_var = std::make_shared<LocalVar>("", std::make_shared<IRPointerType>(ir_type));
+				// Fix: use struct type instead of field type as the base type
+				auto ir_struct_type = ir_manager_.GetIRType(struct_type);
 				current_block->instructions.emplace_back(std::make_shared<GetElementPtrInstruction>(node->result_var,
-					ir_type, node->base_->result_var, index_type, index_value));
+					ir_struct_type, node->base_->result_var, index_type, index_value));
 			}
 		}
 	}
@@ -698,8 +796,17 @@ void IRBuilder::visit(BlockExpressionNode *node) {
 	node->result_var = std::make_shared<LocalVar>("", ir_type);
 	if (node->statements_) {
         node->statements_->accept(this);
+		std::shared_ptr<ExpressionNode> trailing_expression = nullptr;
 		if (node->statements_->expression_) {
-			auto trailing_expression = node->statements_->expression_;
+			trailing_expression = node->statements_->expression_;
+		} else if (!node->statements_->statements_.empty()){
+			uint32_t len = node->statements_->statements_.size();
+			auto trailing_statement = std::dynamic_pointer_cast<ExpressionStatementNode>(node->statements_->statements_[len - 1]);
+			if (trailing_statement && !trailing_statement->has_semicolon_) {
+				trailing_expression = trailing_statement->expression_;
+			}
+		}
+		if (trailing_expression) {
 			if (trailing_expression->is_assignable_) {
 				current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(node->result_var, ir_type, trailing_expression->result_var));
 			} else {
@@ -731,42 +838,13 @@ void IRBuilder::visit(PredicateLoopExpressionNode *node) {
 	auto condition_block = std::make_shared<IRBasicBlock>("condition");
 	auto body_block = std::make_shared<IRBasicBlock>("body");
 	auto combine_block = std::make_shared<IRBasicBlock>("combine");
+	ir_manager_.current_loop_condition = condition_block;
     if (node->conditions_) {
     	current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(condition_block->true_label));
     	current_block = condition_block;
 	    node->conditions_->accept(this);
-    	auto cmp_expr = std::dynamic_pointer_cast<ComparisonExpressionNode>(node->conditions_->expression_);
-    	if (cmp_expr) {
-    		auto ir_bool_type = std::make_shared<IRIntegerType>(1);
-    		auto compare_type = ir_manager_.GetIRType(cmp_expr->rhs_->types[0]);
-    		cmp_expr->result_var = std::make_shared<LocalVar>("", ir_bool_type);
-    		auto lhs_value = std::make_shared<LocalVar>("", compare_type);
-    		if (cmp_expr->lhs_->is_assignable_) {
-    			current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(lhs_value, compare_type, cmp_expr->lhs_->result_var));
-    		} else {
-    			lhs_value = cmp_expr->lhs_->result_var;
-    		}
-    		auto rhs_value = std::make_shared<LocalVar>("", compare_type);
-    		if (cmp_expr->rhs_->is_assignable_) {
-    			current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(rhs_value, compare_type, cmp_expr->rhs_->result_var));
-    		} else {
-    			rhs_value = cmp_expr->rhs_->result_var;
-    		}
-    		if (cmp_expr->type_ == TokenType::EqEq) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::eq));
-    		} else if (cmp_expr->type_ == TokenType::LEq) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::sle));
-    		} else if (cmp_expr->type_ == TokenType::Lt) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::slt));
-    		} else if (cmp_expr->type_ == TokenType::GEq) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::sge));
-    		} else if (cmp_expr->type_ == TokenType::Gt) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::sgt));
-    		} else if (cmp_expr->type_ == TokenType::NEq) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::ne));
-    		}
-    		current_block->instructions.emplace_back(std::make_shared<ConditionalBrInstruction>(cmp_expr->result_var, body_block->true_label, combine_block->true_label));
-    	}
+    	current_block->instructions.emplace_back(std::make_shared<ConditionalBrInstruction>(
+    		node->conditions_->expression_->result_var, body_block->true_label, combine_block->true_label));
     }
     if (node->block_expression_) {
     	current_block = body_block;
@@ -777,6 +855,7 @@ void IRBuilder::visit(PredicateLoopExpressionNode *node) {
 	current_function->blocks.emplace_back(condition_block);
 	current_function->blocks.emplace_back(body_block);
 	current_function->blocks.emplace_back(combine_block);
+	ir_manager_.current_loop_condition = nullptr;
 }
 
 void IRBuilder::visit(IfExpressionNode *node) {
@@ -785,43 +864,16 @@ void IRBuilder::visit(IfExpressionNode *node) {
 	auto combine_block = std::make_shared<IRBasicBlock>("combine");
     if (node->conditions_) {
 	    node->conditions_->accept(this);
-    	auto cmp_expr = std::dynamic_pointer_cast<ComparisonExpressionNode>(node->conditions_->expression_);
-    	if (cmp_expr) {
-    		auto ir_bool_type = std::make_shared<IRIntegerType>(1);
-    		auto compare_type = ir_manager_.GetIRType(cmp_expr->rhs_->types[0]);
-    		cmp_expr->result_var = std::make_shared<LocalVar>("", ir_bool_type);
-    		auto lhs_value = std::make_shared<LocalVar>("", compare_type);
-    		if (cmp_expr->lhs_->is_assignable_) {
-    			current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(lhs_value, compare_type, cmp_expr->lhs_->result_var));
-    		} else {
-    			lhs_value = cmp_expr->lhs_->result_var;
-    		}
-    		auto rhs_value = std::make_shared<LocalVar>("", compare_type);
-    		if (cmp_expr->rhs_->is_assignable_) {
-    			current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(rhs_value, compare_type, cmp_expr->rhs_->result_var));
-    		} else {
-    			rhs_value = cmp_expr->rhs_->result_var;
-    		}
-    		if (cmp_expr->type_ == TokenType::EqEq) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::eq));
-    		} else if (cmp_expr->type_ == TokenType::LEq) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::sle));
-    		} else if (cmp_expr->type_ == TokenType::Lt) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::slt));
-    		} else if (cmp_expr->type_ == TokenType::GEq) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::sge));
-    		} else if (cmp_expr->type_ == TokenType::Gt) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::sgt));
-    		} else if (cmp_expr->type_ == TokenType::NEq) {
-    			current_block->instructions.emplace_back(std::make_shared<ICmpInstruction>(cmp_expr->result_var, compare_type, lhs_value, rhs_value, ConditionType::ne));
-    		}
+    	auto condition_expr = node->conditions_->expression_;
+    	if (condition_expr) {
     		current_function->blocks.emplace_back(if_true_block);
     		current_function->blocks.emplace_back(if_false_block);
     		current_function->blocks.emplace_back(combine_block);
-    		current_block->instructions.emplace_back(std::make_shared<ConditionalBrInstruction>(cmp_expr->result_var, if_true_block->true_label, if_false_block->true_label));
+    		current_block->instructions.emplace_back(std::make_shared<ConditionalBrInstruction>(condition_expr->result_var, if_true_block->true_label, if_false_block->true_label));
     	}
     }
 
+	std::shared_ptr<IRBasicBlock> phi_block_1 = nullptr, phi_block_2 = nullptr;
 	current_block = if_true_block;
     if (node->true_block_expression_) {
 	    node->true_block_expression_->accept(this);
@@ -829,9 +881,12 @@ void IRBuilder::visit(IfExpressionNode *node) {
     		current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(combine_block->true_label));
     	}
     	interrupt = false;
+    	phi_block_1 = current_block;
     }
 	current_block = if_false_block;
-	if (node->false_block_expression_) node->false_block_expression_->accept(this);
+	if (node->false_block_expression_) {
+		node->false_block_expression_->accept(this);
+	}
     if (node->if_expression_) {
 	    node->if_expression_->accept(this);
     }
@@ -839,17 +894,31 @@ void IRBuilder::visit(IfExpressionNode *node) {
 		current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(combine_block->true_label));
 	}
 	interrupt = false;
+	phi_block_2 = current_block;
 	current_block = combine_block;
 	if (node->false_block_expression_) {
 		if (node->true_block_expression_->result_var && node->false_block_expression_->result_var) {
 			std::shared_ptr<IRVar> true_value = node->true_block_expression_->result_var;
 			std::shared_ptr<IRVar> false_value = node->false_block_expression_->result_var;
 			auto ir_type = ir_manager_.GetIRType(node->types[0]);
+			if (ir_type && !std::dynamic_pointer_cast<IRVoidType>(ir_type)) {
+				node->result_var = std::make_shared<LocalVar>("", ir_type);
+				std::vector value_table{true_value, false_value};
+				current_block->instructions.emplace_back(std::make_shared<PhiInstruction>(node->result_var, ir_type,
+					value_table, std::vector{phi_block_1->true_label, phi_block_2->true_label}));
+			}
+		}
+	}
+	if (node->if_expression_) {
+		if (node->true_block_expression_->result_var && node->if_expression_->result_var) {
+			std::shared_ptr<IRVar> true_value = node->true_block_expression_->result_var;
+			std::shared_ptr<IRVar> false_value = node->if_expression_->result_var;
+			auto ir_type = ir_manager_.GetIRType(node->types[0]);
 			if (ir_type) {
 				node->result_var = std::make_shared<LocalVar>("", ir_type);
 				std::vector value_table{true_value, false_value};
 				current_block->instructions.emplace_back(std::make_shared<PhiInstruction>(node->result_var, ir_type,
-					value_table, std::vector{if_true_block->true_label, if_false_block->true_label}));
+					value_table, std::vector{phi_block_1->true_label, phi_block_2->true_label}));
 			}
 		}
 	}
@@ -929,7 +998,11 @@ void IRBuilder::visit(PathInExpressionNode *node) {
     	Symbol sym = scope_manager_.lookup(name);
     	if (sym.symbol_type_ == SymbolType::Variable) {
     		auto ir_type = ir_manager_.GetIRType(node->types[0]);
-    		node->result_var = std::make_shared<LocalVar>(name, ir_type, false);
+    		if (sym.is_const_) {
+    			node->result_var = std::make_shared<ConstVar>(name, ir_type, false);
+    		} else {
+    			node->result_var = std::make_shared<LocalVar>(name, ir_type, false);
+    		}
     	}
     }
 }
@@ -951,11 +1024,17 @@ void IRBuilder::visit(StructExpressionNode *node) {
     	uint32_t index = 0;
     	for (const auto& field: struct_expr_field_nodes) {
     		std::shared_ptr<IRType> index_type = std::make_shared<IRIntegerType>(32);
+    		std::shared_ptr<IRLiteral> index_value_0 = std::make_shared<LiteralInt>(0);
     		std::shared_ptr<IRLiteral> index_value = std::make_shared<LiteralInt>(index);
     		auto element_type = struct_type->members[index];
     		auto local_ptr = std::make_shared<LocalVar>("", std::make_shared<IRPointerType>(element_type));
+    		// Fix: use two indices [0, field_index] and struct type for correct field initialization
     		current_block->instructions.emplace_back(std::make_shared<GetElementPtrInstruction>
-    			(local_ptr, element_type, node->result_var, std::vector{index_type}, std::vector{index_value}));
+    			(local_ptr, struct_type, node->result_var, std::vector{index_type, index_type}, std::vector{index_value_0, index_value}));
+    		if (auto ir_array_type = std::dynamic_pointer_cast<IRArrayType>(struct_type->members[index])) {
+    			StoreArrayLiteral(field->expression_node_, local_ptr, ir_array_type);
+    			return;
+    		}
     		auto element_value = std::make_shared<LocalVar>("", element_type);
     		if (field->expression_node_->is_assignable_) {
     			current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(element_value, element_type, field->expression_node_->result_var));
@@ -1145,15 +1224,27 @@ void IRBuilder::StoreArrayLiteral(const std::shared_ptr<ExpressionNode>& expr_no
 				if (possible_array_type) {
 					StoreArrayLiteral(expr, element_var, possible_array_type);
 				} else {
-					current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_element_type, expr->result_var, element_var));
+					auto var = std::make_shared<LocalVar>("", ir_element_type);
+					if (expr->is_assignable_) {
+						current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(var, ir_element_type, expr->result_var));
+					} else {
+						var = expr->result_var;
+					}
+					current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_element_type, var, element_var));
 				}
 				cnt++;
 			}
 		}
 		if (array_literal->lhs_ && array_literal->rhs_) {
+			auto ir_element_type = array_type->baseType;
 			auto value = *std::get_if<int64_t>(&array_literal->rhs_->value);
+			auto var = std::make_shared<LocalVar>("", ir_element_type);
+			if (array_literal->lhs_->is_assignable_) {
+				current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(var, ir_element_type, array_literal->lhs_->result_var));
+			} else {
+				var = array_literal->lhs_->result_var;
+			}
 			for (uint32_t i = 0; i < value; i++) {
-				auto ir_element_type = array_type->baseType;
 				auto element_var = std::make_shared<LocalVar>("", ir_element_type);
 				std::vector index_types({ir_element_type});
 				std::vector<std::shared_ptr<IRLiteral>> index_values({std::make_shared<LiteralInt>(i)});
@@ -1163,9 +1254,10 @@ void IRBuilder::StoreArrayLiteral(const std::shared_ptr<ExpressionNode>& expr_no
 				if (possible_array_type) {
 					StoreArrayLiteral(array_literal->lhs_, element_var, possible_array_type);
 				} else {
-					current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_element_type, array_literal->lhs_->result_var, element_var));
+					current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_element_type, var, element_var));
 				}
 			}
 		}
 	}
 }
+

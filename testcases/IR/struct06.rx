@@ -1,0 +1,14 @@
+struct Point {
+    a : i32,
+    b : i32
+}
+
+fn main() {
+    let mut x : Point = Point{a : 1, b : 2};
+    let mut y : Point = Point{a : 3, b : 4};
+    x.a = x.b + 1;
+    x.b = x.a * y.b;
+    printlnInt(x.a);
+    printlnInt(x.b);
+    exit(0);
+}

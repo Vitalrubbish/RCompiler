@@ -1,0 +1,11 @@
+fn main() {
+    let a : i32 = getInt();
+    let mut i : i32 = 0;
+    let mut ans : i32 = 0;
+    while (i <= a) {
+        ans += i;
+        i += 1;
+    }
+    printlnInt(ans);
+    exit(0);
+}

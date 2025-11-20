@@ -1,0 +1,18 @@
+struct Point {
+    a : i32,
+    b : i32
+}
+
+impl Point {
+    fn GetDist(self) -> i32 {
+        self.a + self.b
+    }
+}
+
+fn main() {
+    let mut aa : i32 = getInt();
+    let mut x : Point = Point{a : aa, b : 23};
+    let y : i32 = x.GetDist();
+    printInt(y);
+    exit(0);
+}

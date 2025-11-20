@@ -821,6 +821,7 @@ void SemanticChecker::visit(ArrayIndexExpressionNode *node) {
                                     node->pos_);
             }
             tmp = ref_type->type_;
+        	node->auto_deref_count++;
         }
     }
     if (node->index_) {
@@ -864,6 +865,7 @@ void SemanticChecker::visit(MemberAccessExpressionNode *node) {
             auto ref_type = std::dynamic_pointer_cast<ReferenceType>(type);
             if (!ref_type) { break; }
             type = ref_type->type_;
+        	node->auto_deref_count++;
         }
         throw SemanticError("Semantic Error: Invalid Member Access Expression", node->pos_);
     }

@@ -1,0 +1,13 @@
+fn main() {
+    let mut a : i32 = 10;
+    let mut b : &i32 = &a;
+    printlnInt(*b);
+    printlnInt(a);
+    *b += 1;
+    printlnInt(*b);
+    printlnInt(a);
+    a += 2;
+    printlnInt(*b);
+    printlnInt(a);
+    exit(0);
+}

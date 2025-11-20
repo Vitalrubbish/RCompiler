@@ -26,7 +26,8 @@ IRBuilder *ir_builder = new IRBuilder{scope_manager, ir_manager};
 std::shared_ptr<IRProgram> ir_program;
 
 int main() {
-	// freopen("../testcases/IR/builtin01.rx", "r", stdin);
+	// freopen("../testcases/IR/autoref01.rx", "r", stdin);
+	// freopen("../stdin.rx", "r", stdin);
 	// freopen("../testcases_official/semantic-2/comprehensive1/comprehensive1.rx", "r", stdin);
 	// freopen("../stdout.ll", "w", stdout);
     std::ios_base::sync_with_stdio(false);
@@ -71,7 +72,7 @@ int main() {
 
         // std::cout << 0 << '\r';
     } catch (std::exception &error) {
-        // std::cout << error.what() << '\n';
+        std::cout << error.what() << '\n';
         // std::cout << -1 << '\r';
     }
 }

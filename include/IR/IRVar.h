@@ -6,6 +6,7 @@
 #include "IRManager.h"
 
 class IRManager;
+class IRBuilder;
 
 extern IRManager ir_manager;
 
@@ -52,9 +53,10 @@ public:
     }
 };
 
-class ConstVar : public IRVar {
+class ConstVar : public LocalVar {
 public:
-    explicit ConstVar(const std::string& name, const std::shared_ptr<IRType>& type) : IRVar(name, VarType::Constant, type) {}
+    explicit ConstVar(const std::string& name, const std::shared_ptr<IRType>& type, bool change_name = true) :
+		LocalVar(name, type, change_name) {}
 
 	void print() override {
     	std::cout << "@" << true_name;

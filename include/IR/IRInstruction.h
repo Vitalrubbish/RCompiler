@@ -165,6 +165,17 @@ public:
     SremInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                    const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::Srem) {}
+
+	void print() override {
+    	std::cout << '\t';
+    	result->print();
+    	std::cout << " = srem ";
+    	type->print();
+    	std::cout << ' ';
+    	op1->print();
+    	std::cout << ", ";
+    	op2->print();
+    }
 };
 
 class ShlInstruction : public BinaryOpInstruction {
@@ -186,6 +197,17 @@ public:
     AndInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                    const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::And) {}
+
+	void print() override {
+    	std::cout << '\t';
+    	result->print();
+    	std::cout << " = and ";
+    	type->print();
+    	std::cout << ' ';
+    	op1->print();
+    	std::cout << ", ";
+    	op2->print();
+    }
 };
 
 class OrInstruction : public BinaryOpInstruction {
@@ -193,6 +215,17 @@ public:
     OrInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                    const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::Or) {}
+
+	void print() override {
+    	std::cout << '\t';
+    	result->print();
+    	std::cout << " = or ";
+    	type->print();
+    	std::cout << ' ';
+    	op1->print();
+    	std::cout << ", ";
+    	op2->print();
+    }
 };
 
 class XorInstruction : public BinaryOpInstruction {
@@ -235,7 +268,7 @@ public:
 	void print() override {
 	    std::cout << "\tbr i1 ";
     	condition->print();
-    	std::cout << " label " << if_true << ", label " << if_false;
+    	std::cout << ", label %" << if_true << ", label %" << if_false;
     }
 };
 
@@ -247,7 +280,7 @@ public:
             : ControlInstruction(OpType::UncondBr), label(std::move(label)) {}
 
 	void print() override {
-	    std::cout << "\tbr label " << label;
+	    std::cout << "\tbr label %" << label;
     }
 };
 
@@ -281,7 +314,12 @@ public:
     	std::cout << '\t';
     	result->print();
 	    std::cout << " = load ";
-    	type->print();
+    	auto possible_array_type = std::dynamic_pointer_cast<IRArrayType>(type);
+    	if (possible_array_type) {
+    		std::cout << "ptr";
+    	} else {
+    		type->print();
+    	}
     	std::cout << ", ptr ";
     	ptr->print();
     }
@@ -495,7 +533,7 @@ public:
     	for (uint32_t i = 0; i < values.size(); i++) {
     		std::cout << "[";
     		values[i]->print();
-    		std::cout << ", " << labels[i] << "]";
+    		std::cout << ", %" << labels[i] << "]";
     		if (i != values.size() - 1) {
     			std::cout << ", ";
     		}
@@ -531,10 +569,12 @@ public:
 
 	void print() override {
 	    struct_type->print();
-    	std::cout << " = type { ";
-    	for (auto& it: args) {
-    		it->print();
-    		std::cout << " ";
+    	std::cout << " = type {";
+    	for (uint32_t i = 0; i < args.size(); i++) {
+    		args[i]->print();
+    		if (i != args.size() - 1) {
+    			std::cout << ", ";
+    		}
     	}
     	std::cout << "}";
     }

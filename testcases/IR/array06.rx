@@ -1,0 +1,9 @@
+fn main() {
+    let mut arr : [[i32; 2]; 3] = [[1, 2], [3, 4], [5, 6]];
+    arr[1][0] = 7;
+    printlnInt(arr[1][0]);
+    arr[2][0] = getInt();
+    printlnInt(arr[2][0]);
+    printlnInt(arr[2][1]);
+    exit(0);
+}

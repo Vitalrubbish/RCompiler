@@ -1,0 +1,7 @@
+fn main() {
+    let mut a : i32 = 10;
+    let mut b : i32 = 0;
+    b = -a;
+    printlnInt(b);
+    exit(0);
+}

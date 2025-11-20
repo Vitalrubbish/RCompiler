@@ -69,8 +69,9 @@ public:
 };
 
 class IRPointerType: public IRType {
-    std::shared_ptr<IRType> baseType;
 public:
+	std::shared_ptr<IRType> baseType;
+
     explicit IRPointerType(const std::shared_ptr<IRType> &base) : IRType(TypeID::pointerType) {
         baseType = base;
     }

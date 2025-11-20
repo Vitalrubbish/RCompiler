@@ -13,6 +13,8 @@ inline void GetInt();
 
 inline void PrintInt();
 
+inline void PrintlnInt();
+
 inline void Exit();
 
 class IRProgram : public IRNode {
@@ -51,11 +53,12 @@ public:
 
 inline void PrintBuiltIn() {
 	std::cout << "declare i32 @printf(i8*, ...)\n"; // scanf function linked to libc
-	std::cout << "declare i32 @scanf(i8*, ...)\n\n"; // printf function linked to libc
+	std::cout << "declare i32 @scanf(i8*, ...)\n"; // printf function linked to libc
 	std::cout << R"(@.str.d = private unnamed_addr constant [3 x i8] c"%d\00")" << '\n';
-	std::cout << R"(@.str.d_ln = private unnamed_addr constant [4 x i8] c"%d\0A\00")" << "\n\n";
+	std::cout << R"(@.str.d_ln = private unnamed_addr constant [4 x i8] c"%d\0A\00")" << "\n";
 
 	PrintInt();
+	PrintlnInt();
 	GetInt();
 	Exit();
 }
@@ -63,7 +66,7 @@ inline void PrintBuiltIn() {
 inline void PrintInt() {
 	std::cout << "define void @printInt(i32 %value) {\n";
 	std::cout << "entry:\n";
-	std::cout << "\t%fmt = getelementptr inbounds [4 x i8], [4 x i8]* @.str.d_ln, i32 0, i32 0\n";
+	std::cout << "\t%fmt = getelementptr inbounds [4 x i8], [4 x i8]* @.str.d, i32 0, i32 0\n";
 	std::cout << "\tcall i32 (i8*, ...) @printf(i8* %fmt, i32 %value)\n";
 	std::cout << "\tret void\n";
 	std::cout << "}\n\n";
@@ -77,6 +80,15 @@ inline void GetInt() {
 	std::cout << "\tcall i32 (i8*, ...) @scanf(i8* %fmt, i32* %ptr)\n";
 	std::cout << "\t%input_value = load i32, ptr %ptr\n";
 	std::cout << "\tret i32 %input_value\n";
+	std::cout << "}\n\n";
+}
+
+inline void PrintlnInt() {
+	std::cout << "define void @printlnInt(i32 %value) {\n";
+	std::cout << "entry:\n";
+	std::cout << "\t%fmt = getelementptr inbounds [4 x i8], [4 x i8]* @.str.d_ln, i32 0, i32 0\n";
+	std::cout << "\tcall i32 (i8*, ...) @printf(i8* %fmt, i32 %value)\n";
+	std::cout << "\tret void\n";
 	std::cout << "}\n\n";
 }
 

@@ -1,0 +1,11 @@
+fn main() {
+    let mut a : i32 = getInt();
+    let mut b : i32 = getInt();
+    a += b;
+    a -= b;
+    a = a * b;
+    a = a / b;
+    printlnInt(a + b);
+    printlnInt(a * b);
+    exit(0);
+}

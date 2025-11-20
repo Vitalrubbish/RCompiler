@@ -839,6 +839,7 @@ class ArrayIndexExpressionNode : public ExpressionWithoutBlockNode {
 public:
     std::shared_ptr<ExpressionNode> base_;
     std::shared_ptr<ExpressionNode> index_;
+	uint32_t auto_deref_count = 0;
 
     ArrayIndexExpressionNode(Position pos, std::shared_ptr<ExpressionNode> base,
                              std::shared_ptr<ExpressionNode> index)
@@ -854,6 +855,7 @@ class MemberAccessExpressionNode : public ExpressionWithoutBlockNode {
 public:
     std::shared_ptr<ExpressionNode> base_;
     Token member_;
+    uint32_t auto_deref_count = 0;
 
     MemberAccessExpressionNode(Position pos, std::shared_ptr<ExpressionNode> base, Token member)
         : ExpressionWithoutBlockNode(pos, true), base_(std::move(base)), member_(std::move(member)) {

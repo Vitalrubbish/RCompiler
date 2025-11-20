@@ -15,6 +15,7 @@ public:
     std::string label;
 	std::string true_label;
     std::vector<std::shared_ptr<IRInstruction>> instructions;
+	std::map<std::string, uint32_t> last_variable_index;
 
     explicit IRBasicBlock(const std::string& label)
         : label(label) {

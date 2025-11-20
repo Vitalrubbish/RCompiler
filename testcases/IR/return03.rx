@@ -1,0 +1,17 @@
+fn ptr_add(a : &mut i32, b : &mut i32) -> i32 {
+    *a + *b
+}
+
+fn add(mut a : i32, mut b : i32) -> i32 {
+    let mut c : &mut i32 = &mut a;
+    let mut d : &mut i32 = &mut b;
+    ptr_add(c, d)
+}
+
+fn main() {
+    let a : i32 = 100;
+    let b : i32 = 12;
+    let c : i32 = add(a, b);
+    printlnInt(c);
+    exit(0);
+}

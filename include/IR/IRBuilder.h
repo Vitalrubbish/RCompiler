@@ -10,6 +10,7 @@ class IRBuilder: public ASTVisitor {
 
 	std::shared_ptr<IRFunction> current_function;
 	std::shared_ptr<IRBasicBlock> current_block;
+	std::shared_ptr<IRBasicBlock> entry_block;
 
 	bool interrupt = false;
 
