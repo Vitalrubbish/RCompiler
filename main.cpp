@@ -28,8 +28,8 @@ std::shared_ptr<IRProgram> ir_program;
 int main() {
 	// freopen("../testcases/IR/autoref01.rx", "r", stdin);
 	// freopen("../stdin.rx", "r", stdin);
-	// freopen("../testcases_official/semantic-2/comprehensive1/comprehensive1.rx", "r", stdin);
-	// freopen("../stdout.ll", "w", stdout);
+	freopen("../testcases_official/semantic-2/comprehensive1/comprehensive1.rx", "r", stdin);
+	freopen("../stdout.ll", "w", stdout);
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::string text((std::istreambuf_iterator(std::cin)),

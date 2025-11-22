@@ -18,6 +18,7 @@ public:
 	std::map<std::string, std::shared_ptr<IRFunction>> function_map_;
 	std::map<std::string, uint32_t> label_count;
 	std::shared_ptr<IRBasicBlock> current_loop_condition = nullptr;
+	std::shared_ptr<IRBasicBlock> current_loop_combine;
 
 	std::shared_ptr<IRType> GetIRType(const std::shared_ptr<Type>& type) {
 		auto array_type = std::dynamic_pointer_cast<ArrayType>(type);

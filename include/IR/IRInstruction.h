@@ -21,7 +21,7 @@ enum class OpType {
     Ret, CondBr, UncondBr,
     Add, Sub, Mul, SDiv, Srem, Shl, AShr, And, Or, Xor,
     Alloca, Load, Store, GetElementPtr,
-    ICmp, CallWithRet, CallWithoutRet, Phi, Select
+    ICmp, CallWithRet, CallWithoutRet, Phi, Select, UDiv, Urem
 };
 
 /**************** BASE CLASS ****************/
@@ -32,6 +32,12 @@ public:
     IRInstruction() = default;
 
 	void print() override {}
+};
+
+class UnreachableInstruction: public IRInstruction {
+	void print() override {
+		std::cout << "\tunreachable";
+	}
 };
 
 class BinaryOpInstruction : public IRInstruction {
@@ -160,6 +166,25 @@ public:
     }
 };
 
+class UDivInstruction : public BinaryOpInstruction {
+public:
+	UDivInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
+				   const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
+			: BinaryOpInstruction(result, type, op1, op2, OpType::UDiv) {}
+
+	void print() override {
+		std::cout << '\t';
+		result->print();
+		std::cout << " = udiv ";
+		type->print();
+		std::cout << ' ';
+		op1->print();
+		std::cout << ", ";
+		op2->print();
+	}
+};
+
+
 class SremInstruction : public BinaryOpInstruction {
 public:
     SremInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
@@ -176,6 +201,24 @@ public:
     	std::cout << ", ";
     	op2->print();
     }
+};
+
+class UremInstruction : public BinaryOpInstruction {
+public:
+	UremInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
+				   const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
+			: BinaryOpInstruction(result, type, op1, op2, OpType::Urem) {}
+
+	void print() override {
+		std::cout << '\t';
+		result->print();
+		std::cout << " = urem ";
+		type->print();
+		std::cout << ' ';
+		op1->print();
+		std::cout << ", ";
+		op2->print();
+	}
 };
 
 class ShlInstruction : public BinaryOpInstruction {
@@ -233,6 +276,17 @@ public:
     XorInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                    const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::Xor) {}
+
+	void print() override {
+    	std::cout << '\t';
+    	result->print();
+    	std::cout << " = or ";
+    	type->print();
+    	std::cout << ' ';
+    	op1->print();
+    	std::cout << ", ";
+    	op2->print();
+    }
 };
 
 class RetInstruction : public ControlInstruction {
@@ -284,6 +338,33 @@ public:
     }
 };
 
+class ZextInstruction : public IRInstruction {
+public:
+	std::shared_ptr<IRVar> result;
+	std::shared_ptr<IRType> type1;
+	std::shared_ptr<IRVar> op;
+	std::shared_ptr<IRType> type2;
+
+	ZextInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type1,
+				   const std::shared_ptr<IRVar> &op, const std::shared_ptr<IRType> &type2) : IRInstruction() {
+		this->result = result;
+		this->type1 = type1;
+		this->op = op;
+		this->type2 = type2;
+	}
+
+	void print() override {
+		std::cout << '\t';
+		result->print();
+		std::cout << " = zext ";
+		type1->print();
+		std::cout << ' ';
+		op->print();
+		std::cout << " to ";
+		type2->print();
+	}
+};
+
 class AllocaInstruction : public MemoryInstruction {
 public:
     std::shared_ptr<IRVar> result;
@@ -314,12 +395,7 @@ public:
     	std::cout << '\t';
     	result->print();
 	    std::cout << " = load ";
-    	auto possible_array_type = std::dynamic_pointer_cast<IRArrayType>(type);
-    	if (possible_array_type) {
-    		std::cout << "ptr";
-    	} else {
-    		type->print();
-    	}
+    	type->print();
     	std::cout << ", ptr ";
     	ptr->print();
     }

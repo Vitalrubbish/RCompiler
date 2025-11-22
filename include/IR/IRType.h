@@ -53,10 +53,13 @@ public:
 };
 
 class IRIntegerType: public IRType {
-    uint32_t length = 0;
 public:
-    explicit IRIntegerType(const uint32_t &length) : IRType(TypeID::integerType) {
+	uint32_t length = 0;
+	bool is_signed = true;
+
+    explicit IRIntegerType(const uint32_t &length, bool is_signed = true) : IRType(TypeID::integerType) {
         this->length = length;
+    	this->is_signed = is_signed;
     }
 
     [[nodiscard]] std::string toString() const override {
