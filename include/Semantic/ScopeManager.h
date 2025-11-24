@@ -138,6 +138,10 @@ public:
         }
     }
 
+	void ir_declare(const std::string &name) {
+	    current_scope->ir_declare(name);
+    }
+
     [[nodiscard]] Symbol lookup(const std::string& name) const {
         std::shared_ptr<Scope> cursor = current_scope;
         while (cursor != nullptr) {
@@ -148,6 +152,18 @@ public:
             cursor = cursor -> parent_scope_;
         }
         throw SemanticError("Semantic Error: Symbol not found - " + name);
+    }
+
+	[[nodiscard]] uint32_t ir_lookup(const std::string& name) const {
+    	std::shared_ptr<Scope> cursor = current_scope;
+    	while (cursor != nullptr) {
+    		uint32_t symbol = cursor -> ir_lookup(name);
+    		if (symbol != UINT32_MAX) {
+				return symbol;
+			}
+    		cursor = cursor -> parent_scope_;
+    	}
+    	throw SemanticError("Semantic Error: Symbol not found - " + name);
     }
 
     std::shared_ptr<Type> lookupType(const std::shared_ptr<TypeNode> &type);

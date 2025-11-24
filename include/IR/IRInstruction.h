@@ -226,6 +226,17 @@ public:
     ShlInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                    const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::Shl) {}
+
+	void print() override {
+    	std::cout << '\t';
+    	result->print();
+    	std::cout << " = shl ";
+    	type->print();
+    	std::cout << ' ';
+    	op1->print();
+    	std::cout << ", ";
+    	op2->print();
+    }
 };
 
 class AShrInstruction : public BinaryOpInstruction {
@@ -233,6 +244,17 @@ public:
     AShrInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
                    const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::AShr) {}
+
+	void print() override {
+    	std::cout << '\t';
+    	result->print();
+    	std::cout << " = ashr ";
+    	type->print();
+    	std::cout << ' ';
+    	op1->print();
+    	std::cout << ", ";
+    	op2->print();
+    }
 };
 
 class AndInstruction : public BinaryOpInstruction {
@@ -280,7 +302,7 @@ public:
 	void print() override {
     	std::cout << '\t';
     	result->print();
-    	std::cout << " = or ";
+    	std::cout << " = xor ";
     	type->print();
     	std::cout << ' ';
     	op1->print();

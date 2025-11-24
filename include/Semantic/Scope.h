@@ -1,5 +1,6 @@
 #ifndef SCOPE_H
 #define SCOPE_H
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -14,10 +15,11 @@ class Scope {
     std::unordered_map<std::string, std::shared_ptr<Type> > types_;
 
 public:
-	uint32_t scope_index;
+	uint32_t scope_index{};
     std::vector<std::shared_ptr<Scope> > next_level_scopes_;
     std::shared_ptr<Scope> parent_scope_;
     std::unordered_map<std::string, ConstValue> value_map_;
+    std::unordered_map<std::string, uint32_t> ir_symbols_;
     uint32_t index = 0;
 
     Scope() = default;
@@ -36,6 +38,17 @@ public:
         }
         return Symbol{};
     }
+
+	void ir_declare(const std::string& name) {
+	    ir_symbols_[name] = scope_index;
+    }
+
+	uint32_t ir_lookup(const std::string& name) {
+	    if (ir_symbols_.find(name) != ir_symbols_.end()) {
+	        return ir_symbols_[name];
+		}
+		return UINT32_MAX;
+	}
 
     void ModifyType(const std::string &name, const std::shared_ptr<Type> &type) {
         *types_[name] = *type;

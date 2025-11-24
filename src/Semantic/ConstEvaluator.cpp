@@ -475,6 +475,7 @@ void ConstEvaluator::visit(GroupedExpressionNode *node) {
         node->expression_->accept(this);
         node -> types = node -> expression_ -> types;
         node->is_compiler_known_ = node->expression_->is_compiler_known_;
+        node->value = node->expression_->value;
     }
 }
 

@@ -172,6 +172,8 @@ public:
     std::shared_ptr<FunctionParametersNode> function_parameters_;
     std::shared_ptr<TypeNode> type_;
     std::shared_ptr<BlockExpressionNode> block_expression_;
+	std::shared_ptr<IRVar> struct_ret_var;
+	bool is_struct_type = false;
 
     FunctionNode(Position pos, bool is_const, std::string identifier,
                  std::shared_ptr<FunctionParametersNode> function_parameters,

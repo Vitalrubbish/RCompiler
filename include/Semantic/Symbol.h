@@ -17,6 +17,7 @@ struct Symbol {
     bool is_const_ = false;
     bool is_assigned_ = true;
     Position pos_;
+	uint32_t scope_index_ = 0;
 
     Symbol() = default;
 
