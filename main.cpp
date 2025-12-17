@@ -62,9 +62,11 @@ int main() {
         root->accept(symbol_manager);
         root->accept(semantic_checker); // Semantic Check
 
-        ir_program = std::make_shared<IRProgram>();
-        root->accept(ir_builder);
-    	ir_program->print();
+        try {
+            ir_program = std::make_shared<IRProgram>();
+            root->accept(ir_builder);
+            ir_program->print();
+        } catch (std::exception &error) {} // IR Generation
     } catch (std::exception &error) {
         std::cout << error.what() << '\n';
         exit(1);
