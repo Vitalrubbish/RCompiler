@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <cstdint>
 
 #include "IRNode.h"
 
