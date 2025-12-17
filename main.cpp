@@ -67,5 +67,6 @@ int main() {
     	ir_program->print();
     } catch (std::exception &error) {
         std::cout << error.what() << '\n';
+        exit(1);
     }
 }
