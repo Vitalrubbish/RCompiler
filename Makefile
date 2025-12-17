@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -g -I. -Iinclude -Ierror -Iutil
-LDFLAGS = -lboost_regex
+LDFLAGS = 
 
 # Find all source files
 # Using shell find to recursively find all .cpp files in src and main.cpp
