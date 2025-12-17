@@ -664,7 +664,9 @@ void IRBuilder::visit(AssignmentExpressionNode *node) {
 
 void IRBuilder::visit(ContinueExpressionNode *node) {
 	interrupt = true;
-	current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(ir_manager_.current_loop_condition->true_label));
+	if (ir_manager_.current_loop_condition) {
+		current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(ir_manager_.current_loop_condition->true_label));
+	}
 }
 
 void IRBuilder::visit(UnderscoreExpressionNode *node) {
@@ -699,7 +701,9 @@ void IRBuilder::visit(JumpExpressionNode *node) {
 	}
 	if (node->type_ == TokenType::Break) {
 		interrupt = true;
-		current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(ir_manager_.current_loop_combine->true_label));
+		if (ir_manager_.current_loop_combine) {
+			current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(ir_manager_.current_loop_combine->true_label));
+		}
 	}
 }
 
@@ -1006,7 +1010,9 @@ void IRBuilder::visit(FunctionCallExpressionNode *node) {
     			if (ir_pointer_type) {
     				ir_struct_type = std::dynamic_pointer_cast<IRStructType>(ir_pointer_type->baseType); // auto deref
     			}
-    			function_name = ir_struct_type->name + "." + method_expression->member_.token;
+    			if (ir_struct_type) {
+    				function_name = ir_struct_type->name + "." + method_expression->member_.token;
+    			}
     		}
         	if (function_type->have_self_) {
         		auto ir_pointer_type = std::dynamic_pointer_cast<IRPointerType>(ir_base_type);
@@ -1629,11 +1635,13 @@ void IRBuilder::visit(PathInExpressionNode *node) {
     	std::string name = node->path_indent_segments_[0]->identifier_;
     	Symbol sym = scope_manager_.lookup(name);
     	if (sym.symbol_type_ == SymbolType::Variable) {
-    		auto ir_type = ir_manager_.GetIRType(node->types[0]);
-    		if (sym.is_const_) {
-    			node->result_var = std::make_shared<ConstVar>(name, ir_type, false);
-    		} else {
-    			node->result_var = std::make_shared<LocalVar>(name, ir_type, false);
+    		if (!node->types.empty()) {
+    			auto ir_type = ir_manager_.GetIRType(node->types[0]);
+    			if (sym.is_const_) {
+    				node->result_var = std::make_shared<ConstVar>(name, ir_type, false);
+    			} else {
+    				node->result_var = std::make_shared<LocalVar>(name, ir_type, false);
+    			}
     		}
     	}
     }
@@ -1648,6 +1656,7 @@ void IRBuilder::visit(StructExpressionNode *node) {
         node->path_in_expression_node_->accept(this);
     }
 	auto struct_type = std::dynamic_pointer_cast<IRStructType>(ir_manager_.GetIRType(node->types[0]));
+	if (!struct_type) return;
 	node->result_var = std::make_shared<LocalVar>("", std::make_shared<IRPointerType>(struct_type));
 	current_block->instructions.emplace_back(std::make_shared<AllocaInstruction>(node->result_var, struct_type));
 	if (node->struct_expr_fields_node_) {

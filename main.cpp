@@ -66,7 +66,8 @@ int main() {
             ir_program = std::make_shared<IRProgram>();
             root->accept(ir_builder);
             ir_program->print();
-        } catch (std::exception &error) {} // IR Generation
+        } catch (...) {} // IR Generation
+    	// std::cout << 0 << '\n';
     } catch (std::exception &error) {
         std::cout << error.what() << '\n';
         exit(1);
