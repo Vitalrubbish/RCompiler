@@ -1474,7 +1474,7 @@ std::shared_ptr<TypeNode> Parser::ParseType() {
 std::shared_ptr<TypeNoBoundsNode> Parser::ParseTypeNoBounds() {
     Position pos = tokens[parseIndex].pos;
     try {
-        if (tokens[parseIndex].type == TokenType::Identifier) {
+        if (tokens[parseIndex].type == TokenType::Identifier || tokens[parseIndex].type == TokenType::SELF) {
             return ParseTypePath();
         }
         if (tokens[parseIndex].type == TokenType::LParen) {
