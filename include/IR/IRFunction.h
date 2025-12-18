@@ -16,7 +16,9 @@ public:
 	IRFunctionParam(const std::shared_ptr<IRType>& type, const std::shared_ptr<IRVar>& name) : type(type), var(name) {}
 
 	void print() override {
-		type->print();
+		if (type) {
+			type->print();
+		}
 		std::cout << " ";
 		var->print();
 	}
@@ -38,7 +40,9 @@ public:
 
 	void print() override {
 	    std::cout << "define ";
-    	return_type->print();
+    	if (return_type) {
+    		return_type->print();
+    	}
     	std::cout << " @" << name << "(";
     	for (int32_t i = 0; i < function_params.size(); i++) {
     		function_params[i].print();

@@ -321,7 +321,9 @@ public:
 
 	void print() override {
 	    std::cout << "\tret ";
-    	type->print();
+    	if (type) {
+    		type->print();
+    	}
     	std::cout << " ";
     	if (var) {
     		var->print();
@@ -399,7 +401,9 @@ public:
     	std::cout << '\t';
 	    result->print();
     	std::cout << " = alloca ";
-    	type->print();
+    	if (type) {
+    		type->print();
+    	}
     }
 };
 
@@ -417,9 +421,13 @@ public:
     	std::cout << '\t';
     	result->print();
 	    std::cout << " = load ";
-    	type->print();
+    	if (type) {
+    		type->print();
+    	}
     	std::cout << ", ptr ";
-    	ptr->print();
+    	if (ptr) {
+    		ptr->print();
+    	}
     }
 };
 
@@ -444,7 +452,9 @@ public:
     		literal->print();
     	}
     	if (var) {
-    		type->print();
+    		if (type) {
+    			type->print();
+    		}
     		std::cout << " ";
     		var->print();
     	}
@@ -481,7 +491,9 @@ public:
     	std::cout << '\t';
         result->print();
     	std::cout << " = getelementptr ";
-    	type->print();
+    	if (type) {
+    		type->print();
+    	}
     	std::cout << ", ptr ";
     	ptr->print();
     	for (size_t i = 0; i < types.size(); i++) {
@@ -535,11 +547,15 @@ public:
     		condition = "slt";
     	}
     	std::cout << condition << " ";
-    	type->print();
+    	if (type) {
+    		type->print();
+    	}
     	std::cout << " ";
     	op1->print();
     	std::cout << ", ";
-    	op2->print();
+    	if (op2) {
+    		op2->print();
+    	}
 
     }
 };
@@ -569,12 +585,18 @@ public:
     	std::cout << "\t";
 	    result->print();
     	std::cout << " = call ";
-    	return_type->print();
+    	if (return_type) {
+    		return_type->print();
+    	}
     	std::cout << " @" << func_name << "(";
     	for (uint32_t i = 0; i < args.size(); i++) {
-    		arg_types[i]->print();
+    		if (arg_types[i]) {
+    			arg_types[i]->print();
+    		}
     		std::cout << " ";
-    		args[i]->print();
+    		if (args[i]) {
+    			args[i]->print();
+    		}
     		if (i != args.size() - 1) {
     			std::cout << ", ";
     		}

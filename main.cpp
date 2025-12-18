@@ -26,6 +26,7 @@ IRBuilder *ir_builder = new IRBuilder{scope_manager, ir_manager};
 std::shared_ptr<IRProgram> ir_program;
 
 int main() {
+	// freopen("../testcases_official/semantic-1/misc35/misc35.rx", "r", stdin);
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::string text((std::istreambuf_iterator(std::cin)),
