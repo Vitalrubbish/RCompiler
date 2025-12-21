@@ -22,7 +22,7 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 run: build
-	./$(TARGET)
+	@./$(TARGET)
 
 clean:
 	rm -f $(OBJS) $(TARGET)
