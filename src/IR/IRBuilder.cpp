@@ -1480,6 +1480,7 @@ void IRBuilder::visit(PredicateLoopExpressionNode *node) {
 	ir_manager_.current_loop_combine = combine_block;
 	if (node->conditions_) {
 		current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(condition_block->true_label));
+		current_function->blocks.emplace_back(condition_block);
 		current_block = condition_block;
 		node->conditions_->accept(this);
 
@@ -1491,18 +1492,20 @@ void IRBuilder::visit(PredicateLoopExpressionNode *node) {
     		condition_var = condition_expr->result_var;
     	}
 
+		auto long_branch_exit = std::make_shared<IRBasicBlock>("long_branch_exit");
 		current_block->instructions.emplace_back(std::make_shared<ConditionalBrInstruction>(
-			condition_var, body_block->true_label, combine_block->true_label));
+			condition_var, body_block->true_label, long_branch_exit->true_label));
+		current_function->blocks.emplace_back(long_branch_exit);
+		long_branch_exit->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(combine_block->true_label));
 	}
 	if (node->block_expression_) {
+		current_function->blocks.emplace_back(body_block);
 		current_block = body_block;
 		node->block_expression_->accept(this);
 		current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(condition_block->true_label));
 	}
-	current_block = combine_block;
-	current_function->blocks.emplace_back(condition_block);
-	current_function->blocks.emplace_back(body_block);
 	current_function->blocks.emplace_back(combine_block);
+	current_block = combine_block;
 	ir_manager_.current_loop_condition = saved_current_loop_condition;
 	ir_manager_.current_loop_combine = saved_current_loop_combine;
 }
@@ -1522,10 +1525,10 @@ void IRBuilder::visit(IfExpressionNode *node) {
     		condition_var = condition_expr->result_var;
     	}
     	if (condition_expr) {
-    		current_function->blocks.emplace_back(if_true_block);
-    		current_function->blocks.emplace_back(if_false_block);
-    		current_function->blocks.emplace_back(combine_block);
-    		current_block->instructions.emplace_back(std::make_shared<ConditionalBrInstruction>(condition_var, if_true_block->true_label, if_false_block->true_label));
+			auto long_branch_false = std::make_shared<IRBasicBlock>("long_branch_false");
+    		current_block->instructions.emplace_back(std::make_shared<ConditionalBrInstruction>(condition_var, if_true_block->true_label, long_branch_false->true_label));
+			current_function->blocks.emplace_back(long_branch_false);
+			long_branch_false->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(if_false_block->true_label));
     	}
     }
 
@@ -1533,6 +1536,7 @@ void IRBuilder::visit(IfExpressionNode *node) {
 	bool true_branch_interrupted = false;
 	bool false_branch_interrupted = false;
 
+	current_function->blocks.emplace_back(if_true_block);
 	current_block = if_true_block;
     if (node->true_block_expression_) {
 	    node->true_block_expression_->accept(this);
@@ -1544,6 +1548,7 @@ void IRBuilder::visit(IfExpressionNode *node) {
     	interrupt = false;
     	phi_block_1 = current_block;
     }
+	current_function->blocks.emplace_back(if_false_block);
 	current_block = if_false_block;
 	if (node->false_block_expression_) {
 		node->false_block_expression_->accept(this);
@@ -1558,6 +1563,7 @@ void IRBuilder::visit(IfExpressionNode *node) {
 		interrupt = false;
 	}
 	phi_block_2 = current_block;
+	current_function->blocks.emplace_back(combine_block);
 	current_block = combine_block;
 
 	if (true_branch_interrupted && false_branch_interrupted) {
