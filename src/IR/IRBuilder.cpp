@@ -708,43 +708,91 @@ void IRBuilder::visit(JumpExpressionNode *node) {
 }
 
 void IRBuilder::visit(LogicOrExpressionNode *node) {
-    if (node->lhs_) node->lhs_->accept(this);
-    if (node->rhs_) node->rhs_->accept(this);
 	auto ir_bool_type = std::make_shared<IRIntegerType>(1);
 	node->result_var = std::make_shared<LocalVar>("", ir_bool_type);
-	auto left_value = std::make_shared<LocalVar>("", ir_bool_type);
-	auto right_value = std::make_shared<LocalVar>("", ir_bool_type);
+	
+	std::shared_ptr<IRVar> result_ptr = std::make_shared<LocalVar>(".or_res", std::make_shared<IRPointerType>(ir_bool_type));
+	entry_block->instructions.insert(entry_block->instructions.begin(), std::make_shared<AllocaInstruction>(result_ptr, ir_bool_type));
+
+	if (node->lhs_) node->lhs_->accept(this);
+	
+	std::shared_ptr<IRVar> lhs_val = std::make_shared<LocalVar>("", ir_bool_type);
 	if (node->lhs_->is_assignable_) {
-		current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(left_value, ir_bool_type, node->lhs_->result_var));
+		current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(lhs_val, ir_bool_type, node->lhs_->result_var));
 	} else {
-		left_value = node->lhs_->result_var;
+		lhs_val = node->lhs_->result_var;
 	}
+	
+	current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_bool_type, lhs_val, result_ptr));
+	
+	auto rhs_block = std::make_shared<IRBasicBlock>("or_rhs");
+	auto end_block = std::make_shared<IRBasicBlock>("or_end");
+	
+	current_block->instructions.emplace_back(std::make_shared<ConditionalBrInstruction>(lhs_val, end_block->true_label, rhs_block->true_label));
+	
+	current_function->blocks.emplace_back(rhs_block);
+	current_block = rhs_block;
+	
+	if (node->rhs_) node->rhs_->accept(this);
+	
+	std::shared_ptr<IRVar> rhs_val = std::make_shared<LocalVar>("", ir_bool_type);
 	if (node->rhs_->is_assignable_) {
-		current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(right_value, ir_bool_type, node->rhs_->result_var));
+		current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(rhs_val, ir_bool_type, node->rhs_->result_var));
 	} else {
-		right_value = node->rhs_->result_var;
+		rhs_val = node->rhs_->result_var;
 	}
-	current_block->instructions.emplace_back(std::make_shared<OrInstruction>(node->result_var, ir_bool_type, left_value, right_value));
+	
+	current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_bool_type, rhs_val, result_ptr));
+	current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(end_block->true_label));
+	
+	current_function->blocks.emplace_back(end_block);
+	current_block = end_block;
+	
+	current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(node->result_var, ir_bool_type, result_ptr));
 }
 
 void IRBuilder::visit(LogicAndExpressionNode *node) {
-    if (node->lhs_) node->lhs_->accept(this);
-    if (node->rhs_) node->rhs_->accept(this);
 	auto ir_bool_type = std::make_shared<IRIntegerType>(1);
 	node->result_var = std::make_shared<LocalVar>("", ir_bool_type);
-	auto left_value = std::make_shared<LocalVar>("", ir_bool_type);
-	auto right_value = std::make_shared<LocalVar>("", ir_bool_type);
+	
+	std::shared_ptr<IRVar> result_ptr = std::make_shared<LocalVar>(".and_res", std::make_shared<IRPointerType>(ir_bool_type));
+	entry_block->instructions.insert(entry_block->instructions.begin(), std::make_shared<AllocaInstruction>(result_ptr, ir_bool_type));
+
+	if (node->lhs_) node->lhs_->accept(this);
+	
+	std::shared_ptr<IRVar> lhs_val = std::make_shared<LocalVar>("", ir_bool_type);
 	if (node->lhs_->is_assignable_) {
-		current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(left_value, ir_bool_type, node->lhs_->result_var));
+		current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(lhs_val, ir_bool_type, node->lhs_->result_var));
 	} else {
-		left_value = node->lhs_->result_var;
+		lhs_val = node->lhs_->result_var;
 	}
+	
+	current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_bool_type, lhs_val, result_ptr));
+	
+	auto rhs_block = std::make_shared<IRBasicBlock>("and_rhs");
+	auto end_block = std::make_shared<IRBasicBlock>("and_end");
+	
+	current_block->instructions.emplace_back(std::make_shared<ConditionalBrInstruction>(lhs_val, rhs_block->true_label, end_block->true_label));
+	
+	current_function->blocks.emplace_back(rhs_block);
+	current_block = rhs_block;
+	
+	if (node->rhs_) node->rhs_->accept(this);
+	
+	std::shared_ptr<IRVar> rhs_val = std::make_shared<LocalVar>("", ir_bool_type);
 	if (node->rhs_->is_assignable_) {
-		current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(right_value, ir_bool_type, node->rhs_->result_var));
+		current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(rhs_val, ir_bool_type, node->rhs_->result_var));
 	} else {
-		right_value = node->rhs_->result_var;
+		rhs_val = node->rhs_->result_var;
 	}
-	current_block->instructions.emplace_back(std::make_shared<AndInstruction>(node->result_var, ir_bool_type, left_value, right_value));
+	
+	current_block->instructions.emplace_back(std::make_shared<StoreInstruction>(ir_bool_type, rhs_val, result_ptr));
+	current_block->instructions.emplace_back(std::make_shared<UnconditionalBrInstruction>(end_block->true_label));
+	
+	current_function->blocks.emplace_back(end_block);
+	current_block = end_block;
+	
+	current_block->instructions.emplace_back(std::make_shared<LoadInstruction>(node->result_var, ir_bool_type, result_ptr));
 }
 
 void IRBuilder::visit(BitwiseOrExpressionNode *node) {
