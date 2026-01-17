@@ -1,3 +1,8 @@
+#ifndef ASMOPERAND_H
+#define ASMOPERAND_H
+
+#include <cstdint>
+#include <string>
 
 
 enum class OperandType {
@@ -6,16 +11,18 @@ enum class OperandType {
     IMMEDIATE,
     LABEL,
     STACK_OFFSET
-}
+};
 
 class ASMOperand {
 public:
-    OperandType type;
+	virtual ~ASMOperand() = default;
 
-    ASMOperand(OperandType t) : type(t) {}
+	OperandType type;
+
+    explicit ASMOperand(OperandType t) : type(t) {}
 
     virtual void print() = 0;
-}
+};
 
 class Register: public ASMOperand {
 public:
@@ -28,24 +35,26 @@ public:
           index(idx), is_physical(physical) {}
 
     void print() override {}
-}
+};
 
 class Immediate: public ASMOperand {
 public:
     uint64_t value = 0;
 
-    Immediate(uint64_t val)
+    explicit Immediate(const uint64_t val)
         : ASMOperand(OperandType::IMMEDIATE), value(val) {}
 
     void print() override {}
-}
+};
 
 class Label: public ASMOperand {
 public:
     std::string name;
 
-    Label(const std::string &lbl_name)
+    explicit Label(const std::string &lbl_name)
         : ASMOperand(OperandType::LABEL), name(lbl_name) {}
 
     void print() override {}
-}
+};
+
+#endif //ASMOPERAND_H
