@@ -497,4 +497,247 @@ public:
 	}
 };
 
+class ASMLwInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rd;
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> imm;
+
+	ASMLwInstruction(const std::shared_ptr<ASMOperand>& rd,
+	              const std::shared_ptr<ASMOperand>& rs1,
+	              const std::shared_ptr<ASMOperand>& imm)
+		: ASMInstruction(ASMOpcode::LW), rd(rd), rs1(rs1), imm(imm) {}
+
+	void print() override {
+		std::cout << "\tlw ";
+		rd->print();
+		std::cout << ", ";
+		imm->print();
+		std::cout << "(";
+		rs1->print();
+		std::cout << ")";
+	}
+};
+
+class ASMSwInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rs2;
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> imm;
+
+	ASMSwInstruction(const std::shared_ptr<ASMOperand>& rs2,
+	              const std::shared_ptr<ASMOperand>& rs1,
+	              const std::shared_ptr<ASMOperand>& imm)
+		: ASMInstruction(ASMOpcode::SW), rs2(rs2), rs1(rs1), imm(imm) {}
+
+	void print() override {
+		std::cout << "\tsw ";
+		rs2->print();
+		std::cout << ", ";
+		imm->print();
+		std::cout << "(";
+		rs1->print();
+		std::cout << ")";
+	}
+};
+
+class ASMJalInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rd;
+	std::shared_ptr<ASMOperand> label;
+
+	ASMJalInstruction(const std::shared_ptr<ASMOperand>& rd,
+	                const std::shared_ptr<ASMOperand>& label)
+		: ASMInstruction(ASMOpcode::JAL), rd(rd), label(label) {}
+
+	void print() override {
+		std::cout << "\tjal ";
+		rd->print();
+		std::cout << ", ";
+		label->print();
+	}
+};
+
+class ASMJalrInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rd;
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> imm;
+
+	ASMJalrInstruction(const std::shared_ptr<ASMOperand>& rd,
+	                 const std::shared_ptr<ASMOperand>& rs1,
+	                 const std::shared_ptr<ASMOperand>& imm)
+		: ASMInstruction(ASMOpcode::JALR), rd(rd), rs1(rs1), imm(imm) {}
+
+	void print() override {
+		std::cout << "\tjalr ";
+		rd->print();
+		std::cout << ", ";
+		imm->print();
+		std::cout << "(";
+		rs1->print();
+		std::cout << ")";
+	}
+};
+
+class ASMLuiInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rd;
+	std::shared_ptr<ASMOperand> imm;
+
+	ASMLuiInstruction(const std::shared_ptr<ASMOperand>& rd,
+	              const std::shared_ptr<ASMOperand>& imm)
+		: ASMInstruction(ASMOpcode::LUI), rd(rd), imm(imm) {}
+
+	void print() override {
+		std::cout << "\tlui ";
+		rd->print();
+		std::cout << ", ";
+		imm->print();
+	}
+};
+
+class ASMAuipcInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rd;
+	std::shared_ptr<ASMOperand> imm;
+
+	ASMAuipcInstruction(const std::shared_ptr<ASMOperand>& rd,
+	                const std::shared_ptr<ASMOperand>& imm)
+		: ASMInstruction(ASMOpcode::AUIPC), rd(rd), imm(imm) {}
+
+	void print() override {
+		std::cout << "\tauipc ";
+		rd->print();
+		std::cout << ", ";
+		imm->print();
+	}
+};
+
+class ASMBeqInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> rs2;
+	std::shared_ptr<ASMOperand> label;
+
+	ASMBeqInstruction(const std::shared_ptr<ASMOperand>& rs1,
+	                const std::shared_ptr<ASMOperand>& rs2,
+	                const std::shared_ptr<ASMOperand>& label)
+		: ASMInstruction(ASMOpcode::BEQ), rs1(rs1), rs2(rs2), label(label) {}
+
+	void print() override {
+		std::cout << "\tbeq ";
+		rs1->print();
+		std::cout << ", ";
+		rs2->print();
+		std::cout << ", ";
+		label->print();
+	}
+};
+
+class ASMBneInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> rs2;
+	std::shared_ptr<ASMOperand> label;
+
+	ASMBneInstruction(const std::shared_ptr<ASMOperand>& rs1,
+					const std::shared_ptr<ASMOperand>& rs2,
+					const std::shared_ptr<ASMOperand>& label)
+		: ASMInstruction(ASMOpcode::BNE), rs1(rs1), rs2(rs2), label(label) {}
+
+	void print() override {
+		std::cout << "\tbne ";
+		rs1->print();
+		std::cout << ", ";
+		rs2->print();
+		std::cout << ", ";
+		label->print();
+	}
+};
+
+class ASMBltInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> rs2;
+	std::shared_ptr<ASMOperand> label;
+
+	ASMBltInstruction(const std::shared_ptr<ASMOperand>& rs1,
+					const std::shared_ptr<ASMOperand>& rs2,
+					const std::shared_ptr<ASMOperand>& label)
+		: ASMInstruction(ASMOpcode::BLT), rs1(rs1), rs2(rs2), label(label) {}
+
+	void print() override {
+		std::cout << "\tblt ";
+		rs1->print();
+		std::cout << ", ";
+		rs2->print();
+		std::cout << ", ";
+		label->print();
+	}
+};
+
+class ASMBgeInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> rs2;
+	std::shared_ptr<ASMOperand> label;
+
+	ASMBgeInstruction(const std::shared_ptr<ASMOperand>& rs1,
+					const std::shared_ptr<ASMOperand>& rs2,
+					const std::shared_ptr<ASMOperand>& label)
+		: ASMInstruction(ASMOpcode::BGE), rs1(rs1), rs2(rs2), label(label) {}
+
+	void print() override {
+		std::cout << "\tbge ";
+		rs1->print();
+		std::cout << ", ";
+		rs2->print();
+		std::cout << ", ";
+		label->print();
+	}
+};
+
+class ASMBltuInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> rs2;
+	std::shared_ptr<ASMOperand> label;
+
+	ASMBltuInstruction(const std::shared_ptr<ASMOperand>& rs1,
+					const std::shared_ptr<ASMOperand>& rs2,
+					const std::shared_ptr<ASMOperand>& label)
+		: ASMInstruction(ASMOpcode::BLTU), rs1(rs1), rs2(rs2), label(label) {}
+
+	void print() override {
+		std::cout << "\tbltu ";
+		rs1->print();
+		std::cout << ", ";
+		rs2->print();
+		std::cout << ", ";
+		label->print();
+	}
+};
+
+class ASMBgeuInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> rs2;
+	std::shared_ptr<ASMOperand> label;
+
+	ASMBgeuInstruction(const std::shared_ptr<ASMOperand>& rs1,
+					const std::shared_ptr<ASMOperand>& rs2,
+					const std::shared_ptr<ASMOperand>& label)
+		: ASMInstruction(ASMOpcode::BGEU), rs1(rs1), rs2(rs2), label(label) {}
+
+	void print() override {
+		std::cout << "\tbgeu ";
+		rs1->print();
+		std::cout << ", ";
+		rs2->print();
+		std::cout << ", ";
+		label->print();
+	}
+};
+
 #endif //ASMINSTRUCTION_H
