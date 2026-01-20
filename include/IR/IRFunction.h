@@ -15,6 +15,8 @@ public:
 
 	IRFunctionParam(const std::shared_ptr<IRType>& type, const std::shared_ptr<IRVar>& name) : type(type), var(name) {}
 
+    void accept(IRVisitor *visitor) override { visitor->visit(this); }
+
 	void print() override {
 		if (type) {
 			type->print();
@@ -37,6 +39,8 @@ public:
         this->return_type = return_type;
         this->function_params = function_params;
     }
+
+    void accept(IRVisitor *visitor) override { visitor->visit(this); }
 
 	void print() override {
 	    std::cout << "define ";

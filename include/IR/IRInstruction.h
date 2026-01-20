@@ -10,6 +10,7 @@
 #include "IRNode.h"
 #include "IRType.h"
 #include "IRVar.h"
+#include "IRVisitor.h"
 
 class IRVar;
 class IRType;
@@ -32,12 +33,15 @@ public:
     IRInstruction() = default;
 
 	void print() override {}
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class UnreachableInstruction: public IRInstruction {
 	void print() override {
 		std::cout << "\tunreachable";
 	}
+	public:
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class BinaryOpInstruction : public IRInstruction {
@@ -102,6 +106,7 @@ public:
     		std::cout << imm2;
     	}
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class SubInstruction : public BinaryOpInstruction {
@@ -111,7 +116,7 @@ public:
             : BinaryOpInstruction(result, type, op1, op2, OpType::Sub) {}
 
 	SubInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
-			const std::shared_ptr<IRVar> op)
+			const std::shared_ptr<IRVar> &op)
 				: BinaryOpInstruction(result, type, nullptr, op, OpType::Sub) {}
 
 	void print() override {
@@ -128,6 +133,7 @@ public:
     	std::cout << ", ";
     	op2->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class MulInstruction : public BinaryOpInstruction {
@@ -146,6 +152,7 @@ public:
     	std::cout << ", ";
     	op2->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class SDivInstruction : public BinaryOpInstruction {
@@ -164,6 +171,7 @@ public:
     	std::cout << ", ";
     	op2->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class UDivInstruction : public BinaryOpInstruction {
@@ -182,6 +190,7 @@ public:
 		std::cout << ", ";
 		op2->print();
 	}
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 
@@ -201,6 +210,7 @@ public:
     	std::cout << ", ";
     	op2->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class UremInstruction : public BinaryOpInstruction {
@@ -219,6 +229,7 @@ public:
 		std::cout << ", ";
 		op2->print();
 	}
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class ShlInstruction : public BinaryOpInstruction {
@@ -237,6 +248,7 @@ public:
     	std::cout << ", ";
     	op2->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class AShrInstruction : public BinaryOpInstruction {
@@ -255,6 +267,7 @@ public:
     	std::cout << ", ";
     	op2->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class AndInstruction : public BinaryOpInstruction {
@@ -273,6 +286,7 @@ public:
     	std::cout << ", ";
     	op2->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class OrInstruction : public BinaryOpInstruction {
@@ -291,6 +305,7 @@ public:
     	std::cout << ", ";
     	op2->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class XorInstruction : public BinaryOpInstruction {
@@ -309,6 +324,7 @@ public:
     	std::cout << ", ";
     	op2->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class RetInstruction : public ControlInstruction {
@@ -329,6 +345,7 @@ public:
     		var->print();
     	}
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 
@@ -348,6 +365,7 @@ public:
     	condition->print();
     	std::cout << ", label %" << if_true << ", label %" << if_false;
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class UnconditionalBrInstruction : public ControlInstruction {
@@ -360,6 +378,7 @@ public:
 	void print() override {
 	    std::cout << "\tbr label %" << label;
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class ZextInstruction : public IRInstruction {
@@ -387,6 +406,7 @@ public:
 		std::cout << " to ";
 		type2->print();
 	}
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class AllocaInstruction : public MemoryInstruction {
@@ -405,6 +425,7 @@ public:
     		type->print();
     	}
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class LoadInstruction : public MemoryInstruction {
@@ -429,6 +450,7 @@ public:
     		ptr->print();
     	}
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class StoreInstruction : public MemoryInstruction {
@@ -461,6 +483,7 @@ public:
     	std::cout << ", ptr ";
     	ptr->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class GetElementPtrInstruction : public MemoryInstruction {
@@ -507,6 +530,7 @@ public:
     		}
     	}
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 enum class ConditionType {
@@ -558,6 +582,7 @@ public:
     	}
 
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class CallExpression : public IRInstruction {
@@ -603,6 +628,7 @@ public:
     	}
     	std::cout << ")";
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class CallWithoutRetInstruction : public CallExpression {
@@ -630,6 +656,7 @@ public:
     	}
     	std::cout << ")";
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class PhiInstruction : public IRInstruction {
@@ -659,6 +686,7 @@ public:
     		}
     	}
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class SelectInstruction : public IRInstruction {
@@ -677,6 +705,7 @@ public:
               true_value(true_value), false_value(false_value) {
         op_type = OpType::Select;
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class StructDefInstruction : public IRInstruction {
@@ -698,6 +727,7 @@ public:
     	}
     	std::cout << "}";
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class GlobalVarDefInstruction : public IRInstruction {
@@ -707,6 +737,7 @@ public:
 
     GlobalVarDefInstruction(const std::shared_ptr<GlobalVar>& global_var, const std::shared_ptr<IRLiteral>& value) :
         global_var(global_var), value(value) {}
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 
 class ConstVarDefInstruction : public IRInstruction {
@@ -722,5 +753,6 @@ public:
     	std::cout << " = constant ";
     	value->print();
     }
+	void accept(IRVisitor *visitor) override { visitor->visit(this); }
 };
 #endif //IRINSTRUCTION_H

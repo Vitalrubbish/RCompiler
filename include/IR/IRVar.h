@@ -4,6 +4,7 @@
 #include <iostream>
 #include "IRNode.h"
 #include "IRManager.h"
+#include "Semantic/ScopeManager.h"
 
 class IRManager;
 class IRBuilder;

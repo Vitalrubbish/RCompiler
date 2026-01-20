@@ -26,6 +26,8 @@ public:
 
     IRProgram() = default;
 
+    void accept(IRVisitor *visitor) override { visitor->visit(this); }
+
 	void print() override {
 		PrintBuiltIn();
 

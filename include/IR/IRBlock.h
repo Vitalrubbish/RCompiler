@@ -27,6 +27,8 @@ public:
     	true_label = label + "." + std::to_string(ir_manager.label_count[label]);
     }
 
+    void accept(IRVisitor *visitor) override { visitor->visit(this); }
+
 	void print() override {
     	std::cout << true_label << ":\n";
 	    for (auto& inst: instructions) {
