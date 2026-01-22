@@ -2,9 +2,24 @@
 #define RCOMPILER_INSTSELECTOR_H
 
 #include "IR/IRVisitor.h"
+#include "IR/IRVar.h"
+#include "ASMBlock.h"
+#include "ASMFunction.h"
+#include "ASMInstruction.h"
+#include "ASMOperand.h"
+#include <map>
 
 class InstSelector : public IRVisitor {
 public:
+    std::vector<std::shared_ptr<ASMFunction>> asm_functions;
+    std::shared_ptr<ASMFunction> cur_func;
+    std::shared_ptr<ASMBlock> cur_block;
+    std::map<std::string, std::shared_ptr<Register>> var_map;
+    int virt_reg_cnt = 0;
+
+    std::shared_ptr<Register> get_operand(const std::shared_ptr<IRVar>& var);
+    std::shared_ptr<Register> new_vreg();
+
     InstSelector() = default;
 
     void visit(IRProgram *node) override;

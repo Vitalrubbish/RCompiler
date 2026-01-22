@@ -1,6 +1,21 @@
 #include "InstSelection/InstSelector.h"
 
 #include "IR/IRProgram.h"
+#include "IR/IRFunction.h"
+#include "IR/IRBlock.h"
+#include "IR/IRInstruction.h"
+
+
+std::shared_ptr<Register> InstSelector::new_vreg() {
+    return std::make_shared<Register>(virt_reg_cnt++, false);
+}
+
+std::shared_ptr<Register> InstSelector::get_operand(const std::shared_ptr<IRVar> &var) {
+    if (var_map.find(var->true_name) == var_map.end()) {
+        var_map[var->true_name] = new_vreg();
+    }
+    return var_map[var->true_name];
+}
 
 void InstSelector::visit(IRProgram *node) {
     for (auto &global : node->globals) {
@@ -18,6 +33,9 @@ void InstSelector::visit(IRProgram *node) {
 }
 
 void InstSelector::visit(IRFunction *node) {
+    cur_func = std::make_shared<ASMFunction>(node->name);
+    asm_functions.push_back(cur_func);
+
     for (auto &block : node->blocks) {
         block->accept(this);
     }
@@ -28,6 +46,8 @@ void InstSelector::visit(IRFunctionParam *node) {
 }
 
 void InstSelector::visit(IRBasicBlock *node) {
+    cur_block = std::make_shared<ASMBlock>(node->true_label);
+    cur_func->AddBlock(cur_block);
     for (auto &inst : node->instructions) {
         inst->accept(this);
     }
@@ -42,8 +62,40 @@ void InstSelector::visit(AllocaInstruction *node) {}
 void InstSelector::visit(LoadInstruction *node) {}
 void InstSelector::visit(StoreInstruction *node) {}
 void InstSelector::visit(GetElementPtrInstruction *node) {}
-void InstSelector::visit(AddInstruction *node) {}
-void InstSelector::visit(SubInstruction *node) {}
+
+void InstSelector::visit(AddInstruction *node) {
+    auto rd = get_operand(node->result);
+
+    if (node->op1 && node->op2) {
+        auto rs1 = get_operand(node->op1);
+        auto rs2 = get_operand(node->op2);
+        auto inst = std::make_shared<ASMAddInstruction>(rd, rs1, rs2);
+        cur_block->AddInstruction(inst);
+    } else if (!node->op1 && !node->op2) {
+        int val = node->imm1 + node->imm2;
+        auto x0 = std::make_shared<Register>(0, true); // x0 is physical register 0
+        auto imm = std::make_shared<Immediate>(val);
+        auto inst = std::make_shared<ASMAddiInstruction>(rd, x0, imm);
+        cur_block->AddInstruction(inst);
+    }
+}
+
+void InstSelector::visit(SubInstruction *node) {
+	auto rd = get_operand(node->result);
+
+	if (node->op1 && node->op2) {
+		auto rs1 = get_operand(node->op1);
+		auto rs2 = get_operand(node->op2);
+		auto inst = std::make_shared<ASMSubInstruction>(rd, rs1, rs2);
+		cur_block->AddInstruction(inst);
+	} else if (!node->op1) {
+		auto x0 = std::make_shared<Register>(0, true); // x0 is physical register 0
+		auto rs2 = get_operand(node->op2);
+		auto inst = std::make_shared<ASMSubInstruction>(rd, x0, rs2);
+		cur_block->AddInstruction(inst);
+	}
+}
+
 void InstSelector::visit(MulInstruction *node) {}
 void InstSelector::visit(SDivInstruction *node) {}
 void InstSelector::visit(UDivInstruction *node) {}

@@ -74,9 +74,10 @@ public:
 
 /**************** DERIVED CLASS ****************/
 class AddInstruction : public BinaryOpInstruction {
+public:
 	int imm1 = 0;
 	int imm2 = 0;
-public:
+
     AddInstruction(const std::shared_ptr<IRVar> &result, const std::shared_ptr<IRType> &type,
         const std::shared_ptr<IRVar> &op1, const std::shared_ptr<IRVar> &op2)
             : BinaryOpInstruction(result, type, op1, op2, OpType::Add) {}
