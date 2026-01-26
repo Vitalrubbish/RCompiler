@@ -58,7 +58,17 @@ void InstSelector::visit(IRInstruction *node) {
 }
 
 void InstSelector::visit(UnreachableInstruction *node) {}
-void InstSelector::visit(AllocaInstruction *node) {}
+void InstSelector::visit(AllocaInstruction *node) {
+	cur_func->AddStackObject(node->type->size);
+	cur_block->AddInstruction(
+		std::make_shared<ASMAddiInstruction>(
+			get_operand(node->result),
+			std::make_shared<Register>(2, true), // sp is physical register 2
+			std::make_shared<Immediate>(0) // offset will be set in later stack allocation phase
+		)
+	);
+}
+
 void InstSelector::visit(LoadInstruction *node) {}
 void InstSelector::visit(StoreInstruction *node) {}
 void InstSelector::visit(GetElementPtrInstruction *node) {}

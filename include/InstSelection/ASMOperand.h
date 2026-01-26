@@ -10,7 +10,7 @@ enum class OperandType {
     PHYSICAL_REGISTER,
     IMMEDIATE,
     LABEL,
-    STACK_OFFSET
+    STACK_OBJECT
 };
 
 class ASMOperand {
@@ -26,7 +26,7 @@ public:
 
 class Register: public ASMOperand {
 public:
-    int index = 0;
+    uint32_t index = 0;
     bool is_physical = false;
 
 
@@ -55,6 +55,16 @@ public:
         : ASMOperand(OperandType::LABEL), name(lbl_name) {}
 
     void print() override {}
+};
+
+class StackObject: public ASMOperand {
+public:
+	uint32_t index = 0;
+	uint32_t size = 0;
+	uint32_t offset = 0;
+
+	StackObject(const uint32_t idx, const uint32_t sz)
+		: ASMOperand(OperandType::STACK_OBJECT), index(idx), size(sz) {}
 };
 
 #endif //ASMOPERAND_H

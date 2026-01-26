@@ -15,9 +15,10 @@ enum class TypeID {
 
 class IRType : public IRNode {
     TypeID id;
-
 public:
-    explicit IRType(const TypeID id) { this->id = id; }
+	uint32_t size = 0;
+
+    explicit IRType(const TypeID id, const uint32_t size = 0) { this->id = id; this->size = size; }
 
     ~IRType() override = default;
 
@@ -42,7 +43,7 @@ public:
 
 class IRVoidType: public IRType {
 public:
-    IRVoidType() : IRType(TypeID::voidType) {}
+    IRVoidType() : IRType(TypeID::voidType, 4) {}
 
     [[nodiscard]] std::string toString() const override {
        return "void";
@@ -58,7 +59,7 @@ public:
 	uint32_t length = 0;
 	bool is_signed = true;
 
-    explicit IRIntegerType(const uint32_t &length, bool is_signed = true) : IRType(TypeID::integerType) {
+    explicit IRIntegerType(const uint32_t &length, bool is_signed = true) : IRType(TypeID::integerType, (length + 7) / 8) {
         this->length = length;
     	this->is_signed = is_signed;
     }
@@ -76,7 +77,7 @@ class IRPointerType: public IRType {
 public:
 	std::shared_ptr<IRType> baseType;
 
-    explicit IRPointerType(const std::shared_ptr<IRType> &base) : IRType(TypeID::pointerType) {
+    explicit IRPointerType(const std::shared_ptr<IRType> &base) : IRType(TypeID::pointerType, 4) {
         baseType = base;
     }
 
@@ -95,7 +96,7 @@ public:
     uint32_t length = 0;
 
     IRArrayType(const std::shared_ptr<IRType> &base, const uint32_t& len) :
-    IRType(TypeID::arrayType) {
+    IRType(TypeID::arrayType, len * base->size) {
         baseType = base;
         length = len;
     }
@@ -112,6 +113,14 @@ public:
 };
 
 class IRStructType: public IRType {
+
+	void calculateSize() {
+		size = 0;
+		for (const auto& member : members) {
+			size += member->size;
+		}
+	}
+
 public:
 	std::string name;
 	std::vector<std::shared_ptr<IRType>> members;
@@ -120,6 +129,7 @@ public:
         IRType(TypeID::structType) {
         this->name = name;
         this->members = members;
+    	calculateSize();
     }
 
     void print() override {
