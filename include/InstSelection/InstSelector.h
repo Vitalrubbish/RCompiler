@@ -19,6 +19,7 @@ public:
 
     std::shared_ptr<Register> get_operand(const std::shared_ptr<IRVar>& var);
     std::shared_ptr<Register> new_vreg();
+	std::shared_ptr<Register> get_temp_operand();
 
     InstSelector() = default;
 

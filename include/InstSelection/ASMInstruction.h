@@ -8,7 +8,7 @@
 enum class ASMOpcode {
 	ADD, SUB,
 
-	MUL, DIV, REM,
+	MUL, DIV, DIVU, REM, REMU,
 
 	AND, OR, XOR,
 
@@ -120,6 +120,27 @@ public:
 	}
 };
 
+class ASMDivuInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rd;
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> rs2;
+
+	ASMDivuInstruction(const std::shared_ptr<ASMOperand>& rd,
+				   const std::shared_ptr<ASMOperand>& rs1,
+				   const std::shared_ptr<ASMOperand>& rs2)
+		: ASMInstruction(ASMOpcode::DIVU), rd(rd), rs1(rs1), rs2(rs2) {}
+
+	void print() override {
+		std::cout << "\tdivu ";
+		rd->print();
+		std::cout << ", ";
+		rs1->print();
+		std::cout << ", ";
+		rs2->print();
+	}
+};
+
 class ASMRemInstruction final : public ASMInstruction {
 public:
 	std::shared_ptr<ASMOperand> rd;
@@ -133,6 +154,27 @@ public:
 
 	void print() override {
 		std::cout << "\trem ";
+		rd->print();
+		std::cout << ", ";
+		rs1->print();
+		std::cout << ", ";
+		rs2->print();
+	}
+};
+
+class ASMRemuInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rd;
+	std::shared_ptr<ASMOperand> rs1;
+	std::shared_ptr<ASMOperand> rs2;
+
+	ASMRemuInstruction(const std::shared_ptr<ASMOperand>& rd,
+					const std::shared_ptr<ASMOperand>& rs1,
+					const std::shared_ptr<ASMOperand>& rs2)
+		: ASMInstruction(ASMOpcode::REMU), rd(rd), rs1(rs1), rs2(rs2) {}
+
+	void print() override {
+		std::cout << "\tremu ";
 		rd->print();
 		std::cout << ", ";
 		rs1->print();
@@ -580,6 +622,15 @@ public:
 	}
 };
 
+class ASMRetInstruction final : public ASMInstruction {
+public:
+	ASMRetInstruction() : ASMInstruction(ASMOpcode::JALR) {}
+
+	void print() override {
+		std::cout << "\tret";
+	}
+};
+
 class ASMLuiInstruction final : public ASMInstruction {
 public:
 	std::shared_ptr<ASMOperand> rd;
@@ -738,6 +789,42 @@ public:
 		std::cout << ", ";
 		label->print();
 	}
+};
+
+class ASMSeqzInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rd;
+	std::shared_ptr<ASMOperand> rs;
+
+	ASMSeqzInstruction(const std::shared_ptr<ASMOperand>& rd,
+	                const std::shared_ptr<ASMOperand>& rs)
+		: ASMInstruction(ASMOpcode::SLTIU), rd(rd), rs(rs) {}
+
+	void print() override {
+		std::cout << "\tseqz ";
+		rd->print();
+		std::cout << ", ";
+		rs->print();
+	}
+	// set rd = 1 iff rs == 0
+};
+
+class ASMSnezInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rd;
+	std::shared_ptr<ASMOperand> rs;
+
+	ASMSnezInstruction(const std::shared_ptr<ASMOperand>& rd,
+					 const std::shared_ptr<ASMOperand>& rs)
+		: ASMInstruction(ASMOpcode::SLTU), rd(rd), rs(rs) {}
+
+	void print() override {
+		std::cout << "\tsnez ";
+		rd->print();
+		std::cout << ", ";
+		rs->print();
+	}
+	// set rd = 1 iff rs != 0
 };
 
 #endif //ASMINSTRUCTION_H
