@@ -36,6 +36,21 @@ public:
 	virtual ~ASMInstruction() = default;
 };
 
+class ASMLaInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> rd;
+	std::string symbol;
+
+	ASMLaInstruction(const std::shared_ptr<ASMOperand>& rd, const std::string& symbol)
+		: ASMInstruction(ASMOpcode::ADDI), rd(rd), symbol(symbol) {}
+
+	void print() override {
+		std::cout << "\tla ";
+		rd->print();
+		std::cout << ", " << symbol;
+	}
+};
+
 class ASMAddInstruction final : public ASMInstruction {
 public:
 	std::shared_ptr<ASMOperand> rd;
@@ -628,6 +643,19 @@ public:
 
 	void print() override {
 		std::cout << "\tret";
+	}
+};
+
+class ASMCallInstruction final : public ASMInstruction {
+public:
+	std::shared_ptr<ASMOperand> label;
+
+	explicit ASMCallInstruction(const std::shared_ptr<ASMOperand>& label)
+		: ASMInstruction(ASMOpcode::JAL), label(label) {}
+
+	void print() override {
+		std::cout << "\tcall ";
+		label->print();
 	}
 };
 

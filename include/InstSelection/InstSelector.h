@@ -7,14 +7,18 @@
 #include "ASMFunction.h"
 #include "ASMInstruction.h"
 #include "ASMOperand.h"
+#include "ASMGlobalVariable.h"
 #include <map>
 
 class InstSelector : public IRVisitor {
 public:
     std::vector<std::shared_ptr<ASMFunction>> asm_functions;
+    std::vector<std::shared_ptr<ASMGlobalVariable>> asm_globals;
     std::shared_ptr<ASMFunction> cur_func;
     std::shared_ptr<ASMBlock> cur_block;
     std::map<std::string, std::shared_ptr<Register>> var_map;
+    std::map<std::string, std::shared_ptr<ASMBlock>> block_map;
+    std::map<std::string, std::vector<std::pair<std::shared_ptr<Register>, std::shared_ptr<Register>>>> pending_phi_copies;
     int virt_reg_cnt = 0;
 
     std::shared_ptr<Register> get_operand(const std::shared_ptr<IRVar>& var);

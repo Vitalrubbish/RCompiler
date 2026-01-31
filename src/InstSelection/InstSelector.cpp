@@ -13,6 +13,13 @@ std::shared_ptr<Register> InstSelector::new_vreg() {
 std::shared_ptr<Register> InstSelector::get_operand(const std::shared_ptr<IRVar> &var) {
     if (var_map.find(var->true_name) == var_map.end()) {
         var_map[var->true_name] = new_vreg();
+        if (var->var_type == VarType::Global || std::dynamic_pointer_cast<ConstVar>(var)) {
+            if (cur_block) {
+                cur_block->AddInstruction(std::make_shared<ASMLaInstruction>(
+                    var_map[var->true_name], var->true_name
+                ));
+            }
+        }
     }
     return var_map[var->true_name];
 }
@@ -39,6 +46,9 @@ void InstSelector::visit(IRProgram *node) {
 void InstSelector::visit(IRFunction *node) {
     cur_func = std::make_shared<ASMFunction>(node->name);
     asm_functions.push_back(cur_func);
+    block_map.clear();
+    var_map.clear();
+    pending_phi_copies.clear();
 
     for (auto &block : node->blocks) {
         block->accept(this);
@@ -52,6 +62,7 @@ void InstSelector::visit(IRFunctionParam *node) {
 void InstSelector::visit(IRBasicBlock *node) {
     cur_block = std::make_shared<ASMBlock>(node->true_label);
     cur_func->AddBlock(cur_block);
+    block_map[node->true_label] = cur_block;
     for (auto &inst : node->instructions) {
         inst->accept(this);
     }
@@ -281,12 +292,43 @@ void InstSelector::visit(RetInstruction *node) {
 			)
 		);
 	}
+
+	cur_block->AddInstruction(
+		std::make_shared<ASMLwInstruction>(
+			std::make_shared<Register>(1, true), // ra is physical register 1
+			std::make_shared<Register>(2, true), // sp is physical register 2
+			std::make_shared<Immediate>(0)
+		)
+	);
+
+	cur_block->AddInstruction(
+		std::make_shared<ASMLwInstruction>(
+			std::make_shared<Register>(8, true), // s0 is physical register 8
+			std::make_shared<Register>(2, true), // sp is physical register 2
+			std::make_shared<Immediate>(0)
+		)
+	);
+
+	cur_block->AddInstruction(
+		std::make_shared<ASMAddiInstruction>(
+			std::make_shared<Register>(2, true), // sp is physical register 2
+			std::make_shared<Register>(2, true), // sp is physical register 2
+			std::make_shared<Immediate>(0)
+		)
+	);
+
 	cur_block->AddInstruction(
 		std::make_shared<ASMRetInstruction>()
 	);
 }
 
 void InstSelector::visit(ConditionalBrInstruction *node) {
+    if (pending_phi_copies.count(cur_block->label)) {
+        for (auto &pair : pending_phi_copies[cur_block->label]) {
+            cur_block->AddInstruction(std::make_shared<ASMAddiInstruction>(
+                pair.first, pair.second, std::make_shared<Immediate>(0)));
+        }
+    }
 	if (node->condition) {
 		auto rs = get_operand(node->condition);
 		cur_block->AddInstruction(
@@ -305,6 +347,12 @@ void InstSelector::visit(ConditionalBrInstruction *node) {
 	}
 }
 void InstSelector::visit(UnconditionalBrInstruction *node) {
+    if (pending_phi_copies.count(cur_block->label)) {
+        for (auto &pair : pending_phi_copies[cur_block->label]) {
+            cur_block->AddInstruction(std::make_shared<ASMAddiInstruction>(
+                pair.first, pair.second, std::make_shared<Immediate>(0)));
+        }
+    }
 	cur_block->AddInstruction(
 		std::make_shared<ASMJalInstruction>(
 			std::make_shared<Register>(0, true), // x0 is physical register 0
@@ -381,11 +429,120 @@ void InstSelector::visit(ICmpInstruction *node) {
 	}
 }
 
-void InstSelector::visit(CallWithRetInstruction *node) {}
-void InstSelector::visit(CallWithoutRetInstruction *node) {}
-void InstSelector::visit(PhiInstruction *node) {}
+void InstSelector::visit(CallWithRetInstruction *node) {
+	for (size_t i = 0; i < node->args.size(); i++) {
+		auto arg_reg = std::make_shared<Register>(10 + i, true); // a0-a7 are physical registers 10-17
+		auto arg_operand = get_operand(node->args[i]);
+		cur_block->AddInstruction(
+			std::make_shared<ASMAddInstruction>(
+				arg_reg,
+				arg_operand,
+				std::make_shared<Register>(0, true) // x0 is physical register 0
+			)
+		);
+		if (i > 7) {
+			cur_block->AddInstruction(
+				std::make_shared<ASMSwInstruction>(
+					arg_reg,
+					std::make_shared<Register>(2, true), // sp is physical register 2
+					std::make_shared<Immediate>(4 * (i - 8))
+				)
+			);
+		}
+	}
+	cur_block->AddInstruction(std::make_shared<ASMCallInstruction>(std::make_shared<Label>(node->func_name)));
+	cur_block->AddInstruction(std::make_shared<ASMAddiInstruction>(
+		get_operand(node->result),
+		std::make_shared<Register>(10, true), // a0 is physical register 10
+		std::make_shared<Immediate>(0)
+	));
+}
+
+void InstSelector::visit(CallWithoutRetInstruction *node) {
+	for (size_t i = 0; i < node->args.size(); i++) {
+		auto arg_reg = std::make_shared<Register>(10 + i, true); // a0-a7 are physical registers 10-17
+		auto arg_operand = get_operand(node->args[i]);
+		cur_block->AddInstruction(
+			std::make_shared<ASMAddInstruction>(
+				arg_reg,
+				arg_operand,
+				std::make_shared<Register>(0, true) // x0 is physical register 0
+			)
+		);
+		if (i > 7) {
+			cur_block->AddInstruction(
+				std::make_shared<ASMSwInstruction>(
+					arg_reg,
+					std::make_shared<Register>(2, true), // sp is physical register 2
+					std::make_shared<Immediate>(4 * (i - 8))
+				)
+			);
+		}
+	}
+	cur_block->AddInstruction(std::make_shared<ASMCallInstruction>(std::make_shared<Label>(node->func_name)));
+}
+void InstSelector::visit(PhiInstruction *node) {
+    auto dest = get_operand(node->result);
+    for (size_t i = 0; i < node->values.size(); ++i) {
+        auto val = get_operand(node->values[i]);
+        auto label = node->labels[i];
+        if (block_map.count(label)) {
+            auto blk = block_map[label];
+            if (!blk->instructions.empty()) {
+                auto insert_pos = blk->instructions.end();
+                auto r_it = blk->instructions.rbegin();
+                while (r_it != blk->instructions.rend()) {
+                    auto opcode = (*r_it)->opcode;
+                    bool is_term = (opcode == ASMOpcode::JAL || opcode == ASMOpcode::JALR || 
+                       opcode == ASMOpcode::BEQ || opcode == ASMOpcode::BNE || 
+                       opcode == ASMOpcode::BLT || opcode == ASMOpcode::BGE || 
+                       opcode == ASMOpcode::BLTU || opcode == ASMOpcode::BGEU); 
+                    
+                    if (is_term) {
+                        if (opcode == ASMOpcode::JAL && std::dynamic_pointer_cast<ASMCallInstruction>(*r_it)) {
+                            is_term = false; // Call is not terminator
+                        }
+                    }
+                    
+                    if (is_term) {
+                        insert_pos = r_it.base(); 
+                        --insert_pos;
+                    } else {
+                        break;
+                    }
+                    ++r_it;
+                }
+                blk->instructions.insert(insert_pos, std::make_shared<ASMAddiInstruction>(dest, val, std::make_shared<Immediate>(0)));
+            } else {
+                blk->AddInstruction(std::make_shared<ASMAddiInstruction>(dest, val, std::make_shared<Immediate>(0)));
+            }
+        } else {
+            pending_phi_copies[label].emplace_back(dest, val);
+        }
+    }
+}
 void InstSelector::visit(SelectInstruction *node) {}
-void InstSelector::visit(ZextInstruction *node) {}
-void InstSelector::visit(StructDefInstruction *node) {}
-void InstSelector::visit(ConstVarDefInstruction *node) {}
-void InstSelector::visit(GlobalVarDefInstruction *node) {}
+void InstSelector::visit(ZextInstruction *node) {
+	cur_block->AddInstruction(std::make_shared<ASMAndiInstruction>(
+		get_operand(node->result),
+		get_operand(node->op),
+		std::make_shared<Immediate>(1)
+	));
+}
+void InstSelector::visit(StructDefInstruction *node) {
+    // Struct definition only provides type info, no code generation needed.
+}
+void InstSelector::visit(ConstVarDefInstruction *node) {
+     asm_globals.push_back(std::make_shared<ASMGlobalVariable>(
+        node->const_var->true_name,
+        node->const_var->type,
+        node->value
+    ));
+}
+void InstSelector::visit(GlobalVarDefInstruction *node) {
+     asm_globals.push_back(std::make_shared<ASMGlobalVariable>(
+        node->global_var->true_name,
+        node->global_var->type,
+        node->value
+    ));
+}
