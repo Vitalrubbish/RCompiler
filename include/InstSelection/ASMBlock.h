@@ -19,6 +19,7 @@ public:
 		std::cout << label << ":\n";
 		for (const auto &inst : instructions) {
 			inst->print();
+			std::cout << '\n';
 		}
 	}
 };

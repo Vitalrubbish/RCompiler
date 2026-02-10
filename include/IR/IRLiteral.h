@@ -19,8 +19,9 @@ public:
 };
 
 class LiteralInt : public IRLiteral {
-    int64_t value = 0;
 public:
+	int64_t value = 0;
+
     explicit LiteralInt(const int64_t &value) {
         literal_type = LiteralType::Integer;
     	this->value = value;
@@ -36,8 +37,9 @@ public:
 };
 
 class LiteralBool : public IRLiteral {
-    bool value = false;
 public:
+	bool value = false;
+
     explicit LiteralBool(const bool value) {
         this->value = value;
         literal_type = LiteralType::Boolean;

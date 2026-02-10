@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <memory>
+#include <utility>
+
+#include "ASMNode.h"
 #include "ASMOperand.h"
 
 enum class ASMOpcode {
@@ -25,15 +28,15 @@ enum class ASMOpcode {
 	BEQ, BNE, BLT, BGE, BLTU, BGEU,
 };
 
-class ASMInstruction {
+class ASMInstruction : public ASMNode {
 public:
 	ASMOpcode opcode;
 
 	explicit ASMInstruction(ASMOpcode opcode) : opcode(opcode) {}
 
-	virtual void print() = 0;
+	void print() override = 0;
 
-	virtual ~ASMInstruction() = default;
+	~ASMInstruction() override = default;
 };
 
 class ASMLaInstruction final : public ASMInstruction {
@@ -41,8 +44,8 @@ public:
 	std::shared_ptr<ASMOperand> rd;
 	std::string symbol;
 
-	ASMLaInstruction(const std::shared_ptr<ASMOperand>& rd, const std::string& symbol)
-		: ASMInstruction(ASMOpcode::ADDI), rd(rd), symbol(symbol) {}
+	ASMLaInstruction(const std::shared_ptr<ASMOperand>& rd, std::string  symbol)
+		: ASMInstruction(ASMOpcode::ADDI), rd(rd), symbol(std::move(symbol)) {}
 
 	void print() override {
 		std::cout << "\tla ";
@@ -644,6 +647,42 @@ public:
 	void print() override {
 		std::cout << "\tret";
 	}
+};
+
+class ASMPrologueInstruction final : public ASMInstruction {
+    uint32_t *stack_size_ptr;
+public:
+    explicit ASMPrologueInstruction(uint32_t *sz_ptr)
+        : ASMInstruction(ASMOpcode::ADDI), stack_size_ptr(sz_ptr) {}
+    
+    void print() override {
+        uint32_t size = *stack_size_ptr;
+        // addi sp, sp, -size
+        std::cout << "\taddi sp, sp, -" << size << "\n";
+        // sw ra, size-4(sp)
+        std::cout << "\tsw ra, " << size-4 << "(sp)\n";
+        // sw s0, size-8(sp)
+        std::cout << "\tsw s0, " << size-8 << "(sp)\n";
+        // addi s0, sp, size
+        std::cout << "\taddi s0, sp, " << size; 
+    }
+};
+
+class ASMEpilogueInstruction final : public ASMInstruction {
+    uint32_t *stack_size_ptr;
+public:
+    explicit ASMEpilogueInstruction(uint32_t *sz_ptr)
+        : ASMInstruction(ASMOpcode::ADDI), stack_size_ptr(sz_ptr) {}
+    
+    void print() override {
+        uint32_t size = *stack_size_ptr;
+        // lw ra, size-4(sp)
+        std::cout << "\tlw ra, " << size-4 << "(sp)\n";
+        // lw s0, size-8(sp)
+        std::cout << "\tlw s0, " << size-8 << "(sp)\n";
+        // addi sp, sp, size
+        std::cout << "\taddi sp, sp, " << size; 
+    }
 };
 
 class ASMCallInstruction final : public ASMInstruction {

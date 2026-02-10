@@ -12,8 +12,6 @@
 
 class InstSelector : public IRVisitor {
 public:
-    std::vector<std::shared_ptr<ASMFunction>> asm_functions;
-    std::vector<std::shared_ptr<ASMGlobalVariable>> asm_globals;
     std::shared_ptr<ASMFunction> cur_func;
     std::shared_ptr<ASMBlock> cur_block;
     std::map<std::string, std::shared_ptr<Register>> var_map;

@@ -8,7 +8,7 @@
 #include "IR/IRType.h"
 #include "IR/IRLiteral.h"
 
-class ASMGlobalVariable {
+class ASMGlobalVariable : public ASMNode {
 public:
     std::string name;
     std::shared_ptr<IRType> type;
@@ -17,7 +17,7 @@ public:
     ASMGlobalVariable(std::string name, std::shared_ptr<IRType> type, std::shared_ptr<IRLiteral> init_val)
         : name(std::move(name)), type(std::move(type)), init_val(std::move(init_val)) {}
 
-    void print() {
+    void print() override {
         std::cout << "\t.globl\t" << name << "\n";
         std::cout << "\t.data\n";
         std::cout << "\t.align\t2\n";

@@ -1,10 +1,13 @@
 #include "InstSelection/InstSelector.h"
+#include "InstSelection/StackAllocator.h"
 
+#include "InstSelection/ASMModule.h"
 #include "IR/IRProgram.h"
 #include "IR/IRFunction.h"
 #include "IR/IRBlock.h"
 #include "IR/IRInstruction.h"
 
+extern std::shared_ptr<ASMModule> asm_module;
 
 std::shared_ptr<Register> InstSelector::new_vreg() {
     return std::make_shared<Register>(virt_reg_cnt++, false);
@@ -45,13 +48,29 @@ void InstSelector::visit(IRProgram *node) {
 
 void InstSelector::visit(IRFunction *node) {
     cur_func = std::make_shared<ASMFunction>(node->name);
-    asm_functions.push_back(cur_func);
+    asm_module->functions.emplace_back(cur_func);
     block_map.clear();
     var_map.clear();
     pending_phi_copies.clear();
+    virt_reg_cnt = 0;
 
     for (auto &block : node->blocks) {
         block->accept(this);
+    }
+
+    if (!cur_func->blocks.empty()) {
+        auto &first_block = cur_func->blocks.front();
+        uint32_t *stack_size_ptr = &cur_func->stack_size;
+        first_block->instructions.insert(
+            first_block->instructions.begin(),
+            std::make_shared<ASMPrologueInstruction>(stack_size_ptr)
+        );
+
+        StackAllocator allocator(cur_func);
+        for (int i = 0; i < virt_reg_cnt; ++i) {
+            allocator.allocate_virtual_register("v" + std::to_string(i), 4);
+        }
+        allocator.run();
     }
 }
 
@@ -74,14 +93,15 @@ void InstSelector::visit(IRInstruction *node) {
 
 void InstSelector::visit(UnreachableInstruction *node) {}
 void InstSelector::visit(AllocaInstruction *node) {
-	cur_func->AddStackObject(node->type->size);
+	auto stack_obj = cur_func->AddStackObject(node->type->size);
 	cur_block->AddInstruction(
 		std::make_shared<ASMAddiInstruction>(
 			get_operand(node->result),
 			std::make_shared<Register>(2, true), // sp is physical register 2
-			std::make_shared<Immediate>(0) // offset will be set in later stack allocation phase
+			stack_obj // offset will be set in later stack allocation phase
 		)
 	);
+	
 }
 
 void InstSelector::visit(LoadInstruction *node) {
@@ -294,27 +314,7 @@ void InstSelector::visit(RetInstruction *node) {
 	}
 
 	cur_block->AddInstruction(
-		std::make_shared<ASMLwInstruction>(
-			std::make_shared<Register>(1, true), // ra is physical register 1
-			std::make_shared<Register>(2, true), // sp is physical register 2
-			std::make_shared<Immediate>(0)
-		)
-	);
-
-	cur_block->AddInstruction(
-		std::make_shared<ASMLwInstruction>(
-			std::make_shared<Register>(8, true), // s0 is physical register 8
-			std::make_shared<Register>(2, true), // sp is physical register 2
-			std::make_shared<Immediate>(0)
-		)
-	);
-
-	cur_block->AddInstruction(
-		std::make_shared<ASMAddiInstruction>(
-			std::make_shared<Register>(2, true), // sp is physical register 2
-			std::make_shared<Register>(2, true), // sp is physical register 2
-			std::make_shared<Immediate>(0)
-		)
+		std::make_shared<ASMEpilogueInstruction>(&cur_func->stack_size)
 	);
 
 	cur_block->AddInstruction(
@@ -533,14 +533,14 @@ void InstSelector::visit(StructDefInstruction *node) {
     // Struct definition only provides type info, no code generation needed.
 }
 void InstSelector::visit(ConstVarDefInstruction *node) {
-     asm_globals.push_back(std::make_shared<ASMGlobalVariable>(
+     asm_module->global_vars.push_back(std::make_shared<ASMGlobalVariable>(
         node->const_var->true_name,
         node->const_var->type,
         node->value
     ));
 }
 void InstSelector::visit(GlobalVarDefInstruction *node) {
-     asm_globals.push_back(std::make_shared<ASMGlobalVariable>(
+     asm_module->global_vars.push_back(std::make_shared<ASMGlobalVariable>(
         node->global_var->true_name,
         node->global_var->type,
         node->value
