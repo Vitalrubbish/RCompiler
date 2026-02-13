@@ -34,6 +34,24 @@ public:
 
 	explicit ASMInstruction(ASMOpcode opcode) : opcode(opcode) {}
 
+	virtual bool has_rd() const { return false; }
+	virtual bool has_rs1() const { return false; }
+	virtual bool has_rs2() const { return false; }
+	
+	virtual std::shared_ptr<ASMOperand>& get_rd() { 
+		static std::shared_ptr<ASMOperand> null_op = nullptr;
+		return null_op; 
+	}
+	virtual std::shared_ptr<ASMOperand>& get_rs1() { 
+		static std::shared_ptr<ASMOperand> null_op = nullptr;
+		return null_op; 
+	}
+	virtual std::shared_ptr<ASMOperand>& get_rs2() { 
+		static std::shared_ptr<ASMOperand> null_op = nullptr;
+		return null_op; 
+	}
+
+
 	void print() override = 0;
 
 	~ASMInstruction() override = default;
@@ -46,6 +64,9 @@ public:
 
 	ASMLaInstruction(const std::shared_ptr<ASMOperand>& rd, std::string  symbol)
 		: ASMInstruction(ASMOpcode::ADDI), rd(rd), symbol(std::move(symbol)) {}
+
+	bool has_rd() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
 
 	void print() override {
 		std::cout << "\tla ";
@@ -64,6 +85,13 @@ public:
 	               const std::shared_ptr<ASMOperand>& rs1,
 	               const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::ADD), rd(rd), rs1(rs1), rs2(rs2) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
 
 	void print() override {
 		std::cout << "\tadd ";
@@ -86,6 +114,13 @@ public:
 				   const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::SUB), rd(rd), rs1(rs1), rs2(rs2) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\tsub ";
 		rd->print();
@@ -106,6 +141,13 @@ public:
 				   const std::shared_ptr<ASMOperand>& rs1,
 				   const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::MUL), rd(rd), rs1(rs1), rs2(rs2) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
 
 	void print() override {
 		std::cout << "\tmul ";
@@ -128,6 +170,13 @@ public:
 				   const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::DIV), rd(rd), rs1(rs1), rs2(rs2) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\tdiv ";
 		rd->print();
@@ -148,6 +197,13 @@ public:
 				   const std::shared_ptr<ASMOperand>& rs1,
 				   const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::DIVU), rd(rd), rs1(rs1), rs2(rs2) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
 
 	void print() override {
 		std::cout << "\tdivu ";
@@ -170,6 +226,13 @@ public:
 				   const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::REM), rd(rd), rs1(rs1), rs2(rs2) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\trem ";
 		rd->print();
@@ -190,6 +253,13 @@ public:
 					const std::shared_ptr<ASMOperand>& rs1,
 					const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::REMU), rd(rd), rs1(rs1), rs2(rs2) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
 
 	void print() override {
 		std::cout << "\tremu ";
@@ -212,6 +282,13 @@ public:
 	               const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::AND), rd(rd), rs1(rs1), rs2(rs2) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\tand ";
 		rd->print();
@@ -232,6 +309,13 @@ public:
 	              const std::shared_ptr<ASMOperand>& rs1,
 	              const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::OR), rd(rd), rs1(rs1), rs2(rs2) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
 
 	void print() override {
 		std::cout << "\tor ";
@@ -254,6 +338,13 @@ public:
 	               const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::XOR), rd(rd), rs1(rs1), rs2(rs2) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\txor ";
 		rd->print();
@@ -274,6 +365,13 @@ public:
 	                const std::shared_ptr<ASMOperand>& rs1,
 	                const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::SRL), rd(rd), rs1(rs1), rs2(rs2) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
 
 	void print() override {
 		std::cout << "\tsrl ";
@@ -296,6 +394,13 @@ public:
 	                const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::SRA), rd(rd), rs1(rs1), rs2(rs2) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\tsra ";
 		rd->print();
@@ -316,6 +421,13 @@ public:
 	                const std::shared_ptr<ASMOperand>& rs1,
 	                const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::SLL), rd(rd), rs1(rs1), rs2(rs2) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
 
 	void print() override {
 		std::cout << "\tsll ";
@@ -338,6 +450,13 @@ public:
 	                const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::SLT), rd(rd), rs1(rs1), rs2(rs2) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\tslt ";
 		rd->print();
@@ -358,6 +477,13 @@ public:
 	                const std::shared_ptr<ASMOperand>& rs1,
 	                const std::shared_ptr<ASMOperand>& rs2)
 		: ASMInstruction(ASMOpcode::SLTU), rd(rd), rs1(rs1), rs2(rs2) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
 
 	void print() override {
 		std::cout << "\tsltu ";
@@ -380,6 +506,11 @@ public:
 				   const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::ADDI), rd(rd), rs1(rs1), imm(imm) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+
 	void print() override {
 		std::cout << "\taddi ";
 		rd->print();
@@ -400,6 +531,11 @@ public:
 	               const std::shared_ptr<ASMOperand>& rs1,
 	               const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::ANDI), rd(rd), rs1(rs1), imm(imm) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
 
 	void print() override {
 		std::cout << "\tandi ";
@@ -422,6 +558,11 @@ public:
 	              const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::ORI), rd(rd), rs1(rs1), imm(imm) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+
 	void print() override {
 		std::cout << "\tori ";
 		rd->print();
@@ -443,11 +584,17 @@ public:
 	               const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::XORI), rd(rd), rs1(rs1), imm(imm) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+
 	void print() override {
 		std::cout << "\txori ";
 		rd->print();
 		std::cout << ", ";
 		rs1->print();
+
 		std::cout << ", ";
 	}
 };
@@ -462,6 +609,11 @@ public:
 	                const std::shared_ptr<ASMOperand>& rs1,
 	                const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::SLLI), rd(rd), rs1(rs1), imm(imm) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
 
 	void print() override {
 		std::cout << "\tslli ";
@@ -484,6 +636,11 @@ public:
 	                const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::SRLI), rd(rd), rs1(rs1), imm(imm) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+
 	void print() override {
 		std::cout << "\tsrli ";
 		rd->print();
@@ -504,6 +661,11 @@ public:
 	                const std::shared_ptr<ASMOperand>& rs1,
 	                const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::SRAI), rd(rd), rs1(rs1), imm(imm) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
 
 	void print() override {
 		std::cout << "\tsrai ";
@@ -526,6 +688,11 @@ public:
 	                const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::SLTI), rd(rd), rs1(rs1), imm(imm) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+
 	void print() override {
 		std::cout << "\tslti ";
 		rd->print();
@@ -547,6 +714,11 @@ public:
 	                const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::SLTIU), rd(rd), rs1(rs1), imm(imm) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+
 	void print() override {
 		std::cout << "\tsltiu ";
 		rd->print();
@@ -567,6 +739,11 @@ public:
 	              const std::shared_ptr<ASMOperand>& rs1,
 	              const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::LW), rd(rd), rs1(rs1), imm(imm) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
 
 	void print() override {
 		std::cout << "\tlw ";
@@ -590,6 +767,11 @@ public:
 	              const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::SW), rs2(rs2), rs1(rs1), imm(imm) {}
 
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\tsw ";
 		rs2->print();
@@ -598,6 +780,7 @@ public:
 		std::cout << "(";
 		rs1->print();
 		std::cout << ")";
+
 	}
 };
 
@@ -609,6 +792,9 @@ public:
 	ASMJalInstruction(const std::shared_ptr<ASMOperand>& rd,
 	                const std::shared_ptr<ASMOperand>& label)
 		: ASMInstruction(ASMOpcode::JAL), rd(rd), label(label) {}
+
+	bool has_rd() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
 
 	void print() override {
 		std::cout << "\tjal ";
@@ -628,6 +814,11 @@ public:
 	                 const std::shared_ptr<ASMOperand>& rs1,
 	                 const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::JALR), rd(rd), rs1(rs1), imm(imm) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
 
 	void print() override {
 		std::cout << "\tjalr ";
@@ -707,6 +898,9 @@ public:
 	              const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::LUI), rd(rd), imm(imm) {}
 
+	bool has_rd() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+
 	void print() override {
 		std::cout << "\tlui ";
 		rd->print();
@@ -723,6 +917,9 @@ public:
 	ASMAuipcInstruction(const std::shared_ptr<ASMOperand>& rd,
 	                const std::shared_ptr<ASMOperand>& imm)
 		: ASMInstruction(ASMOpcode::AUIPC), rd(rd), imm(imm) {}
+
+	bool has_rd() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
 
 	void print() override {
 		std::cout << "\tauipc ";
@@ -743,11 +940,17 @@ public:
 	                const std::shared_ptr<ASMOperand>& label)
 		: ASMInstruction(ASMOpcode::BEQ), rs1(rs1), rs2(rs2), label(label) {}
 
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\tbeq ";
 		rs1->print();
 		std::cout << ", ";
 		rs2->print();
+
 		std::cout << ", ";
 		label->print();
 	}
@@ -763,6 +966,11 @@ public:
 					const std::shared_ptr<ASMOperand>& rs2,
 					const std::shared_ptr<ASMOperand>& label)
 		: ASMInstruction(ASMOpcode::BNE), rs1(rs1), rs2(rs2), label(label) {}
+
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
 
 	void print() override {
 		std::cout << "\tbne ";
@@ -785,6 +993,11 @@ public:
 					const std::shared_ptr<ASMOperand>& label)
 		: ASMInstruction(ASMOpcode::BLT), rs1(rs1), rs2(rs2), label(label) {}
 
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\tblt ";
 		rs1->print();
@@ -805,6 +1018,11 @@ public:
 					const std::shared_ptr<ASMOperand>& rs2,
 					const std::shared_ptr<ASMOperand>& label)
 		: ASMInstruction(ASMOpcode::BGE), rs1(rs1), rs2(rs2), label(label) {}
+
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
 
 	void print() override {
 		std::cout << "\tbge ";
@@ -827,6 +1045,11 @@ public:
 					const std::shared_ptr<ASMOperand>& label)
 		: ASMInstruction(ASMOpcode::BLTU), rs1(rs1), rs2(rs2), label(label) {}
 
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\tbltu ";
 		rs1->print();
@@ -848,6 +1071,11 @@ public:
 					const std::shared_ptr<ASMOperand>& label)
 		: ASMInstruction(ASMOpcode::BGEU), rs1(rs1), rs2(rs2), label(label) {}
 
+	bool has_rs1() const override { return true; }
+	bool has_rs2() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs1; }
+	std::shared_ptr<ASMOperand>& get_rs2() override { return rs2; }
+
 	void print() override {
 		std::cout << "\tbgeu ";
 		rs1->print();
@@ -867,6 +1095,11 @@ public:
 	                const std::shared_ptr<ASMOperand>& rs)
 		: ASMInstruction(ASMOpcode::SLTIU), rd(rd), rs(rs) {}
 
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs; }
+
 	void print() override {
 		std::cout << "\tseqz ";
 		rd->print();
@@ -884,6 +1117,11 @@ public:
 	ASMSnezInstruction(const std::shared_ptr<ASMOperand>& rd,
 					 const std::shared_ptr<ASMOperand>& rs)
 		: ASMInstruction(ASMOpcode::SLTU), rd(rd), rs(rs) {}
+
+	bool has_rd() const override { return true; }
+	bool has_rs1() const override { return true; }
+	std::shared_ptr<ASMOperand>& get_rd() override { return rd; }
+	std::shared_ptr<ASMOperand>& get_rs1() override { return rs; }
 
 	void print() override {
 		std::cout << "\tsnez ";

@@ -2,6 +2,9 @@
 #include <string>
 #include "util/Position.h"
 #include "Error.h"
+#include "InstSelection/ASMModule.h"
+#include "InstSelection/InstSelector.h"
+#include "InstSelection/RegAllocator.h"
 #include "Lexer/Lexer.h"
 #include "Parser/Parser.h"
 #include "Semantic/ASTNode.h"
@@ -23,9 +26,13 @@ SemanticChecker *semantic_checker = new SemanticChecker{scope_manager};
 SymbolManager *symbol_manager = new SymbolManager{scope_manager};
 IRManager ir_manager;
 IRBuilder *ir_builder = new IRBuilder{scope_manager, ir_manager};
+InstSelector *inst_selector = new InstSelector{};
 std::shared_ptr<IRProgram> ir_program;
+std::shared_ptr<ASMModule> asm_module;
+RegAllocator reg_allocator;
 
 int main() {
+	freopen("../testcases/InstSelection/assign01.rx", "r", stdin);
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::string text((std::istreambuf_iterator(std::cin)),
@@ -65,8 +72,15 @@ int main() {
         try {
             ir_program = std::make_shared<IRProgram>();
             root->accept(ir_builder);
-            ir_program->print();
+            // ir_program->print();
         } catch (...) {} // IR Generation
+
+    	asm_module = std::make_shared<ASMModule>();
+    	ir_program->accept(inst_selector);
+        reg_allocator.run(asm_module);
+
+        asm_module->print();
+
     	// std::cout << 0 << '\n';
     } catch (std::exception &error) {
         std::cout << error.what() << '\n';
