@@ -19,6 +19,8 @@ public:
 			global_var->print();
 			std::cout << '\n';
 		}
+		std::cout << '\n';
+		std::cout << ".section .text\n";
 		for (auto &function: functions) {
 			function->print();
 			std::cout << '\n';

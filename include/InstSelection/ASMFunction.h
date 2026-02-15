@@ -31,6 +31,8 @@ public:
 	}
 
 	void print() override {
+		std::cout << ".globl " << name << '\n';
+		std::cout << name << ":\n";
 		for (const auto &block : blocks) {
 			block->print();
 			std::cout << '\n';

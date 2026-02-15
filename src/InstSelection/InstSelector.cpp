@@ -66,6 +66,24 @@ void InstSelector::visit(IRFunction *node) {
             std::make_shared<ASMPrologueInstruction>(stack_size_ptr)
         );
 
+        int param_idx = 0;
+        for (auto &param : node->function_params) {
+            if (param_idx < 8) {
+                // a0-a7: 10-17
+                auto dest = get_operand(param.var);
+                auto src = std::make_shared<Register>(10 + param_idx, true);
+                
+                auto inst = std::make_shared<ASMAddiInstruction>(
+                    dest,
+                    src,
+                    std::make_shared<Immediate>(0)
+                );
+
+                first_block->instructions.insert(first_block->instructions.begin() + 1 + param_idx, inst);
+            }
+            param_idx++;
+        }
+
         StackAllocator allocator(cur_func);
         for (int i = 0; i < virt_reg_cnt; ++i) {
             allocator.allocate_virtual_register("v" + std::to_string(i), 4);
