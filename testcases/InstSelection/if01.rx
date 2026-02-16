@@ -1,0 +1,12 @@
+fn main() {
+    let a : i32 = getInt();
+    let b : i32 = getInt();
+    let mut c : i32 = 0;
+    if (b == 1) {
+        c = a * 2;
+    } else {
+        c = a / 2;
+    }
+    printlnInt(c);
+    exit(0);
+}

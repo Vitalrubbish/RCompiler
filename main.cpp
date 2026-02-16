@@ -32,7 +32,6 @@ std::shared_ptr<ASMModule> asm_module;
 RegAllocator reg_allocator;
 
 int main() {
-	freopen("../testcases/InstSelection/assign01.rx", "r", stdin);
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::string text((std::istreambuf_iterator(std::cin)),

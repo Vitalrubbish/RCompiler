@@ -1,0 +1,7 @@
+fn main() {
+    let a : i32 = getInt();
+    let b : i32 = getInt();
+    let c : i32 = a + b;
+    printlnInt(c);
+    exit(0);
+}

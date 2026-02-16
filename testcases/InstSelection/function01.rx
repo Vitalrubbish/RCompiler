@@ -1,0 +1,12 @@
+fn add(a : i32, b : i32) -> i32 {
+    let mut c : i32 = 0;
+    c = a + b;
+    c
+}
+
+fn main() {
+    let a : i32 = getInt();
+    let b : i32 = getInt();
+    printlnInt(add(a, b));
+    exit(0);
+}
